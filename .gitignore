@@ -1,0 +1,46 @@
+# --- General macOS / System files ---
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# --- Environment & credentials ---
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# --- Node.js dependencies ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Build outputs ---
+dist/
+build/
+.cache/
+.next/
+out/
+coverage/
+.vscode/
+
+# --- IDE / Editor ---
+.idea/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# --- OS-specific ---
+Icon?
+Desktop.ini
+
+# --- Testing & misc ---
+*.test.js
+*.spec.js
+*.coverage
+coverage/
