@@ -40,7 +40,5 @@ Icon?
 Desktop.ini
 
 # --- Testing & misc ---
-*.test.js
-*.spec.js
 *.coverage
 coverage/
