@@ -2,18 +2,31 @@ const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
 
-// ✅ Get all products or filter by category
+// ✅ Get all products, filter by category, or search by name/description
 router.get("/", async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, search } = req.query;
 
-    // 🔹 If category query is provided, filter products by category (case-insensitive)
-    const filter = category
-      ? { category: { $regex: category, $options: "i" } }
-      : {};
+    // 🔹 Build a flexible filter object
+    let filter = {};
 
+    // 🔹 If category is provided, filter by category (case-insensitive)
+    if (category) {
+      filter.category = { $regex: category, $options: "i" };
+    }
+
+    // 🔹 If search is provided, match product name or description (case-insensitive)
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // 🔹 Fetch products that match the filter
     const products = await Product.find(filter);
-    res.json(products);
+
+    res.status(200).json(products);
   } catch (err) {
     console.error("Error fetching products:", err);
     res.status(500).json({ message: "Server error" });
@@ -27,7 +40,7 @@ router.get("/:id", async (req, res) => {
     if (!product)
       return res.status(404).json({ message: "Product not found" });
 
-    res.json(product);
+    res.status(200).json(product);
   } catch (err) {
     console.error("Error fetching product:", err);
     res.status(500).json({ message: "Server error" });
