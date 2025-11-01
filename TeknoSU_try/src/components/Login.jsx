@@ -3,82 +3,54 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthProvider";
 
 const title = "Login";
-const socialTitle = "Login With Social Media";
 const btnText = "Submit Now";
-
-const socialList = [
-  {
-    link: "#",
-    iconName: "icofont-github",
-    className: "github",
-  },
-  {
-    link: "#",
-    iconName: "icofont-facebook",
-    className: "facebook",
-  },
-  {
-    link: "#",
-    iconName: "icofont-twitter",
-    className: "twitter",
-  },
-  {
-    link: "#",
-    iconName: "icofont-linkedin",
-    className: "linkedin",
-  },
-  {
-    link: "#",
-    iconName: "icofont-instagram",
-    className: "instagram",
-  },
-];
 
 const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
-  const { signUpWithGmail, login } = useContext(AuthContext);
-
-  // console.log(signUpWithGmail);
+  const [successMessage, setSuccessMessage] = useState("");
+  const { login } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
 
   const from = location.state?.from?.pathname || "/";
 
-  // login with google
-  const handleRegister = () => {
-    signUpWithGmail()
-      .then((result) => {
-        const user = result.user;
-        navigate(from, { replace: true });
-      })
-      .catch((error) => console.log(error));
-  };
-
-  // login with email password
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
     const form = event.target;
     const email = form.email.value;
     const password = form.password.value;
-    // console.log(email, password);
-    login(email, password)
-      .then((result) => {
-        // Signed in
-        const user = result.user;
-        console.log(user);
-        alert("Login successful!");
-        navigate(from, { replace: true });
-        // ...
-      })
-      .catch((error) => {
-        const errorMessage = error.message;
-        setErrorMessage("Please provide valid email & password!");
-      });
+    
+    setErrorMessage(""); 
+    setSuccessMessage(""); 
+
+    try {
+      const result = await login(email, password); 
+
+      if (result.success) {
+        setSuccessMessage("Giriş başarılı! Yönlendiriliyorsunuz...");
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 1500);
+      } else {
+        setErrorMessage(result.message);
+      }
+    } catch (error) {
+      setErrorMessage("Beklenmedik bir hata oluştu: " + error.message);
+    }
   };
 
   return (
     <div>
-      <div className="login-section padding-tb section-bg">
+      {/* ❗️❗️ Gömülü Stil Bloğu: Arka plan resmini zorla kaldırır ❗️❗️ */}
+      <style>{`
+        .login-section {
+          background-image: none !important;
+          background-color: #f9f9f9 !important; /* Temiz bir arka plan rengi */
+        }
+      `}</style>
+
+      {/* section-bg class'ı kaldırılmıştı, o şekilde kalabilir */}
+      <div className="login-section padding-tb">
         <div className="container">
           <div className="account-wrapper">
             <h3 className="title">{title}</h3>
@@ -97,16 +69,23 @@ const Login = () => {
                   type="password"
                   name="password"
                   placeholder="Password *"
+                  required
                 />
               </div>
-              {/* showing error message */}
+              
               <div>
                 {errorMessage && (
-                  <div className="error-message text-danger">
+                  <div className="error-message text-danger mb-2">
                     {errorMessage}
                   </div>
                 )}
+                {successMessage && (
+                  <div className="success-message text-success mb-2">
+                    {successMessage}
+                  </div>
+                )}
               </div>
+
               <div className="form-group">
                 <div className="d-flex justify-content-between flex-wrap pt-sm-2">
                   <div className="checkgroup">
@@ -117,7 +96,7 @@ const Login = () => {
                 </div>
               </div>
               <div className="form-group text-center">
-                <button className="d-block lab-btn">
+                <button className="d-block lab-btn" type="submit">
                   <span>{btnText}</span>
                 </button>
               </div>
@@ -126,39 +105,6 @@ const Login = () => {
               <span className="d-block cate pt-10">
                 Don’t Have any Account? <Link to="/sign-up">Sign Up</Link>
               </span>
-              <span className="or">
-                <span>or</span>
-              </span>
-
-              {/* social icons */}
-              <h5 className="subtitle">{socialTitle}</h5>
-              <ul className="lab-ul social-icons justify-content-center">
-                <li>
-                  <button onClick={handleRegister} className="github">
-                    <i className="icofont-github"></i>
-                  </button>
-                </li>
-                <li>
-                  <a href="/" className="facebook">
-                    <i className="icofont-facebook"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="twitter">
-                    <i className="icofont-twitter"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="linkedin">
-                    <i className="icofont-linkedin"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="instagram">
-                    <i className="icofont-instagram"></i>
-                  </a>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
@@ -168,3 +114,4 @@ const Login = () => {
 };
 
 export default Login;
+
