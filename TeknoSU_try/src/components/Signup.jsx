@@ -2,163 +2,178 @@ import React, { useContext, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthProvider";
 
-const title = "Register Now";
-const socialTitle = "Register With Social Media";
-const btnText = "Get Started Now";
-
-let socialList = [
-  {
-    link: "#",
-    iconName: "icofont-facebook",
-    className: "facebook",
-  },
-  {
-    link: "#",
-    iconName: "icofont-twitter",
-    className: "twitter",
-  },
-  {
-    link: "#",
-    iconName: "icofont-linkedin",
-    className: "linkedin",
-  },
-  {
-    link: "#",
-    iconName: "icofont-instagram",
-    className: "instagram",
-  },
-  {
-    link: "#",
-    iconName: "icofont-pinterest",
-    className: "pinterest",
-  },
-];
-
 const Signup = () => {
   const [errorMessage, setErrorMessage] = useState("");
-
-  const { signUpWithGmail, createUser } = useContext(AuthContext);
-
+  const [successMessage, setSuccessMessage] = useState("");
+  const { registerUser } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
-
   const from = location.state?.from?.pathname || "/";
 
-  // login with google
-  const handleRegister = () => {
-    signUpWithGmail()
-      .then((result) => {
-        const user = result.user;
-        navigate(from, { replace: true });
-      })
-      .catch((error) => console.log(error));
-  };
-
-  // login with email password
-  const handleSignup = (event) => {
+  const handleSignup = async (event) => {
     event.preventDefault();
+
     const form = event.target;
-    const email = form.email.value;
+    const name = form.name.value.trim();
+    const email = form.email.value.trim();
     const password = form.password.value;
-    const confirmPassword = form.confirmPassword.value; // Get the confirm password field
+    const confirmPassword = form.confirmPassword.value;
+
+    setErrorMessage("");
+    setSuccessMessage("");
 
     if (password !== confirmPassword) {
-      // Passwords do not match, set an error message
-      setErrorMessage("Passwords doesn't match! Please provide correct password");
+      setErrorMessage("❌ Şifreler uyuşmuyor!");
+      return;
+    }
+
+    if (!name) {
+      setErrorMessage("⚠️ Kullanıcı adı gerekli!");
+      return;
+    }
+
+    const result = await registerUser(name, email, password);
+    console.log("Backend result:", result);
+
+    if (result.success || result.status === 201) {
+      setSuccessMessage(result.message || "✅ Hesap başarıyla oluşturuldu!");
+      setTimeout(() => navigate(from, { replace: true }), 2000);
     } else {
-      // Passwords match, proceed with signup logic
-      setErrorMessage(""); // Clear the error message
-      createUser(email, password)
-        .then((userCredential) => {
-          // Signed in successfully
-          const user = userCredential.user;
-          alert("Account Created Successfully!")
-          navigate(from, { replace: true });
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.log(errorMessage);
-          alert(`${errorMessage}`)
-        });
+      setErrorMessage(
+        result.message || "⚠️ Kayıt başarısız. Lütfen bilgileri kontrol edin."
+      );
     }
   };
-  return (
-    <div>
-      <div className="login-section padding-tb section-bg">
-        <div className="container">
-          <div className="account-wrapper">
-            <h3 className="title">{title}</h3>
-            <form className="account-form" onSubmit={handleSignup}>
-              <div className="form-group">
-                <input type="text" name="name" placeholder="User Name" />
-              </div>
-              <div className="form-group">
-                <input type="email" name="email" placeholder="Email" />
-              </div>
-              <div className="form-group">
-                <input type="password" name="password" placeholder="Password" />
-              </div>
-              <div className="form-group">
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                />
-              </div>
-              {/* showing error message */}
-              <div>
-                {errorMessage && (
-                  <div className="error-message text-danger">
-                    {errorMessage}
-                  </div>
-                )}
-              </div>
-              <div className="form-group">
-                <button className="lab-btn">
-                  <span>{btnText}</span>
-                </button>
-              </div>
-            </form>
-            <div className="account-bottom">
-              <span className="d-block cate pt-10">
-                Are you a member? <Link to="/login">Login</Link>
-              </span>
-              <span className="or">
-                <span>or</span>
-              </span>
 
-              <h5 className="subtitle">{socialTitle}</h5>
-              <ul className="lab-ul social-icons justify-content-center">
-                <li>
-                  <button onClick={handleRegister} className="github">
-                    <i className="icofont-github"></i>
-                  </button>
-                </li>
-                <li>
-                  <a href="/" className="facebook">
-                    <i className="icofont-facebook"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="twitter">
-                    <i className="icofont-twitter"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="linkedin">
-                    <i className="icofont-linkedin"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="instagram">
-                    <i className="icofont-instagram"></i>
-                  </a>
-                </li>
-              </ul>
-            </div>
+  return (
+    <div
+      style={{
+        backgroundColor: "#f9f9f9",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: "12px",
+          padding: "40px",
+          width: "400px",
+          boxShadow: "0 0 15px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
+          Register Now
+        </h2>
+
+        {/* 🔥 MESAJLAR */}
+        {errorMessage && (
+          <div
+            style={{
+              backgroundColor: "#ffe5e5",
+              color: "#a70000",
+              border: "1px solid #a70000",
+              borderRadius: "8px",
+              padding: "10px 15px",
+              marginBottom: "15px",
+              textAlign: "center",
+              fontWeight: "600",
+            }}
+          >
+            {errorMessage}
           </div>
-        </div>
+        )}
+
+        {successMessage && (
+          <div
+            style={{
+              backgroundColor: "#ddffdd",
+              color: "#006600",
+              border: "1px solid #006600",
+              borderRadius: "8px",
+              padding: "10px 15px",
+              marginBottom: "15px",
+              textAlign: "center",
+              fontWeight: "600",
+            }}
+          >
+            {successMessage}
+          </div>
+        )}
+
+        <form onSubmit={handleSignup}>
+          <input
+            type="text"
+            name="name"
+            placeholder="User Name *"
+            required
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+            }}
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email *"
+            required
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+            }}
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password *"
+            required
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+            }}
+          />
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password *"
+            required
+            style={{
+              width: "100%",
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+            }}
+          />
+
+          {/* 🔹 Eski temadaki buton stiline geri döndü */}
+          <button className="lab-btn" type="submit" style={{ width: "100%" }}>
+            <span>Get Started Now</span>
+          </button>
+        </form>
+
+        <p
+          style={{
+            textAlign: "center",
+            marginTop: "15px",
+          }}
+        >
+          Already a member?{" "}
+          <Link to="/login" style={{ color: "#007bff", fontWeight: "600" }}>
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );
