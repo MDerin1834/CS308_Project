@@ -33,3 +33,15 @@
     background: #0F9D58;
     color: #fff;
 }
+
+/* 🔧 TeknoSU Logo Position Fix */
+header .logo img {
+  max-width: 150px !important;
+  height: auto !important;
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  z-index: 1 !important;
+  display: inline-block !important;
+}

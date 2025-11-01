@@ -1,70 +1,110 @@
-
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
-import AuthProvider from './contexts/AuthProvider.jsx'
-import 'swiper/css';
 
-// bootstrap css
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.min.js';
+// ❗️ HATA DÜZELTMESİ: Bu iki satır, aşağıdaki './assets/css/' içindeki
+// dosyalarla çakışıyordu ve temanın stillerini bozuyordu.
+// O yüzden kaldırıldılar.
+// import 'swiper/css';
+// import 'bootstrap/dist/css/bootstrap.min.css';
+
+// ❗️ 'beyaz ekran' hatasına neden olan .js dosyası kaldırıldı (bu doğruydu)
+// import 'bootstrap/dist/js/bootstrap.min.js'; 
 
 
-// fonts and icons
-import '././assets/css/icofont.min.css';
-import '././assets/css/animate.css';
-import '././assets/css/style.min.css';
+// fonts and icons (Temanın kendi stil dosyaları)
+import './assets/css/animate.css';
+import './assets/css/bootstrap.min.css'; 
+import './assets/css/icofont.min.css';
+import './assets/css/swiper.min.css';
+import './assets/css/style.min.css';
+import './assets/css/magnific-popup.css';
+
+// Orijinal App.css dosyanızın import'u
+import './App.css'; 
+
+
 import {
-createBrowserRouter,
-RouterProvider,
+  createBrowserRouter,
+  RouterProvider,
 } from "react-router-dom";
 import Home from './home/Home.jsx';
 import Blog from './blog/Blog.jsx';
 import Shop from './shop/Shop.jsx';
 import SingleProduct from './shop/SingleProduct.jsx';
 import CartPage from './shop/CartPage.jsx';
+// ❗️ HATA DÜZELTMESİ: Bu dosya bulunamadığı için yorum satırı yapıldı
+// import SingleBlog from './blog/SingleBlog.jsx';
+// ❗️ HATA DÜZELTMESİ: Bu dosya da bulunamadığı için yorum satırı yapıldı
+// import About from './about/About.jsx';
+// ❗️ HATA DÜZELTMESİ: Bu dosya da bulunamadığı için yorum satırı yapıldı
+// import Contact from './contactPage/Contact.jsx';
+import AuthProvider from './contexts/AuthProvider.jsx';
+import PrivateRoute from './PrivateRoute.jsx/PrivateRoute.jsx';
 import Login from './components/Login.jsx';
-import PrivateRoute from './PrivateRoute.jsx/PrivateRoute.jsx'
-import Signup from './components/Signup.jsx'
+import Signup from './components/Signup.jsx';
+import CheckoutPage from './shop/CheckoutPage.jsx';
 
 const router = createBrowserRouter([
-{
-path: "/",
-element: <App/>,
-children: [
-  {path: "/",
-    element: <Home/>
-  },
-  {path: "/blog",
-    elemnt: <Blog/>
+  {
+    path: "/",
+    element: <App />,
+    children: [
+      {
+        path: "/",
+        element: <Home />
+      },
+      {
+        path: "/blog",
+        element: <Blog />
+      },
+      // ❗️ HATA DÜZELTMESİ: Bu rota, yukarıdaki import'a bağlı olduğu için yorum satırı yapıldı
+      // {
+      //   path: "/blog/:id",
+      //   element: <SingleBlog />
+      // },
+      {
+        path: "/shop",
+        element: <Shop />
+      },
+      {
+        path: "/shop/:id",
+        element: <SingleProduct />
+      },
+      {
+        path: "/cart-page",
+        element: <PrivateRoute><CartPage /></PrivateRoute>
+      },
+      {
+        path: "/check-out",
+        element: <PrivateRoute><CheckoutPage/></PrivateRoute>
+      },
+      // ❗️ HATA DÜZELTMESİ: Bu rota da, yukarıdaki import'a bağlı olduğu için yorum satırı yapıldı
+      // {
+      //   path: "/about",
+      //   element: <About />
+      // },
+      // ❗️ HATA DÜZELTMESİ: Bu rota da, yukarıdaki import'a bağlı olduğu için yorum satırı yapıldı
+      // {
+      //   path: "/contact",
+      //   element: <Contact />
+      // }
+    ]
   },
   {
-    path: "/shop",
-    element: <Shop/>
-  },
-   {
-    path: "/shop/:id",
-    element: <SingleProduct/>
-   },
-   {
-    path: "/cart-page",
-    element: <PrivateRoute><CartPage/></PrivateRoute>
-   },
-   {
     path: "/login",
-    element: <Login/>
-   },
-   {
-    path: "/sign-up",
-    element: <Signup/>
-   }
-]
-}
+    element: <Login />
+  },
+  {
+    path: "sign-up",
+    element: <Signup />
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <AuthProvider>
-    <RouterProvider router= {router}/>
-  </AuthProvider>)
+    <RouterProvider router= {router} />
+  </AuthProvider>,
+)
 
