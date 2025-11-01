@@ -5,23 +5,26 @@ const connectDB = require("./config/db");
 const setupSecurity = require("./middleware/security");
 const productRoutes = require("./routes/productRoutes");
 const userRoutes = require("./routes/userRoutes");
-const cors = require("cors"); // 🔹 Required for frontend-backend connection
+const cors = require("cors"); // ❗️ CORS'u buraya import et
 
 const app = express();
+
+// ❗️ GÜVENLİK SIRALAMASI ÇOK ÖNEMLİ
+// CORS (İzinler) en başa gelmeli.
+const corsOptions = {
+  origin: 'http://localhost:5173', // Vite'in çalıştığı adres
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // İzin verilen metodlar
+  allowedHeaders: ['Content-Type', 'Authorization'], // İzin verilen başlıklar
+  credentials: true, // Token/Cookie gibi bilgilerin gönderilmesine izin ver
+  optionsSuccessStatus: 200, // Preflight isteği için
+};
+app.use(cors(corsOptions)); // ❗️ CORS'u HER ŞEYDEN ÖNCE çalıştır
 
 // ✅ Parse JSON request bodies
 app.use(express.json());
 
-// ✅ Apply security middlewares (Helmet, Rate-limit, etc.)
+// ✅ Apply other security middlewares (Helmet, Rate-limit, etc.)
 setupSecurity(app);
-
-// ✅ Enable CORS for frontend-backend communication
-app.use(
-  cors({
-    origin: "http://localhost:3000", // React frontend address
-    credentials: true, // Allow cookies or authorization headers if needed
-  })
-);
 
 // ✅ Serve static image files
 app.use("/images", express.static(path.join(__dirname, "../public/images")));
@@ -47,3 +50,4 @@ const PORT = process.env.PORT || 5050;
     process.exit(1);
   }
 })();
+
