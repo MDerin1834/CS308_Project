@@ -47,7 +47,6 @@ router.get("/", async (req, res) => {
         sortObj = { price: -1, createdAt: -1 };
         break;
       case "popularity":
-        // assumes model has ratingsCount and ratings
         sortObj = { ratingsCount: -1, ratings: -1, createdAt: -1 };
         break;
       case "newest":
@@ -92,13 +91,16 @@ router.get("/", async (req, res) => {
 
 /**
  * GET /api/products/:id
- * Adds derived field: stockStatus
+ * Returns **all attributes** of a product (+ derived stockStatus)
  */
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findOne({ id: req.params.id }).lean();
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
 
+    // Add derived stockStatus for UI convenience
     const data = {
       ...product,
       stockStatus:
