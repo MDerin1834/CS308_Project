@@ -5,7 +5,7 @@ const Product = require("../models/Product");
 /**
  * GET /api/products
  * Query params:
- *  - search: string (name | seller içinde arar)
+ *  - search: string (name | seller içinde arar)s
  *  - category: string (kategori adı, case-insensitive)
  *  - sort: "price_asc" | "price_desc" | "popularity" | "newest"(default)
  *  - page: number (opsiyonel; default 1)
