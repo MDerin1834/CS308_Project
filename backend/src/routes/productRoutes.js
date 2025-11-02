@@ -4,12 +4,18 @@ const Product = require("../models/Product");
 
 /**
  * GET /api/products
- * Query params:
- *  - search: string (name | seller içinde arar)
- *  - category: string (kategori adı, case-insensitive)
+ * Query:
+ *  - search: string (name | seller)
+ *  - category: string
  *  - sort: "price_asc" | "price_desc" | "popularity" | "newest"(default)
- *  - page: number (opsiyonel; default 1)
- *  - limit: number (opsiyonel; default 24)
+ *  - page: number (default 1)
+ *  - limit: number (default 24)
+ *
+ * Response:
+ *  {
+ *    items: [{ ...product, stockStatus: "in_stock"|"out_of_stock" }, ...],
+ *    meta: { total, page, limit, pages, sort }
+ *  }
  */
 router.get("/", async (req, res) => {
   try {
@@ -21,24 +27,17 @@ router.get("/", async (req, res) => {
       limit = 24,
     } = req.query;
 
-    // --------- Filtre ----------
+    // ---------- Filter ----------
     const filter = {};
-
-    if (category) {
-      // ör: category=telefon -> /telefon/i
-      filter.category = { $regex: category, $options: "i" };
-    }
-
+    if (category) filter.category = { $regex: category, $options: "i" };
     if (search) {
-      // isim veya satıcı alanında arama
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
         { seller: { $regex: search, $options: "i" } },
       ];
     }
 
-    // --------- Sıralama ----------
-    // price_asc | price_desc | popularity | newest
+    // ---------- Sort ----------
     let sortObj = {};
     switch (sort) {
       case "price_asc":
@@ -48,8 +47,7 @@ router.get("/", async (req, res) => {
         sortObj = { price: -1, createdAt: -1 };
         break;
       case "popularity":
-        // En çok oy + yüksek puan önce
-        // (Modelde ratingsCount ve ratings alanları olduğu varsayımıyla)
+        // assumes model has ratingsCount and ratings
         sortObj = { ratingsCount: -1, ratings: -1, createdAt: -1 };
         break;
       case "newest":
@@ -58,15 +56,23 @@ router.get("/", async (req, res) => {
         break;
     }
 
-    // --------- Sayfalama ----------
+    // ---------- Paging ----------
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 24));
     const skip = (pageNum - 1) * limitNum;
 
-    const [items, total] = await Promise.all([
-      Product.find(filter).sort(sortObj).skip(skip).limit(limitNum),
+    // lean() => plain objects; we can add derived fields easily
+    const [itemsRaw, total] = await Promise.all([
+      Product.find(filter).sort(sortObj).skip(skip).limit(limitNum).lean(),
       Product.countDocuments(filter),
     ]);
+
+    // ---------- Enrich with stockStatus ----------
+    const items = itemsRaw.map((p) => ({
+      ...p,
+      stockStatus:
+        typeof p.stock === "number" && p.stock > 0 ? "in_stock" : "out_of_stock",
+    }));
 
     return res.status(200).json({
       items,
@@ -86,13 +92,22 @@ router.get("/", async (req, res) => {
 
 /**
  * GET /api/products/:id
- * Tek ürün detayı (mevcutta varsa korunur; örnek tamlık için bırakıldı)
+ * Adds derived field: stockStatus
  */
 router.get("/:id", async (req, res) => {
   try {
-    const product = await Product.findOne({ id: req.params.id });
+    const product = await Product.findOne({ id: req.params.id }).lean();
     if (!product) return res.status(404).json({ message: "Product not found" });
-    return res.status(200).json(product);
+
+    const data = {
+      ...product,
+      stockStatus:
+        typeof product.stock === "number" && product.stock > 0
+          ? "in_stock"
+          : "out_of_stock",
+    };
+
+    return res.status(200).json(data);
   } catch (err) {
     console.error("Error fetching product:", err);
     return res.status(500).json({ message: "Server error" });
