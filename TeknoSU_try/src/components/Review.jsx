@@ -9,30 +9,31 @@ let ReviewList = [
     imgAlt: "Client thumb",
     name: "Ganelon Boileau",
     date: "Posted on Jun 10, 2022 at 6:57 am",
-    desc: "Enthusiast build innovativ initiatives before lonterm high-impact awesome theme seo psd porta monetize covalent leadership after without resource.",
+    desc: "The platform has exceeded my expectations. Everything is intuitive, well-organized, and surprisingly fast. I managed to finish my first project in no time!",
   },
   {
     imgUrl: "/src/assets/images/instructor/02.jpg",
     imgAlt: "Client thumb",
     name: "Morgana Cailot",
     date: "Posted on Jun 10, 2022 at 6:57 am",
-    desc: "Enthusiast build innovativ initiatives before lonterm high-impact awesome theme seo psd porta monetize covalent leadership after without resource.",
+    desc: "I really appreciate the attention to detail here. The lessons are clear, the instructors are engaging, and the design makes learning genuinely fun.",
   },
   {
     imgUrl: "/src/assets/images/instructor/03.jpg",
     imgAlt: "Client thumb",
     name: "Telford Bois",
     date: "Posted on Jun 10, 2022 at 6:57 am",
-    desc: "Enthusiast build innovativ initiatives before lonterm high-impact awesome theme seo psd porta monetize covalent leadership after without resource.",
+    desc: "This has been one of the most helpful learning experiences I’ve had online. The support team responds quickly, and the community is super friendly.",
   },
   {
     imgUrl: "/src/assets/images/instructor/04.jpg",
     imgAlt: "Client thumb",
     name: "Cher Daviau",
     date: "Posted on Jun 10, 2022 at 6:57 am",
-    desc: "Enthusiast build innovativ initiatives before lonterm high-impact awesome theme seo psd porta monetize covalent leadership after without resource.",
+    desc: "I was a bit skeptical at first, but the quality of the courses and the consistent updates won me over. Definitely worth recommending to anyone serious about improving their skills.",
   },
 ];
+
 
 const Review = () => {
   const [reviewShow, setReviewShow] = useState(true);
@@ -116,13 +117,7 @@ const Review = () => {
         </div>
         <div className="description">
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
+            Insert item description here and bellow
           </p>
           <div className="post-item">
             <div className="post-thumb">

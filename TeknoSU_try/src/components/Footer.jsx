@@ -1,9 +1,9 @@
 /* eslint-disable react/jsx-no-target-blank */
 
 import { Link } from "react-router-dom";
-
-const title = "About ShopCart";
-const desc = "Eduaid theme number one world class university in the world There are student are studing always in this university for all time.";
+// fixed footer 
+const title = "About TeknoSu";
+const desc = "";
 const ItemTitle = "Categories";
 const quickTitle = "Quick Links";
 const tweetTitle = "Recent Tweets";
@@ -11,15 +11,15 @@ const tweetTitle = "Recent Tweets";
 const addressList = [
     {
         iconName: 'icofont-google-map',
-        text: 'New York, USA.',
+        text: 'Istanbul, Turkey',
     },
     {
         iconName: 'icofont-phone',
-        text: '+880 123 456 789',
+        text: '+90 123 123 45 67',
     },
     {
         iconName: 'icofont-envelope',
-        text: 'info@shopcart.com',
+        text: 'info@TeknoSu.com',
     },
 ]
 
@@ -77,24 +77,8 @@ const ItemList = [
         link: '/about',
     }
 ]
-
+    //removed some empty quick links 
 const quickList = [
-    {
-        text: 'Summer Sessions',
-        link: '#',
-    },
-    {
-        text: 'Events',
-        link: '#',
-    },
-    {
-        text: 'Gallery',
-        link: '#',
-    },
-    {
-        text: 'Forums',
-        link: '#',
-    },
     {
         text: 'Privacy Policy',
         link: '#',
@@ -108,31 +92,16 @@ const quickList = [
 const tweetList = [
     {
         iconName: 'icofont-twitter',
-        desc: <p>Aminur islam <a href="#">@ShopCart Greetings!  #HTML_Template</a> Grab your item, 50% Big Sale Offer !!</p>,
+        desc: <p>Mehmet47 <a href="#">@Selamlar TeknoSu  #HTML_Template</a> siparisim cok erken geldi cok memnunum!</p>,
     },
     {
         iconName: 'icofont-twitter',
-        desc: <p>Somrat islam <a href="#">@ShopCart Hey! #HTML_Template</a> Grab your item, 50% Big Sale Offer !!</p>,
+        desc: <p>XxXahmetXxX <a href="#">@Selamlar Taknosu #HTML_Template</a> bu cok orijinal isme yakisir bir sistem!!</p>,
     },
 ]
 
 const footerbottomList = [
-    {
-        text: 'Faculty',
-        link: '#',
-    },
-    {
-        text: 'Staff',
-        link: '#',
-    },
-    {
-        text: 'Students',
-        link: '#',
-    },
-    {
-        text: 'Alumni',
-        link: '#',
-    },
+
 ]
 
 const Footer = () => {
@@ -229,8 +198,8 @@ const Footer = () => {
     </div>
     <div className="footer-bottom">
         <div className="container">
-            <div className="section-wrapper">
-                <p>&copy; 2023 <Link to="/">Shop Cart</Link> Designed by <a href="https://themeforest.net/user/CodexCoder" target="_blank">XYZ</a> </p>
+            <div className="section-wrapper">  
+                <p>&copy; 2025 <Link to="/">TeknoSu</Link> Designed by <a href="https://github.com/MDerin1834/CS308_Projec" target="_blank">sabanci university students</a> </p>
                 <div className="footer-bottom-list">
                     {footerbottomList.map((val, i) => (
                         <a href={val.link} key={i}>{val.text}</a>
