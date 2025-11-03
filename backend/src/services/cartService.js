@@ -2,29 +2,30 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
 /**
- * guestCart: [{ product: "<productId>", quantity: number }, ...]
- * Mantık:
- * - Aynı üründe miktarı topla.
- * - Toplam miktarı stokla sınırla (Product.quantity).
- * - Stok dışı/0 olanları ele.
+ * Backlog 22:
+ * guestCart: [{ product:"<productId>", quantity:Number }, ...]
+ * - Aynı ürünler toplanır.
+ * - Stok (Product.quantity) üstü kırpılır.
+ * - 0 veya bulunmayan ürünler elenir.
  */
 async function mergeGuestCartToUser(userId, guestCart = []) {
-  // Kullanıcı sepetini getir/oluştur
   let userCart = await Cart.findOne({ user: userId });
   if (!userCart) userCart = await Cart.create({ user: userId, items: [] });
 
   if (!Array.isArray(guestCart) || guestCart.length === 0) {
-    // Boşsa hiçbir şey yapma; mevcut sepeti döndür
     return await userCart.populate("items.product");
   }
 
-  // Mevcut sepeti map’e çek
+  // Mevcut sepet -> Map
   const currentMap = new Map();
   for (const it of userCart.items) {
-    currentMap.set(String(it.product), { product: String(it.product), quantity: it.quantity });
+    currentMap.set(String(it.product), {
+      product: String(it.product),
+      quantity: Number(it.quantity) || 0,
+    });
   }
 
-  // Guest sepeti ekle
+  // Guest sepet ekle
   for (const g of guestCart) {
     if (!g || !g.product) continue;
     const pid = String(g.product);
@@ -37,14 +38,17 @@ async function mergeGuestCartToUser(userId, guestCart = []) {
 
   // Stok kontrolü
   const productIds = Array.from(currentMap.keys());
-  const products = await Product.find({ _id: { $in: productIds } }, { quantity: 1 });
-  const stockMap = new Map(products.map(p => [String(p._id), p.quantity]));
+  const products = await Product.find(
+    { _id: { $in: productIds } },
+    { quantity: 1 }
+  ).lean();
+  const stockMap = new Map(products.map(p => [String(p._id), Number(p.quantity) || 0]));
 
   const mergedItems = [];
   for (const [pid, entry] of currentMap) {
     const stock = stockMap.get(pid);
-    if (typeof stock !== "number") continue; // ürün yoksa
-    const finalQty = Math.min(Math.max(entry.quantity, 0), stock);
+    if (typeof stock !== "number") continue; // ürün bulunamadıysa
+    const finalQty = Math.min(Math.max(Number(entry.quantity) || 0, 0), stock);
     if (finalQty > 0) mergedItems.push({ product: pid, quantity: finalQty });
   }
 
@@ -53,4 +57,57 @@ async function mergeGuestCartToUser(userId, guestCart = []) {
   return await userCart.populate("items.product");
 }
 
-module.exports = { mergeGuestCartToUser };
+/**
+ * Backlog 23: Checkout öncesi sepet özeti
+ * - Ürün adı/fiyatı Product'tan çekilir (Product.price varsayılır).
+ * - Satır toplamı ve genel toplam hesaplanır.
+ * - Silinmiş/eksik ürünler atlanır.
+ */
+async function getCartSummary(userId) {
+  const cart = await Cart.findOne({ user: userId }).lean();
+  if (!cart || !Array.isArray(cart.items) || cart.items.length === 0) {
+    return { items: [], itemCount: 0, subtotal: 0, currency: "TRY" };
+  }
+
+  const productIds = cart.items.map(i => String(i.product));
+  const products = await Product.find(
+    { _id: { $in: productIds } },
+    { name: 1, price: 1 }
+  ).lean();
+
+  const pmap = new Map(products.map(p => [String(p._id), p]));
+
+  const summaryItems = [];
+  let subtotal = 0;
+
+  for (const it of cart.items) {
+    const p = pmap.get(String(it.product));
+    if (!p) continue;
+    const quantity = Math.max(Number(it.quantity) || 0, 0);
+    if (quantity <= 0) continue;
+
+    const price = Number(p.price) || 0;
+    const lineTotal = price * quantity;
+    subtotal += lineTotal;
+
+    summaryItems.push({
+      productId: String(it.product),
+      name: p.name,
+      price,
+      quantity,
+      lineTotal,
+    });
+  }
+
+  return {
+    items: summaryItems,
+    itemCount: summaryItems.reduce((acc, x) => acc + x.quantity, 0),
+    subtotal,
+    currency: "TRY",
+  };
+}
+
+module.exports = {
+  mergeGuestCartToUser,
+  getCartSummary,
+};
