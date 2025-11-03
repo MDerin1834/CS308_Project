@@ -12,6 +12,7 @@ const productSchema = new mongoose.Schema(
     name: { type: String, required: true },
     model: { type: String, default: "" },
     serialNumber: { type: String, default: "" },
+    tag: { type: String, default: "" },
 
     description: { type: String, default: "" },
 

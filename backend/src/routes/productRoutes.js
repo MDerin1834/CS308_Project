@@ -116,4 +116,59 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+router.post("/", async (req, res) => {
+  try {
+    const {
+      id,
+      name,
+      price,
+      category,
+      seller,
+      stock = 0,
+      description = "",
+      imageURL = "",
+      model = "",
+      serialNumber = "",
+      tag = "",
+      specs = {},
+      warranty = "",
+      distributor = "",
+      shipping = 0,
+    } = req.body;
+
+    if (!id || !name || !price || !category || !seller) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const existing = await Product.findOne({ id });
+    if (existing) {
+      return res.status(400).json({ message: "Product with this ID already exists" });
+    }
+
+    const product = new Product({
+      id,
+      name,
+      price,
+      category,
+      seller,
+      stock,
+      description,
+      imageURL,
+      model,
+      serialNumber,
+      tag,
+      specs,
+      warranty,
+      distributor,
+      shipping,
+    });
+
+    await product.save();
+    return res.status(201).json({ message: "Product created", product });
+  } catch (err) {
+    console.error("Error creating product:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
