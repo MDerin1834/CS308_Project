@@ -1,88 +1,114 @@
 const express = require("express");
 const request = require("supertest");
-const productRoutes = require("../src/routes/productRoutes");
-const Product = require("../src/models/Product");
 
-// ✅ Mock the Product model
-jest.mock("../src/models/Product");
+// 🔹 ÖNCE mock, SONRA require – çok önemli
+jest.mock("../src/models/Product", () => {
+  const m = {
+    find: jest.fn(),
+    countDocuments: jest.fn(),
+    findOne: jest.fn(),
+  };
+  return m;
+});
+
+const Product = require("../src/models/Product");
+const productRoutes = require("../src/routes/productRoutes");
 
 describe("Product Routes", () => {
   let app;
+  let query;
 
-  beforeAll(() => {
+  beforeEach(() => {
     app = express();
+    app.use(express.json());
     app.use("/api/products", productRoutes);
+
+    // find() için chainable query mock'u
+    query = {
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      lean: jest.fn(),
+    };
+
+    Product.find.mockReturnValue(query);
+    Product.find.mockClear();
+    Product.countDocuments.mockClear();
+    Product.findOne.mockClear();
   });
 
-  // ✅ Test: Get all products
-  it("GET /api/products should return all products", async () => {
-    Product.find.mockResolvedValue([{ name: "Mouse" }, { name: "Keyboard" }]);
-    const res = await request(app).get("/api/products");
-    expect(res.statusCode).toBe(200);
-    expect(res.body.length).toBe(2);
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  // ✅ Test: Filter by category
-  it("GET /api/products?category=electronics should filter by category", async () => {
-    Product.find.mockResolvedValue([{ name: "Monitor", category: "electronics" }]);
-    const res = await request(app).get("/api/products?category=electronics");
-
-    expect(Product.find).toHaveBeenCalledWith({
-      category: { $regex: "electronics", $options: "i" },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.body[0].category).toBe("electronics");
-  });
-
-  // ✅ Test: Search by name or description
-  it("GET /api/products?search=keyboard should search by name or description", async () => {
-    Product.find.mockResolvedValue([{ name: "Keyboard", description: "Mechanical keyboard" }]);
-    const res = await request(app).get("/api/products?search=keyboard");
-
-    expect(Product.find).toHaveBeenCalledWith({
-      $or: [
-        { name: { $regex: "keyboard", $options: "i" } },
-        { description: { $regex: "keyboard", $options: "i" } },
-      ],
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.body[0].name).toBe("Keyboard");
-  });
-
-  // ✅ Test: Combined search and category filter
-  it("GET /api/products?category=electronics&search=laptop should apply both filters", async () => {
-    Product.find.mockResolvedValue([
-      { name: "Gaming Laptop", category: "electronics" },
+  // ✅ GET /api/products — basic list + meta
+  it("GET /api/products should return items and meta", async () => {
+    query.lean.mockResolvedValue([
+      { id: "p1", name: "Mouse", stock: 5 },
+      { id: "p2", name: "Keyboard", stock: 0 },
     ]);
+    Product.countDocuments.mockResolvedValue(2);
+
+    const res = await request(app).get("/api/products");
+
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body.items)).toBe(true);
+    expect(res.body.items).toHaveLength(2);
+    expect(res.body.items[0].name).toBe("Mouse");
+    expect(res.body.items[0].stockStatus).toBe("in_stock");
+    expect(res.body.items[1].stockStatus).toBe("out_of_stock");
+    expect(res.body.meta.total).toBe(2);
+    expect(res.body.meta.page).toBe(1);
+  });
+
+  // ✅ GET /api/products?category=&search= → filter check
+  it("GET /api/products should apply category and search filter", async () => {
+    query.lean.mockResolvedValue([
+      { id: "p1", name: "Gaming Laptop", category: "electronics", stock: 3 },
+    ]);
+    Product.countDocuments.mockResolvedValue(1);
 
     const res = await request(app).get(
       "/api/products?category=electronics&search=laptop"
     );
 
+    // filter nesnesi productRoutes'taki mantığa göre
     expect(Product.find).toHaveBeenCalledWith({
       category: { $regex: "electronics", $options: "i" },
       $or: [
         { name: { $regex: "laptop", $options: "i" } },
-        { description: { $regex: "laptop", $options: "i" } },
+        { seller: { $regex: "laptop", $options: "i" } },
       ],
     });
+
     expect(res.statusCode).toBe(200);
-    expect(res.body[0].name).toBe("Gaming Laptop");
+    expect(res.body.items[0].name).toBe("Gaming Laptop");
   });
 
-  // ✅ Test: Get product by ID
-  it("GET /api/products/:id should return product if exists", async () => {
-    Product.findOne.mockResolvedValue({ id: "p1", name: "Monitor" });
+  // ✅ GET /api/products/:id → product exists
+it("GET /api/products/:id should return product if exists", async () => {
+  Product.findOne.mockReturnValue({
+    lean: jest.fn().mockResolvedValue({
+      id: "p1",
+      name: "Monitor",
+      stock: 10,
+    }),
+  });
+
     const res = await request(app).get("/api/products/p1");
 
     expect(Product.findOne).toHaveBeenCalledWith({ id: "p1" });
     expect(res.statusCode).toBe(200);
     expect(res.body.name).toBe("Monitor");
+    expect(res.body.stockStatus).toBe("in_stock");
   });
 
-  // ✅ Test: Return 404 if product not found
+  // ✅ GET /api/products/:id → 404 if not found
   it("GET /api/products/:id should return 404 if not found", async () => {
-    Product.findOne.mockResolvedValue(null);
+    Product.findOne.mockReturnValue({
+      lean: jest.fn().mockResolvedValue(null),
+    });
+
     const res = await request(app).get("/api/products/unknown");
 
     expect(res.statusCode).toBe(404);

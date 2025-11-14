@@ -9,7 +9,8 @@ const setupSecurity = require("./middleware/security");
 // Routes
 const productRoutes = require("./routes/productRoutes");
 const userRoutes = require("./routes/userRoutes");
-const cartRoutes = require("./routes/cartRoutes"); // ✅ Cart API eklendi
+const cartRoutes = require("./routes/cartRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 const app = express();
 
@@ -38,7 +39,8 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 /* ---------- API Rotaları ---------- */
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/cart", cartRoutes); // ✅ eklendi
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
 
 /* ---------- Sunucu ---------- */
 const PORT = process.env.PORT || 5050;
