@@ -45,6 +45,8 @@ import PrivateRoute from './PrivateRoute.jsx/PrivateRoute.jsx';
 import Login from './components/Login.jsx';
 import Signup from './components/Signup.jsx';
 import CheckoutPage from './shop/CheckoutPage.jsx';
+import ReviewOrderPage from './shop/PeviewOrderPage.jsx';
+
 
 const router = createBrowserRouter([
   {
@@ -99,7 +101,11 @@ const router = createBrowserRouter([
   {
     path: "sign-up",
     element: <Signup />
-  }
+  },
+  {
+        path: "/review-order",
+        element: <ReviewOrderPage />
+      }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
