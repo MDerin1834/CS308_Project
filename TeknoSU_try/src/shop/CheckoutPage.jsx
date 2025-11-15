@@ -2,30 +2,26 @@ import React, { useState } from "react";
 import "../components/modal.css";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const CheckoutPage = () => {
+const CheckoutPage = ({ cartItems = [], orderTotal = 0 }) => {
   const [show, setShow] = useState(false);
-  const [activeTab, setActiveTab] = useState("visa"); // Initial active tab
+  const [activeTab, setActiveTab] = useState("visa");
+  const navigate = useNavigate();
 
-  const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-  };
-
+  const handleTabChange = (tabId) => setActiveTab(tabId);
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
-  // order confirmation and redirect to home page
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const from = location.state?.from?.pathname || "/";
-
   const handleOrderConfirm = () => {
-      alert("Your order placed successfully!")
-      localStorage.removeItem("cart");
-      navigate(from, { replace: true });
-  }
+    alert("Your order placed successfully!");
+    localStorage.removeItem("cart");
+
+    // ✅ Navigate to ReviewOrderPage with cart info
+    navigate("/review-order", {
+      state: { items: cartItems, total: orderTotal },
+    });
+  };
 
   return (
     <div className="modalCard">
@@ -33,13 +29,7 @@ const CheckoutPage = () => {
         Proceed to Checkout
       </Button>
 
-      <Modal
-        show={show}
-        onHide={handleClose}
-        animation={false}
-        className="modal fade"
-        centered
-      >
+      <Modal show={show} onHide={handleClose} animation={false} className="modal fade" centered>
         <div className="modal-dialog">
           <h5 className="px-3 mb-3">Select Your Payment Method</h5>
           <div className="modal-content">
@@ -48,9 +38,7 @@ const CheckoutPage = () => {
                 <ul className="nav nav-tabs" id="myTab" role="tablist">
                   <li className="nav-item" role="presentation">
                     <a
-                      className={`nav-link ${
-                        activeTab === "visa" ? "active" : ""
-                      }`}
+                      className={`nav-link ${activeTab === "visa" ? "active" : ""}`}
                       id="visa-tab"
                       data-toggle="tab"
                       href="#visa"
@@ -64,9 +52,7 @@ const CheckoutPage = () => {
                   </li>
                   <li className="nav-item" role="presentation">
                     <a
-                      className={`nav-link ${
-                        activeTab === "paypal" ? "active" : ""
-                      }`}
+                      className={`nav-link ${activeTab === "paypal" ? "active" : ""}`}
                       id="paypal-tab"
                       data-toggle="tab"
                       href="#paypal"
@@ -80,62 +66,26 @@ const CheckoutPage = () => {
                   </li>
                 </ul>
                 <div className="tab-content" id="myTabContent">
-                  {/* visa content */}
-                  <div
-                    className={`tab-pane fade ${
-                      activeTab === "visa" ? "show active" : ""
-                    }`}
-                    id="visa"
-                    role="tabpanel"
-                    aria-labelledby="visa-tab"
-                  >
-                    {/* Visa tab content */}
+                  {/* Visa Tab */}
+                  <div className={`tab-pane fade ${activeTab === "visa" ? "show active" : ""}`} id="visa" role="tabpanel" aria-labelledby="visa-tab">
                     <div className="mt-4 mx-4">
-                      <div className="text-center">
-                        <h5>Credit card</h5>
-                      </div>
+                      <div className="text-center"><h5>Credit card</h5></div>
                       <div className="form mt-3">
                         <div className="inputbox">
-                          <input
-                            type="text"
-                            name="name"
-                            className="form-control"
-                            required="required"
-                          />
+                          <input type="text" name="name" className="form-control" required="required" />
                           <span>Cardholder Name</span>
                         </div>
                         <div className="inputbox">
-                          <input
-                            type="text"
-                            name="name"
-                            min="1"
-                            max="999"
-                            className="form-control"
-                            required="required"
-                          />
+                          <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
                           <span>Card Number</span> <i className="fa fa-eye"></i>
                         </div>
                         <div className="d-flex flex-row">
                           <div className="inputbox">
-                            <input
-                              type="text"
-                              name="name"
-                              min="1"
-                              max="999"
-                              className="form-control"
-                              required="required"
-                            />
+                            <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
                             <span>Expiration Date</span>
                           </div>
                           <div className="inputbox">
-                            <input
-                              type="text"
-                              name="name"
-                              min="1"
-                              max="999"
-                              className="form-control"
-                              required="required"
-                            />
+                            <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
                             <span>CVV</span>
                           </div>
                         </div>
@@ -147,62 +97,27 @@ const CheckoutPage = () => {
                       </div>
                     </div>
                   </div>
-                  {/* paypal content */}
-                  <div
-                    className={`tab-pane fade ${
-                      activeTab === "paypal" ? "show active" : ""
-                    }`}
-                    id="paypal"
-                    role="tabpanel"
-                    aria-labelledby="paypal-tab"
-                  >
-                    {/* Paypal tab content */}
+
+                  {/* Paypal Tab */}
+                  <div className={`tab-pane fade ${activeTab === "paypal" ? "show active" : ""}`} id="paypal" role="tabpanel" aria-labelledby="paypal-tab">
                     <div className="mx-4 mt-4">
-                      <div className="text-center">
-                        <h5>Paypal Account Info</h5>
-                      </div>
+                      <div className="text-center"><h5>Paypal Account Info</h5></div>
                       <div className="form mt-3">
                         <div className="inputbox">
-                          <input
-                            type="text"
-                            name="name"
-                            className="form-control"
-                            required="required"
-                          />
+                          <input type="text" name="name" className="form-control" required="required" />
                           <span>Enter your email</span>
                         </div>
                         <div className="inputbox">
-                          <input
-                            type="text"
-                            name="name"
-                            min="1"
-                            max="999"
-                            className="form-control"
-                            required="required"
-                          />
+                          <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
                           <span>Your Name</span>
                         </div>
                         <div className="d-flex flex-row">
                           <div className="inputbox">
-                            <input
-                              type="text"
-                              name="name"
-                              min="1"
-                              max="999"
-                              className="form-control"
-                              required="required"
-                            />
+                            <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
                             <span>Extra Info</span>
                           </div>
                           <div className="inputbox">
-                            <input
-                              type="text"
-                              name="name"
-                              min="1"
-                              max="999"
-                              className="form-control"
-                              required="required"
-                            />
+                            <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
                             <span></span>
                           </div>
                         </div>
@@ -216,9 +131,8 @@ const CheckoutPage = () => {
                   </div>
                 </div>
               </div>
-              {/* payment desclaimer */}
               <p className="mt-3 px-4 p-Disclaimer">
-              <em>Payment Disclaimer:</em> In no event shall payment or partial payment by Owner for any material or service
+                <em>Payment Disclaimer:</em> In no event shall payment or partial payment by Owner for any material or service
               </p>
             </div>
           </div>
