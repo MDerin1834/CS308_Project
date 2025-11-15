@@ -1,73 +1,81 @@
 /* eslint-disable react/prop-types */
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 const desc =
-  "Energistia an deliver atactica metrcs after avsionary Apropria trnsition enterpris an sources applications emerging 	psd template.";
+  "Energistia an deliver atactica metrcs after avsionary Apropria trnsition enterpris an sources applications emerging psd template.";
 
 const ProductDisplay = ({ item }) => {
-  const { id, img, price, name, quantity, seller } = item;
+  const navigate = useNavigate(); // ✅ Added for checkout redirect
+  const { id, img, price, name, quantity, seller, stock } = item;
+
   const [prequantity, setQuantity] = useState(quantity);
   const [coupon, setCoupon] = useState("");
   const [size, setSize] = useState("Select Size");
   const [color, setColor] = useState("Select Color");
 
   const handleDecrease = () => {
-    if (prequantity > 1) {
-      setQuantity(prequantity - 1);
-    }
+    if (prequantity > 1) setQuantity(prequantity - 1);
   };
 
   const handleIncrease = () => {
-    setQuantity(prequantity + 1);
+    if (prequantity < stock) setQuantity(prequantity + 1);
+    else alert(`⚠️ Maximum stock limit reached (${stock} units).`);
   };
 
-  const handleSizeChange = (e) => {
-    setSize(e.target.value);
-  };
-
-  const handleColorChange = (e) => {
-    setColor(e.target.value);
-  };
+  const handleSizeChange = (e) => setSize(e.target.value);
+  const handleColorChange = (e) => setColor(e.target.value);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Create an object representing the product to be added to the cart
-    const product = {
-      id: id,
-      img: img,
-      name: name,
-      price: price, 
-      quantity: prequantity,
-      size: size,
-      color: color,
-      coupon: coupon,
-    };
+    if (stock <= 0) {
+      alert(`❌ Sorry, ${name} is currently out of stock.`);
+      return;
+    }
 
-    // Retrieve existing cart items from local storage or initialize an empty array
+    if (prequantity > stock) {
+      alert(`⚠️ Only ${stock} units available. Please reduce quantity.`);
+      return;
+    }
+
+    const product = { id, img, name, price, quantity: prequantity, size, color, coupon };
+
     const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
-
-    // Check if the product with the same ID is already in the cart
-    const existingProductIndex = existingCart.findIndex((item) => item.id === id);
+    const existingProductIndex = existingCart.findIndex((i) => i.id === id);
 
     if (existingProductIndex !== -1) {
-      // Product already in the cart; update quantity
-      existingCart[existingProductIndex].quantity += prequantity;
+      const newQuantity = existingCart[existingProductIndex].quantity + prequantity;
+      if (newQuantity > stock) {
+        alert(`⚠️ You can only have up to ${stock} units of ${name} in your cart.`);
+        return;
+      }
+      existingCart[existingProductIndex].quantity = newQuantity;
     } else {
-      // Product not in the cart; add it
       existingCart.push(product);
     }
 
-    // Update the local storage with the updated cart items
     localStorage.setItem("cart", JSON.stringify(existingCart));
 
-    // Reset form fields and quantity
     setQuantity(1);
     setSize("Select Size");
     setColor("Select Color");
     setCoupon("");
+  };
 
-    // You can add further logic, such as displaying a confirmation message.
+  // ✅ Quick checkout button logic
+  const handleCheckout = (e) => {
+    e.preventDefault();
+
+    handleSubmit(e);
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      localStorage.setItem("redirectAfterLogin", "/cart-page");
+      navigate("/login");
+    } else {
+      navigate("/cart-page");
+    }
   };
 
   return (
@@ -84,63 +92,69 @@ const ProductDisplay = ({ item }) => {
         </p>
         <h4>${price}</h4>
         <h6>{seller}</h6>
+
+        {stock > 0 ? (
+          <p style={{ color: "green", fontWeight: "500" }}>✅ In Stock: {stock} available</p>
+        ) : (
+          <p style={{ color: "red", fontWeight: "500" }}>❌ Out of Stock</p>
+        )}
         <p>{desc}</p>
       </div>
-      {/* Single Product Cart Component here */}
-      <div>
-      <form onSubmit={handleSubmit}>
-      <div className="select-product size">
-        <select value={size} onChange={handleSizeChange}>
-          <option>Select Size</option>
-          <option>SM</option>
-          <option>MD</option>
-          <option>LG</option>
-          <option>XL</option>
-          <option>XXL</option>
-        </select>
-        <i className="icofont-rounded-down"></i>
-      </div>
-      <div className="select-product color">
-        <select value={color} onChange={handleColorChange}>
-          <option>Select Color</option>
-          <option>Pink</option>
-          <option>Ash</option>
-          <option>Red</option>
-          <option>White</option>
-          <option>Blue</option>
-        </select>
-        <i className="icofont-rounded-down"></i>
-      </div>
-      <div className="cart-plus-minus">
-        <div onClick={handleDecrease} className="dec qtybutton">
-          -
-        </div>
-        <input
-          className="cart-plus-minus-box"
-          type="text"
-          name="qtybutton"
-          value={prequantity}
-          onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
-        />
-        <div className="inc qtybutton" onClick={handleIncrease}>
-          +
-        </div>
-      </div>
-      <div className="discount-code mb-2">
-        <input
-          type="text"
-          placeholder="Enter Discount Code"
-          onChange={(e) => setCoupon(e.target.value)}
-        />
-      </div>
-      <button type="submit" className="lab-btn">
-        <span>Add To Cart</span>
-      </button>
 
-      <Link to="/cart-page" className="lab-btn bg-primary">
-        <span>Check Out</span>
-      </Link>
-    </form>
+      <div>
+        <form onSubmit={handleSubmit}>
+          <div className="select-product size">
+            <select value={size} onChange={handleSizeChange}>
+              <option>Select Size</option>
+              <option>SM</option>
+              <option>MD</option>
+              <option>LG</option>
+              <option>XL</option>
+              <option>XXL</option>
+            </select>
+            <i className="icofont-rounded-down"></i>
+          </div>
+
+          <div className="select-product color">
+            <select value={color} onChange={handleColorChange}>
+              <option>Select Color</option>
+              <option>Pink</option>
+              <option>Ash</option>
+              <option>Red</option>
+              <option>White</option>
+              <option>Blue</option>
+            </select>
+            <i className="icofont-rounded-down"></i>
+          </div>
+
+          <div className="cart-plus-minus">
+            <div onClick={handleDecrease} className="dec qtybutton">-</div>
+            <input
+              className="cart-plus-minus-box"
+              type="text"
+              value={prequantity}
+              onChange={(e) => setQuantity(Math.min(parseInt(e.target.value, 10) || 1, stock))}
+            />
+            <div className="inc qtybutton" onClick={handleIncrease}>+</div>
+          </div>
+
+          <div className="discount-code mb-2">
+            <input type="text" placeholder="Enter Discount Code" onChange={(e) => setCoupon(e.target.value)} />
+          </div>
+
+          <button
+            type="submit"
+            className="lab-btn"
+            disabled={stock <= 0}
+            style={{ opacity: stock <= 0 ? 0.6 : 1, cursor: stock <= 0 ? "not-allowed" : "pointer" }}
+          >
+            <span>{stock > 0 ? "Add To Cart" : "Out of Stock"}</span>
+          </button>
+
+          <button className="lab-btn bg-primary" onClick={handleCheckout}>
+            <span>Check Out</span>
+          </button>
+        </form>
       </div>
     </div>
   );
