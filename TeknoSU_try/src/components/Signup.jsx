@@ -13,11 +13,12 @@ const Signup = () => {
   const handleSignup = async (event) => {
     event.preventDefault();
 
-    const form = event.target;
-    const name = form.name.value.trim();
-    const email = form.email.value.trim();
-    const password = form.password.value;
-    const confirmPassword = form.confirmPassword.value;
+    const form = event.currentTarget;
+    const { elements } = form;
+    const name = elements.name.value.trim();
+    const email = elements.email.value.trim();
+    const password = elements.password.value;
+    const confirmPassword = elements.confirmPassword.value;
 
     setErrorMessage("");
     setSuccessMessage("");
