@@ -2,92 +2,80 @@ import React, { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import delImgUrl from "../assets/images/shop/del.png";
-import api from "../api/client";
+import LoadingOverlay from "../components/LoadingOverlay";
+import CheckoutPage from "./CheckoutPage";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
-  const [subtotal, setSubtotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
   const navigate = useNavigate();
 
-  const loadCart = async () => {
-    try {
-      const res = await api.get("/api/cart", { validateStatus: () => true });
-      if (res.status === 200) {
-        setCartItems(res.data?.items || []);
-        setSubtotal(res.data?.subtotal || 0);
-      } else {
-        setError(res.data?.message || "Cart could not be loaded");
-      }
-    } catch (err) {
-      setError(err?.response?.data?.message || "Cart could not be loaded");
-    } finally {
+  useEffect(() => {
+    setLoading(true);
+    const storedCartItems = JSON.parse(localStorage.getItem("cart")) || [];
+    setCartItems(storedCartItems);
+    setLoading(false);
+  }, []);
+
+  const calculateTotalPrice = (item) => item.price * item.quantity;
+
+  const handleIncrease = (item) => {
+    setLoading(true);
+    const updatedCart = cartItems.map((cartItem) =>
+      cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
+    );
+    setCartItems(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    setLoading(false);
+  };
+
+  const handleDecrease = (item) => {
+    if (item.quantity > 1) {
+      setLoading(true);
+      const updatedCart = cartItems.map((cartItem) =>
+        cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity - 1 } : cartItem
+      );
+      setCartItems(updatedCart);
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadCart();
-  }, []);
-
-  const updateQuantity = async (productId, quantity) => {
-    try {
-      const res = await api.post(
-        "/api/cart",
-        { productId, quantity },
-        { validateStatus: () => true }
-      );
-      if (res.status >= 200 && res.status < 300) {
-        setCartItems(res.data.items || []);
-        setSubtotal(res.data.subtotal || 0);
-      } else {
-        alert(res.data?.message || "Unable to update cart");
-      }
-    } catch (err) {
-      alert(err?.response?.data?.message || "Unable to update cart");
-    }
+  const handleRemoveItem = (item) => {
+    setLoading(true);
+    const updatedCart = cartItems.filter((cartItem) => cartItem.id !== item.id);
+    setCartItems(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    setLoading(false);
   };
 
-  const handleIncrease = (item) => updateQuantity(item.productId, item.quantity + 1);
+  const cartSubtotal = cartItems.reduce(
+    (total, item) => total + calculateTotalPrice(item),
+    0
+  );
+  const orderTotal = cartSubtotal;
 
-  const handleDecrease = (item) => {
-    if (item.quantity > 1) {
-      updateQuantity(item.productId, item.quantity - 1);
-    }
-  };
-
-  const handleRemoveItem = async (item) => {
-    try {
-      const res = await api.delete(`/api/cart/${item.productId}`, {
-        validateStatus: () => true,
-      });
-      if (res.status >= 200 && res.status < 300) {
-        setCartItems(res.data.items || []);
-        setSubtotal(res.data.subtotal || 0);
-      } else {
-        alert(res.data?.message || "Unable to remove item");
-      }
-    } catch (err) {
-      alert(err?.response?.data?.message || "Unable to remove item");
-    }
-  };
-
-  const orderTotal = subtotal;
-
-  // ✅ Checkout button handler
   const handleCheckout = () => {
-    navigate("/check-out", { state: { cartItems, orderTotal } });
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      localStorage.setItem("redirectAfterLogin", "/cart-page");
+      navigate("/login");
+    } else {
+      setShowCheckout(true);
+    }
   };
 
   return (
     <div>
+      {/* ⭐ Full-page Loading Overlay */}
+      {loading && <LoadingOverlay />}
+
       <PageHeader title={"Shop Cart"} curPage={"Cart Page"} />
+
       <div className="shop-cart padding-tb">
         <div className="container">
           <div className="section-wrapper">
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {/* cart top */}
             <div className="cart-top">
               <table>
                 <thead>
@@ -100,16 +88,11 @@ const CartPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading && (
-                    <tr>
-                      <td colSpan="5">Loading cart...</td>
-                    </tr>
-                  )}
-                  {!loading && cartItems.map((item, indx) => (
+                  {cartItems.map((item, indx) => (
                     <tr key={indx}>
                       <td className="product-item cat-product">
                         <div className="p-thumb">
-                          <img src={item.img || item.imageURL || ""} alt={item.name} />
+                          <img src={item.img} alt={item.name} />
                         </div>
                         <div className="p-content">{item.name}</div>
                       </td>
@@ -126,10 +109,10 @@ const CartPage = () => {
                           <div className="inc qtybutton" onClick={() => handleIncrease(item)}>+</div>
                         </div>
                       </td>
-                      <td className="cat-toprice">${item.lineTotal}</td>
+                      <td className="cat-toprice">${calculateTotalPrice(item)}</td>
                       <td className="cat-edit">
-                        <a href="#" onClick={(e) => { e.preventDefault(); handleRemoveItem(item); }}>
-                          <img src={delImgUrl} alt="" />
+                        <a href="#" onClick={() => handleRemoveItem(item)}>
+                          <img src={delImgUrl} alt="Delete" />
                         </a>
                       </td>
                     </tr>
@@ -138,51 +121,26 @@ const CartPage = () => {
               </table>
             </div>
 
-            {/* cart bottom */}
             <div className="cart-bottom">
               <div className="cart-checkout-box">
                 <form className="coupon" action="/">
-                  <input type="text" name="coupon" placeholder="Coupon Code..." className="cart-page-input-text" />
+                  <input type="text" placeholder="Coupon Code..." className="cart-page-input-text" />
                   <input type="submit" value="Apply Coupon" />
                 </form>
                 <div className="cart-checkout">
                   <input type="submit" value="Update Cart" />
-                  <button
-                    type="button"
-                    className="lab-btn bg-primary"
-                    onClick={handleCheckout}
-                  >
+                  <button className="lab-btn bg-primary" onClick={handleCheckout}>
                     Proceed to Checkout
                   </button>
                 </div>
               </div>
 
-              {/* shipping & totals */}
               <div className="shiping-box">
                 <div className="row">
                   <div className="col-md-6 col-12">
                     <div className="calculate-shiping">
                       <h3>Calculate Shipping</h3>
-                      <div className="outline-select">
-                        <select>
-                          <option value="volvo">United Kingdom (UK)</option>
-                          <option value="saab">Bangladesh</option>
-                          <option value="saab">Pakisthan</option>
-                          <option value="saab">India</option>
-                          <option value="saab">Nepal</option>
-                        </select>
-                      </div>
-                      <div className="outline-select shipping-select">
-                        <select>
-                          <option value="volvo">State/Country</option>
-                          <option value="saab">Dhaka</option>
-                          <option value="saab">Benkok</option>
-                          <option value="saab">Kolkata</option>
-                          <option value="saab">Kapasia</option>
-                        </select>
-                      </div>
-                      <input type="text" name="coupon" placeholder="Postcode/ZIP" className="cart-page-input-text" />
-                      <button type="submit">Update Total</button>
+                      {/* Shipping form here */}
                     </div>
                   </div>
                   <div className="col-md-6 col-12">
@@ -191,7 +149,7 @@ const CartPage = () => {
                       <ul className="lab-ul">
                         <li>
                           <span className="pull-left">Cart Subtotal</span>
-                          <p className="pull-right">$ {subtotal.toFixed(2)}</p>
+                          <p className="pull-right">${cartSubtotal}</p>
                         </li>
                         <li>
                           <span className="pull-left">Shipping and Handling</span>
@@ -199,7 +157,7 @@ const CartPage = () => {
                         </li>
                         <li>
                           <span className="pull-left">Order Total</span>
-                          <p className="pull-right">$ {orderTotal.toFixed(2)}</p>
+                          <p className="pull-right">${orderTotal.toFixed(2)}</p>
                         </li>
                       </ul>
                     </div>
@@ -211,6 +169,14 @@ const CartPage = () => {
           </div>
         </div>
       </div>
+
+      {/* ⭐ Checkout modal */}
+      <CheckoutPage
+        show={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        cartItems={cartItems}
+        orderTotal={orderTotal}
+      />
     </div>
   );
 };
