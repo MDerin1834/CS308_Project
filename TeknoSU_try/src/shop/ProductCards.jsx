@@ -16,7 +16,7 @@ const ProductCards = ({ products, GridList }) => {
           <div className="product-item">
             <div className="product-thumb">
               <div className="pro-thumb">
-                <img src={`${product.img}`} alt={`${product.img}`} />
+                <img src={product.img || product.imageURL} alt={product.name} />
               </div>
               <div className="product-action-link">
                 <Link to={`/shop/${product.id}`}>
@@ -43,7 +43,7 @@ const ProductCards = ({ products, GridList }) => {
           <div className="product-list-item">
             <div className="product-thumb">
               <div className="pro-thumb">
-                <img src={`${product.img}`} alt={`${product.imgAlt}`} />
+                <img src={product.img || product.imageURL} alt={product.name} />
               </div>
               <div className="product-action-link">
                 <a href="#">

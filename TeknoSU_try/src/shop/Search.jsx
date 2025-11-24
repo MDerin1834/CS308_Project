@@ -29,7 +29,7 @@ const Search = ({ products, GridList }) => {
             <div className="d-flex gap-3 p-2">
             <div>
               <div className="pro-thumb h-25">
-                <img src={`${product.img}`} alt={`${product.imgAlt}`} width={70} className="flex-{grow|shrink}-0"/>
+                <img src={product.img || product.imageURL} alt={product.name} width={70} className="flex-{grow|shrink}-0"/>
               </div>
             </div>
             <div className="product-content">

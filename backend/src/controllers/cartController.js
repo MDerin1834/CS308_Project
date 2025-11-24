@@ -1,18 +1,35 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
-// GET /api/cart  — sepet ve özet döner
+// GET /api/cart  — cart with item details + totals
 exports.getCart = async (req, res) => {
   const cart =
     (await Cart.findOne({ userId: req.user.id }).lean()) || { items: [] };
 
-  const subtotal = cart.items.reduce(
-    (s, it) => s + (it.priceSnapshot || 0) * (it.quantity || 0),
-    0
-  );
-  const itemCount = cart.items.reduce((s, it) => s + (it.quantity || 0), 0);
+  const productIds = cart.items.map((it) => it.productId);
+  const products = await Product.find({ id: { $in: productIds } }).lean();
+  const pmap = new Map(products.map((p) => [p.id, p]));
 
-  return res.json({ items: cart.items, subtotal, itemCount });
+  const detailedItems = cart.items.map((it) => {
+    const p = pmap.get(it.productId) || {};
+    const price = it.priceSnapshot ?? p.price ?? 0;
+    const quantity = it.quantity || 0;
+    const lineTotal = price * quantity;
+    return {
+      productId: it.productId,
+      quantity,
+      price,
+      lineTotal,
+      name: p.name || it.productId,
+      img: p.imageURL || p.img || "",
+      stock: p.stock ?? null,
+    };
+  });
+
+  const subtotal = detailedItems.reduce((s, it) => s + it.lineTotal, 0);
+  const itemCount = detailedItems.reduce((s, it) => s + (it.quantity || 0), 0);
+
+  return res.json({ items: detailedItems, subtotal, itemCount });
 };
 
 // POST /api/cart  — sepete ekle/güncelle (stok doğrulaması)
@@ -93,7 +110,10 @@ exports.mergeGuestCart = async (req, res) => {
         priceSnapshot: product.price,
       });
     } else {
-      const newQty = Math.min(cart.items[idx].quantity + allowed, product.stock ?? 0);
+      const newQty = Math.min(
+        (cart.items[idx].quantity || 0) + allowed,
+        product.stock ?? 0
+      );
       cart.items[idx].quantity = newQty;
       cart.items[idx].priceSnapshot = product.price;
     }

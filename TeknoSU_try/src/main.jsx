@@ -45,7 +45,7 @@ import PrivateRoute from './PrivateRoute.jsx/PrivateRoute.jsx';
 import Login from './components/Login.jsx';
 import Signup from './components/Signup.jsx';
 import CheckoutPage from './shop/CheckoutPage.jsx';
-import ReviewOrderPage from './shop/PeviewOrderPage.jsx';
+import ReviewOrderPage from './shop/ReviewOrderPage.jsx';
 
 
 const router = createBrowserRouter([
@@ -113,4 +113,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <RouterProvider router= {router} />
   </AuthProvider>,
 )
-

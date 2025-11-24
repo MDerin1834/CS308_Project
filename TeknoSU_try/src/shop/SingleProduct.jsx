@@ -13,24 +13,41 @@ import Review from "../components/Review";
 import ProductDisplay from "./ProductDisplay";
 import Tags from "./Tags";
 const reviwtitle = "Add a Review";
+import api from "../api/client";
 
 const SingleProduct = () => {
-  const [product, setProduct] = useState([]);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const { id } = useParams();
   useEffect(() => {
-    fetch("/src/products.json")
-      .then((res) => res.json())
-      .then((data) => setProduct(data));
-  }, []);
+    let mounted = true;
+    api
+      .get(`/api/products/${id}`)
+      .then((res) => {
+        if (!mounted) return;
+        setProduct(res.data);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setError(err?.response?.data?.message || "Product could not be loaded");
+      })
+      .finally(() => mounted && setLoading(false));
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
 
 
-  const result = product.filter((p) => p.id === id);
+  const result = product ? [product] : [];
   return (
     
     <div>
       <PageHeader title={"OUR SHOP SINGLE"} curPage={"Shop / Single Product"} />
       <div className="shop-single padding-tb aside-bg">
         <div className="container">
+          {loading && <p>Loading product...</p>}
+          {error && <p style={{ color: "red" }}>{error}</p>}
           <div className="row justify-content-center">
             <div className="col-lg-8 col-12">
               <article>
@@ -56,7 +73,7 @@ const SingleProduct = () => {
                             {result.map((item, i) => (
                               <SwiperSlide key={i}>
                                 <div className="single-thumb">
-                                  <img src={item.img} alt="" />
+                                  <img src={item.img || item.imageURL} alt={item.name} />
                                 </div>
                               </SwiperSlide>
                             ))}

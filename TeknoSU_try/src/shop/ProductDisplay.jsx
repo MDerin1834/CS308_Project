@@ -1,12 +1,15 @@
 /* eslint-disable react/prop-types */
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../api/client";
+import { AuthContext } from "../contexts/AuthProvider";
 
 const desc =
   "Energistia an deliver atactica metrcs after avsionary Apropria trnsition enterpris an sources applications emerging psd template.";
 
 const ProductDisplay = ({ item }) => {
   const navigate = useNavigate(); // ✅ Added for checkout redirect
+  const { user } = useContext(AuthContext);
   const { id, img, price, name, quantity, seller, stock } = item;
 
   const [prequantity, setQuantity] = useState(quantity);
@@ -26,36 +29,40 @@ const ProductDisplay = ({ item }) => {
   const handleSizeChange = (e) => setSize(e.target.value);
   const handleColorChange = (e) => setColor(e.target.value);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (stock <= 0) {
+    const availableStock = typeof stock === "number" ? stock : Infinity;
+    if (availableStock <= 0) {
       alert(`❌ Sorry, ${name} is currently out of stock.`);
       return;
     }
 
-    if (prequantity > stock) {
-      alert(`⚠️ Only ${stock} units available. Please reduce quantity.`);
+    if (prequantity > availableStock) {
+      alert(`⚠️ Only ${availableStock} units available. Please reduce quantity.`);
       return;
     }
 
-    const product = { id, img, name, price, quantity: prequantity, size, color, coupon };
-
-    const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const existingProductIndex = existingCart.findIndex((i) => i.id === id);
-
-    if (existingProductIndex !== -1) {
-      const newQuantity = existingCart[existingProductIndex].quantity + prequantity;
-      if (newQuantity > stock) {
-        alert(`⚠️ You can only have up to ${stock} units of ${name} in your cart.`);
-        return;
-      }
-      existingCart[existingProductIndex].quantity = newQuantity;
-    } else {
-      existingCart.push(product);
+    if (!user) {
+      localStorage.setItem("redirectAfterLogin", `/shop/${id}`);
+      navigate("/login");
+      return;
     }
 
-    localStorage.setItem("cart", JSON.stringify(existingCart));
+    try {
+      const res = await api.post(
+        "/api/cart",
+        { productId: id, quantity: prequantity },
+        { validateStatus: () => true }
+      );
+      if (res.status >= 200 && res.status < 300) {
+        alert("Added to cart");
+      } else {
+        alert(res.data?.message || "Could not add to cart");
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || "Could not add to cart");
+    }
 
     setQuantity(1);
     setSize("Select Size");
@@ -64,18 +71,10 @@ const ProductDisplay = ({ item }) => {
   };
 
   // ✅ Quick checkout button logic
-  const handleCheckout = (e) => {
+  const handleCheckout = async (e) => {
     e.preventDefault();
-
-    handleSubmit(e);
-
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
-      localStorage.setItem("redirectAfterLogin", "/cart-page");
-      navigate("/login");
-    } else {
-      navigate("/cart-page");
-    }
+    await handleSubmit(e);
+    navigate("/cart-page");
   };
 
   return (

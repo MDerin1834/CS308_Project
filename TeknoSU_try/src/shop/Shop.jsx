@@ -6,11 +6,14 @@ import Pagination from "./Pagination";
 import ShopCategory from "./ShopCategory";
 import ProductCards from "./ProductCards";
 const showResult = "Showing 01 - 12 of 139 Results";
-import Data from "/src/products.json"
+import api from "../api/client";
 
 const Shop = () => {
   const [GridList, setGridList] = useState(true);
-  const [products, setProducts] = useState(Data);
+  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   //   category active colors
 const [selectedCategory, setSelectedCategory] = useState("All");
@@ -33,16 +36,33 @@ const [selectedCategory, setSelectedCategory] = useState("All");
   };
 
   // category based filtering
-  const menuItems = [...new Set(Data.map((Val) => Val.category))];
+  const menuItems = [...new Set(allProducts.map((Val) => Val.category))];
 
   const filterItem = (curcat) => {
-    const newItem = Data.filter((newVal) => {
-      return newVal.category === curcat;
-    });
-    setSelectedCategory(curcat); 
+    const newItem = allProducts.filter((newVal) => newVal.category === curcat);
+    setSelectedCategory(curcat);
     setProducts(newItem);
-    // console.log(selectedCategory)
   };
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get("/api/products", { params: { limit: 200 } })
+      .then((res) => {
+        if (!mounted) return;
+        const items = res.data?.items || [];
+        setAllProducts(items);
+        setProducts(items);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setError(err?.response?.data?.message || "Failed to load products");
+      })
+      .finally(() => mounted && setLoading(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div>
@@ -55,7 +75,11 @@ const [selectedCategory, setSelectedCategory] = useState("All");
             <div className="col-lg-8 col-12">
               <article>
                 <div className="shop-title d-flex flex-wrap justify-content-between">
-                  <p>{showResult}</p>
+                  <p>
+                    {loading
+                      ? "Loading products..."
+                      : `Showing ${currentProducts.length} of ${products.length} Results`}
+                  </p>
                   <div
                     className={`product-view-mode ${
                       GridList ? "gridActive" : "listActive"
@@ -69,6 +93,7 @@ const [selectedCategory, setSelectedCategory] = useState("All");
                     </a>
                   </div>
                 </div>
+                {error && <p style={{ color: "red" }}>{error}</p>}
                 <div>
                   <ProductCards
                     products={currentProducts}
@@ -89,10 +114,10 @@ const [selectedCategory, setSelectedCategory] = useState("All");
                 {/* <ShopCategory /> */}
                 <ShopCategory
                   filterItem={filterItem}
-                  setItem={setProducts}
                   menuItems={menuItems}
                   setProducts={setProducts}
                   selectedCategory={selectedCategory }
+                  allProducts={allProducts}
                 />
 
               </aside>

@@ -2,60 +2,82 @@ import React, { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import delImgUrl from "../assets/images/shop/del.png";
-import CheckoutPage from "./CheckoutPage";
+import api from "../api/client";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
+  const [subtotal, setSubtotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  const loadCart = async () => {
+    try {
+      const res = await api.get("/api/cart", { validateStatus: () => true });
+      if (res.status === 200) {
+        setCartItems(res.data?.items || []);
+        setSubtotal(res.data?.subtotal || 0);
+      } else {
+        setError(res.data?.message || "Cart could not be loaded");
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Cart could not be loaded");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const storedCartItems = JSON.parse(localStorage.getItem("cart")) || [];
-    setCartItems(storedCartItems);
+    loadCart();
   }, []);
 
-  const calculateTotalPrice = (item) => item.price * item.quantity;
-
-  const handleIncrease = (item) => {
-    item.quantity += 1;
-    setCartItems([...cartItems]);
-    localStorage.setItem("cart", JSON.stringify(cartItems));
+  const updateQuantity = async (productId, quantity) => {
+    try {
+      const res = await api.post(
+        "/api/cart",
+        { productId, quantity },
+        { validateStatus: () => true }
+      );
+      if (res.status >= 200 && res.status < 300) {
+        setCartItems(res.data.items || []);
+        setSubtotal(res.data.subtotal || 0);
+      } else {
+        alert(res.data?.message || "Unable to update cart");
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || "Unable to update cart");
+    }
   };
+
+  const handleIncrease = (item) => updateQuantity(item.productId, item.quantity + 1);
 
   const handleDecrease = (item) => {
     if (item.quantity > 1) {
-      item.quantity -= 1;
-      setCartItems([...cartItems]);
-      localStorage.setItem("cart", JSON.stringify(cartItems));
+      updateQuantity(item.productId, item.quantity - 1);
     }
   };
 
-  const handleRemoveItem = (item) => {
-    const updatedCart = cartItems.filter((cartItem) => cartItem.id !== item.id);
-    setCartItems(updatedCart);
-    updateLocalStorage(updatedCart);
+  const handleRemoveItem = async (item) => {
+    try {
+      const res = await api.delete(`/api/cart/${item.productId}`, {
+        validateStatus: () => true,
+      });
+      if (res.status >= 200 && res.status < 300) {
+        setCartItems(res.data.items || []);
+        setSubtotal(res.data.subtotal || 0);
+      } else {
+        alert(res.data?.message || "Unable to remove item");
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || "Unable to remove item");
+    }
   };
 
-  const updateLocalStorage = (cart) => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  };
-
-  const cartSubtotal = cartItems.reduce(
-    (total, item) => total + calculateTotalPrice(item),
-    0
-  );
-  const orderTotal = cartSubtotal;
+  const orderTotal = subtotal;
 
   // ✅ Checkout button handler
   const handleCheckout = () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
-      // guest → save redirect & go to login
-      localStorage.setItem("redirectAfterLogin", "/cart-page");
-      navigate("/login");
-    } else {
-      // logged in → proceed to checkout
-      navigate("/checkout", { state: { cartItems, orderTotal } });
-    }
+    navigate("/check-out", { state: { cartItems, orderTotal } });
   };
 
   return (
@@ -64,6 +86,7 @@ const CartPage = () => {
       <div className="shop-cart padding-tb">
         <div className="container">
           <div className="section-wrapper">
+            {error && <p style={{ color: "red" }}>{error}</p>}
             {/* cart top */}
             <div className="cart-top">
               <table>
@@ -77,11 +100,16 @@ const CartPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {cartItems.map((item, indx) => (
+                  {loading && (
+                    <tr>
+                      <td colSpan="5">Loading cart...</td>
+                    </tr>
+                  )}
+                  {!loading && cartItems.map((item, indx) => (
                     <tr key={indx}>
                       <td className="product-item cat-product">
                         <div className="p-thumb">
-                          <img src={`${item.img}`} alt="" />
+                          <img src={item.img || item.imageURL || ""} alt={item.name} />
                         </div>
                         <div className="p-content">{item.name}</div>
                       </td>
@@ -98,9 +126,9 @@ const CartPage = () => {
                           <div className="inc qtybutton" onClick={() => handleIncrease(item)}>+</div>
                         </div>
                       </td>
-                      <td className="cat-toprice">${calculateTotalPrice(item)}</td>
+                      <td className="cat-toprice">${item.lineTotal}</td>
                       <td className="cat-edit">
-                        <a href="#" onClick={() => handleRemoveItem(item)}>
+                        <a href="#" onClick={(e) => { e.preventDefault(); handleRemoveItem(item); }}>
                           <img src={delImgUrl} alt="" />
                         </a>
                       </td>
@@ -163,7 +191,7 @@ const CartPage = () => {
                       <ul className="lab-ul">
                         <li>
                           <span className="pull-left">Cart Subtotal</span>
-                          <p className="pull-right">$ {cartSubtotal}</p>
+                          <p className="pull-right">$ {subtotal.toFixed(2)}</p>
                         </li>
                         <li>
                           <span className="pull-left">Shipping and Handling</span>

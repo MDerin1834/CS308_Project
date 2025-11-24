@@ -1,9 +1,7 @@
-import React, { useState } from "react";
-
-// import SelectCategory from "../Shop/SelectCategory";
-import productData from "/src/products.json";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import SelectedCategory from "../components/SelectedCategory";
+import api from "../api/client";
 
 const title = (
   <h2>
@@ -28,19 +26,35 @@ const bannerList = [
 ];
 
 const Banner = () => {
-  // product search funtionality
   const [searchInput, setSearchInput] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState(productData);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get("/api/products", { params: { limit: 200 } })
+      .then((res) => {
+        if (!mounted) return;
+        setProducts(res.data?.items || []);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setError(err?.response?.data?.message || "Failed to load products");
+      })
+      .finally(() => mounted && setLoading(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filteredProducts = products.filter((product) =>
+    product.name?.toLowerCase().includes(searchInput.toLowerCase())
+  );
 
   const handleSearch = (e) => {
-    const searchTerm = e.target.value;
-    setSearchInput(searchTerm);
-
-    // Filter products based on the search term
-    const filtered = productData.filter((product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredProducts(filtered);
+    setSearchInput(e.target.value);
   };
 
   return (
@@ -48,6 +62,7 @@ const Banner = () => {
       <div className="container">
         <div className="banner-content">
           {title}
+          {error && <p style={{ color: "red" }}>{error}</p>}
           <form>
             <SelectedCategory select={"all"}/>
             <input
@@ -56,14 +71,14 @@ const Banner = () => {
               placeholder="Search your product"
               value={searchInput}
               onChange={handleSearch}
-            />
+              />
             <button type="submit">
               <i className="icofont-search"></i>
             </button>
           </form>
           <p>{desc}</p>
           <ul className="lab-ul">
-          {searchInput && filteredProducts.map((product, i) => (
+          {searchInput && !loading && filteredProducts.map((product, i) => (
               <li key={i}>
                <Link to={`/shop/${product.id}`}> {product.name}</Link>
               </li>
