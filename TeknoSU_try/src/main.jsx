@@ -46,6 +46,8 @@ import Login from './components/Login.jsx';
 import Signup from './components/Signup.jsx';
 import CheckoutPage from './shop/CheckoutPage.jsx';
 import ReviewOrderPage from './shop/ReviewOrderPage.jsx';
+import PastOrders from './shop/PastOrders.jsx';
+
 
 
 const router = createBrowserRouter([
@@ -105,6 +107,10 @@ const router = createBrowserRouter([
   {
         path: "/review-order",
         element: <ReviewOrderPage />
+      },
+      {
+        path: "/past-orders",
+        element: <PastOrders />
       }
 ]);
 
