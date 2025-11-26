@@ -1,53 +1,109 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import PageHeader from "../components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import delImgUrl from "../assets/images/shop/del.png";
 import LoadingOverlay from "../components/LoadingOverlay";
 import CheckoutPage from "./CheckoutPage";
+import api from "../api/client";
+import { AuthContext } from "../contexts/AuthProvider";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const loadCart = async () => {
     setLoading(true);
-    const storedCartItems = JSON.parse(localStorage.getItem("cart")) || [];
-    setCartItems(storedCartItems);
-    setLoading(false);
-  }, []);
-
-  const calculateTotalPrice = (item) => item.price * item.quantity;
-
-  const handleIncrease = (item) => {
-    setLoading(true);
-    const updatedCart = cartItems.map((cartItem) =>
-      cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
-    );
-    setCartItems(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    setLoading(false);
-  };
-
-  const handleDecrease = (item) => {
-    if (item.quantity > 1) {
-      setLoading(true);
-      const updatedCart = cartItems.map((cartItem) =>
-        cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity - 1 } : cartItem
-      );
-      setCartItems(updatedCart);
-      localStorage.setItem("cart", JSON.stringify(updatedCart));
+    try {
+      if (user) {
+        const res = await api.get("/api/cart", { validateStatus: () => true });
+        if (res.status === 200 && Array.isArray(res.data?.items)) {
+          const normalized = res.data.items.map((it) => ({
+            id: it.productId,
+            name: it.name,
+            price: it.price,
+            quantity: it.quantity,
+            img: it.img,
+          }));
+          setCartItems(normalized);
+          setLoading(false);
+          return;
+        }
+      }
+      // fallback to local storage for guests or failed fetch
+      const storedCartItems = JSON.parse(localStorage.getItem("cart")) || [];
+      setCartItems(storedCartItems);
+    } catch (err) {
+      const storedCartItems = JSON.parse(localStorage.getItem("cart")) || [];
+      setCartItems(storedCartItems);
+    } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadCart();
+  }, [user]);
+
+  const calculateTotalPrice = (item) => item.price * item.quantity;
+
+  const updateQuantity = async (item, nextQty) => {
+    if (nextQty < 1) return;
+    setLoading(true);
+    try {
+      if (user) {
+        const res = await api.post(
+          "/api/cart",
+          { productId: item.id, quantity: nextQty },
+          { validateStatus: () => true }
+        );
+        if (res.status === 200 && Array.isArray(res.data?.items)) {
+          const normalized = res.data.items.map((it) => ({
+            id: it.productId,
+            name: it.name,
+            price: it.price,
+            quantity: it.quantity,
+            img: it.img,
+          }));
+          setCartItems(normalized);
+        }
+      } else {
+        const updatedCart = cartItems.map((cartItem) =>
+          cartItem.id === item.id ? { ...cartItem, quantity: nextQty } : cartItem
+        );
+        setCartItems(updatedCart);
+        localStorage.setItem("cart", JSON.stringify(updatedCart));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleIncrease = (item) => updateQuantity(item, item.quantity + 1);
+
+  const handleDecrease = (item) =>
+    item.quantity > 1 ? updateQuantity(item, item.quantity - 1) : null;
+
   const handleRemoveItem = (item) => {
     setLoading(true);
-    const updatedCart = cartItems.filter((cartItem) => cartItem.id !== item.id);
-    setCartItems(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    setLoading(false);
+    const removeLocal = () => {
+      const updatedCart = cartItems.filter((cartItem) => cartItem.id !== item.id);
+      setCartItems(updatedCart);
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
+    };
+
+    if (user) {
+      api
+        .delete(`/api/cart/${item.id}`, { validateStatus: () => true })
+        .then(() => loadCart())
+        .catch(() => removeLocal())
+        .finally(() => setLoading(false));
+    } else {
+      removeLocal();
+      setLoading(false);
+    }
   };
 
   const cartSubtotal = cartItems.reduce(
