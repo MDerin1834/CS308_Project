@@ -2,11 +2,11 @@ const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema(
   {
-    productId: { type: String, required: true }, // Product.id (senin cart ile aynı)
+    productId: { type: String, required: true }, // Product.id aligns with cart items
     name: { type: String, required: true },
     imageURL: { type: String, default: "" },
     quantity: { type: Number, required: true, min: 1 },
-    unitPrice: { type: Number, required: true }, // satırdaki birim fiyat
+    unitPrice: { type: Number, required: true }, // unit price captured at order time
     lineTotal: { type: Number, required: true }, // quantity * unitPrice
   },
   { _id: false }
@@ -43,8 +43,10 @@ const orderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["processing", "paid", "cancelled", "delivered"],
-      default: "processing", // #25 için yeterli
+      default: "processing",
     },
+    paidAt: { type: Date },
+    invoiceNumber: { type: String },
 
     shippingAddress: {
       type: shippingAddressSchema,
@@ -56,7 +58,6 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// JSON çıktısını temizle
 orderSchema.set("toJSON", {
   transform: (_doc, ret) => {
     ret.id = ret._id;
