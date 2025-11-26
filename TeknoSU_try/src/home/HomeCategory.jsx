@@ -10,37 +10,37 @@ const categoryList = [
         imgUrl: 'src/assets/images/category/01.jpg',
         imgAlt: 'category rajibraj91 rajibraj',
         iconName: 'icofont-brand-windows',
-        title: 'DSLR Camera',
+        title: 'Phones',
     },
     {
         imgUrl: 'src/assets/images/category/02.jpg',
         imgAlt: 'category rajibraj91 rajibraj',
         iconName: 'icofont-brand-windows',
-        title: 'Windows',
+        title: 'Computers',
     },
     {
         imgUrl: 'src/assets/images/category/03.jpg',
         imgAlt: 'category rajibraj91 rajibraj',
         iconName: 'icofont-brand-windows',
-        title: 'Shoes',
+        title: 'Speakers',
     },
     {
         imgUrl: 'src/assets/images/category/04.jpg',
         imgAlt: 'category rajibraj91 rajibraj',
         iconName: 'icofont-brand-windows',
-        title: 'Bag',
+        title: 'Headphones',
     },
     {
         imgUrl: 'src/assets/images/category/05.jpg',
         imgAlt: 'category rajibraj91 rajibraj',
         iconName: 'icofont-brand-windows',
-        title: 'Headphone',
+        title: 'Printers',
     },
     {
         imgUrl: 'src/assets/images/category/06.jpg',
         imgAlt: 'category rajibraj91 rajibraj',
         iconName: 'icofont-brand-windows',
-        title: 'Watch',
+        title: 'Watchs',
     },
 ]
 
@@ -62,8 +62,16 @@ const HomeCategory = () => {
                             <Link to="/shop" className='category-item'>
                                 <div className='category-inner'>
                                     {/* image thumb */}
-                                    <div className='category-thumb'>
-                                        <img src={val.imgUrl} alt={val.imgAlt} />
+                                    <div className='category-thumb' style={{
+                                        aspectRatio: '1.2 / 1', // Enforces a square shape
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden' // Prevents any overflow
+                                    }}>
+                                        <img src={val.imgUrl} alt={val.imgAlt} style={{
+                                            width: '100%', height: '100%', objectFit: 'fill' // Stretches the image
+                                        }}/>
                                     </div>
 
                                     {/* content */}

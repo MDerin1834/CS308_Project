@@ -29,7 +29,7 @@ router.get("/", async (req, res) => {
 
     // ---------- Filter ----------
     const filter = {};
-    if (category) filter.category = { $regex: category, $options: "i" };
+    if (category && category !== "All") filter.category = { $regex: category, $options: "i" };
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
