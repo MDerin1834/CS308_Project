@@ -11,8 +11,6 @@ const Home = () => {
         <Banner/>
         <HomeCategory/>
         <CategoryShowCase/>
-        <AppSection/>
-        
     </div>
   )
 }
