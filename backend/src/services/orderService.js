@@ -111,6 +111,18 @@ async function createOrderFromCart(userId, payload) {
   return order.toJSON();
 }
 
+/**
+ * #28: Belirli kullanıcıya ait tüm siparişleri getirir.
+ * - userId ile filtreler
+ * - en yeni siparişi en üstte döner
+ */
+async function getOrdersByUserId(userId) {
+  return Order.find({ userId })
+    .sort({ createdAt: -1 })
+    .lean();
+}
+
 module.exports = {
   createOrderFromCart,
+  getOrdersByUserId,
 };

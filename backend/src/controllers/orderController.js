@@ -46,3 +46,23 @@ exports.createOrder = async (req, res) => {
     return res.status(500).json({ message: "Failed to create order" });
   }
 };
+
+/**
+ * GET /api/orders/my-orders
+ 
+ */
+exports.getMyOrders = async (req, res) => {
+  try {
+    const userId = req.user.id; // auth middleware'den geliyor
+
+    const orders = await orderService.getOrdersByUserId(userId);
+
+    return res.status(200).json({
+      message: "Orders fetched successfully",
+      orders,
+    });
+  } catch (err) {
+    console.error("❌ getMyOrders error:", err);
+    return res.status(500).json({ message: "Failed to fetch orders" });
+  }
+};
