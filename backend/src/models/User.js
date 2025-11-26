@@ -26,4 +26,5 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", userSchema);
+// Reuse compiled model in dev to avoid OverwriteModelError with nodemon reloads
+module.exports = mongoose.models.User || mongoose.model("User", userSchema);
