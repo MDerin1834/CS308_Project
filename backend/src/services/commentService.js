@@ -1,16 +1,17 @@
 const Comment = require("../models/Comment");
-const Order = require("../models/Order");
 const Product = require("../models/Product");
+const Order = require("../models/Order");
 
+// -----------------------------
+// 1) Add Comment (from backlog 32)
+// -----------------------------
 async function addComment(userId, productId, commentText) {
-  // 1) Yorum boş mu?
   if (!commentText || commentText.trim().length === 0) {
     const err = new Error("Invalid comment");
     err.code = "INVALID_COMMENT";
     throw err;
   }
 
-  // 2) Ürün var mı?
   const product = await Product.findOne({ id: productId });
   if (!product) {
     const err = new Error("Product not found");
@@ -18,7 +19,6 @@ async function addComment(userId, productId, commentText) {
     throw err;
   }
 
-  // 3) Kullanıcı bu ürünü gerçekten satın almış mı + teslim edilmiş mi?
   const deliveredOrder = await Order.findOne({
     userId,
     status: "delivered",
@@ -31,15 +31,60 @@ async function addComment(userId, productId, commentText) {
     throw err;
   }
 
-  // 4) Yorum oluştur (default approved: false)
   const newComment = await Comment.create({
     userId,
     productId,
     comment: commentText,
-    approved: false, // PM approval required
+    status: "pending",
   });
 
   return newComment.toJSON();
 }
 
-module.exports = { addComment };
+// -----------------------------
+// 2) Get Pending Comments
+// -----------------------------
+async function getPendingComments() {
+  return Comment.find({ status: "pending" }).sort({ createdAt: -1 }).lean();
+}
+
+// -----------------------------
+// 3) Approve a comment
+// -----------------------------
+async function approveComment(commentId) {
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    const err = new Error("Comment not found");
+    err.code = "COMMENT_NOT_FOUND";
+    throw err;
+  }
+
+  comment.status = "approved";
+  await comment.save();
+
+  return comment.toJSON();
+}
+
+// -----------------------------
+// 4) Reject a comment
+// -----------------------------
+async function rejectComment(commentId) {
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    const err = new Error("Comment not found");
+    err.code = "COMMENT_NOT_FOUND";
+    throw err;
+  }
+
+  comment.status = "rejected";
+  await comment.save();
+
+  return comment.toJSON();
+}
+
+module.exports = {
+  addComment,
+  getPendingComments,
+  approveComment,
+  rejectComment,
+};

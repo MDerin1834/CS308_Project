@@ -43,6 +43,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/comments", require("./routes/commentRoutes"));
 
 /* ---------- Sunucu ---------- */
 const PORT = process.env.PORT || 5050;
