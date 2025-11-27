@@ -3,6 +3,7 @@ const router = express.Router();
 const Product = require("../models/Product");
 const auth = require("../middleware/auth");
 const ratingService = require("../services/ratingService");
+const commentService = require("../services/commentService");
 /**
  * GET /api/products
  * Query:
@@ -202,6 +203,35 @@ router.post("/:id/rating", auth, async (req, res) => {
       return res.status(409).json({ message: "You already rated this product" });
 
     return res.status(500).json({ message: "Failed to submit rating" });
+  }
+});
+
+// POST /api/products/:id/comment
+router.post("/:id/comment", auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const productId = req.params.id;
+    const { comment } = req.body;
+
+    const newComment = await commentService.addComment(userId, productId, comment);
+
+    return res.status(201).json({
+      message: "Comment submitted successfully (Pending approval)",
+      comment: newComment,
+    });
+  } catch (err) {
+    console.error("❌ Comment error:", err);
+
+    if (err.code === "INVALID_COMMENT")
+      return res.status(400).json({ message: "Comment cannot be empty" });
+
+    if (err.code === "NOT_FOUND")
+      return res.status(404).json({ message: "Product not found" });
+
+    if (err.code === "NOT_DELIVERED")
+      return res.status(403).json({ message: "You can only comment after product is delivered" });
+
+    return res.status(500).json({ message: "Failed to submit comment" });
   }
 });
 
