@@ -94,3 +94,33 @@ exports.cancelOrder = async (req, res) => {
     return res.status(500).json({ message: "Failed to cancel order" });
   }
 };
+
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const userRole = req.user.role;
+    const orderId = req.params.id;
+    const { status } = req.body;
+
+    if (userRole !== "productManager") {
+      return res.status(403).json({ message: "Only product managers can update status" });
+    }
+
+    const order = await orderService.updateOrderStatus(orderId, status);
+
+    return res.status(200).json({
+      message: "Order status updated successfully",
+      order,
+    });
+  } catch (err) {
+    console.error("❌ updateOrderStatus error:", err);
+
+    if (err.code === "ORDER_NOT_FOUND") {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (err.code === "INVALID_STATUS") {
+      return res.status(400).json({ message: "Invalid order status" });
+    }
+
+    return res.status(500).json({ message: "Failed to update order status" });
+  }
+};

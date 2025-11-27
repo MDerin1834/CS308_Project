@@ -2,6 +2,8 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 
+const VALID_STATUSES = ["processing", "paid", "cancelled", "in-transit", "delivered"];
+
 /**
  * #25: Kullanıcının sepetinden order oluşturur.
  * - Sepeti okur
@@ -150,8 +152,29 @@ async function cancelOrder(orderId, userId) {
   return order.toJSON();
 }
 
+async function updateOrderStatus(orderId, newStatus) {
+  if (!VALID_STATUSES.includes(newStatus)) {
+    const err = new Error("Invalid order status");
+    err.code = "INVALID_STATUS";
+    throw err;
+  }
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    const err = new Error("Order not found");
+    err.code = "ORDER_NOT_FOUND";
+    throw err;
+  }
+
+  order.status = newStatus;
+  await order.save();
+
+  return order.toJSON();
+}
+
 module.exports = {
   createOrderFromCart,
   getOrdersByUserId,
   cancelOrder,
+  updateOrderStatus,
 };

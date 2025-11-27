@@ -14,4 +14,7 @@ router.get("/my-orders", auth, orderController.getMyOrders);
 // PATCH /api/orders/:id/cancel
 router.patch("/:id/cancel", auth, orderController.cancelOrder);
 
+// PATCH /api/orders/:id/status   (product manager)
+router.patch("/:id/status", auth, orderController.updateOrderStatus);
+
 module.exports = router;
