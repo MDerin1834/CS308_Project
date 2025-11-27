@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
-
+const auth = require("../middleware/auth");
+const ratingService = require("../services/ratingService");
 /**
  * GET /api/products
  * Query:
@@ -168,6 +169,39 @@ router.post("/", async (req, res) => {
   } catch (err) {
     console.error("Error creating product:", err);
     return res.status(500).json({ message: "Server error" });
+  }
+});
+
+// POST /api/products/:id/rating
+router.post("/:id/rating", auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const productId = req.params.id;
+    const { rating } = req.body;
+
+    const result = await ratingService.addRating(userId, productId, rating);
+
+    return res.status(201).json({
+      message: "Rating submitted successfully",
+      rating: result.rating,
+      product: result.product,
+    });
+  } catch (err) {
+    console.error("❌ Rating error:", err);
+
+    if (err.code === "INVALID_RATING")
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+
+    if (err.code === "NOT_FOUND")
+      return res.status(404).json({ message: "Product not found" });
+
+    if (err.code === "NOT_DELIVERED")
+      return res.status(403).json({ message: "You can only rate delivered products" });
+
+    if (err.code === "ALREADY_RATED")
+      return res.status(409).json({ message: "You already rated this product" });
+
+    return res.status(500).json({ message: "Failed to submit rating" });
   }
 });
 
