@@ -1,9 +1,47 @@
 const express = require("express");
 const router = express.Router();
+const path = require("path");
+const multer = require("multer");
+
 const Product = require("../models/Product");
 const auth = require("../middleware/auth");
 const ratingService = require("../services/ratingService");
 const commentService = require("../services/commentService");
+
+/* ============== MULTER: IMAGE UPLOAD AYARI ============== */
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    // server.js -> app.use("/images", express.static(path.join(__dirname, "./public/images")));
+    // Buraya kaydedilen dosyalar /images/<filename> ile serve edilecek
+    cb(null, path.join(__dirname, "../public/images"));
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const base =
+      (req.body.id || file.fieldname + "-" + Date.now())
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]/gi, "_"); // güvenli dosya adı
+
+    cb(null, `${base}${ext}`);
+  },
+});
+
+function fileFilter(req, file, cb) {
+  if (!file.mimetype.startsWith("image/")) {
+    return cb(new Error("Only image files are allowed"), false);
+  }
+  cb(null, true);
+}
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
 /**
  * GET /api/products
  * Query:
@@ -31,7 +69,8 @@ router.get("/", async (req, res) => {
 
     // ---------- Filter ----------
     const filter = {};
-    if (category && category !== "All") filter.category = { $regex: category, $options: "i" };
+    if (category && category !== "All")
+      filter.category = { $regex: category, $options: "i" };
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -118,7 +157,24 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+/**
+ * POST /api/products
+ * Backlog 34: Product Manager yeni ürün ekler (image upload destekli).
+ *
+ * Beklenen istek:
+ *  Content-Type: multipart/form-data
+ *  Alanlar:
+ *    - id (string) *
+ *    - name (string) *
+ *    - price (number) *
+ *    - category (string) *
+ *    - seller (string) *
+ *    - stock (number, optional)
+ *    - description, model, serialNumber, tag, warranty, distributor, shipping
+ *    - image (file)  <-- buradan upload
+ *    - specs (opsiyonel; JSON string olarak gönderilebilir)
+ */
+router.post("/", upload.single("image"), async (req, res) => {
   try {
     const {
       id,
@@ -132,11 +188,23 @@ router.post("/", async (req, res) => {
       model = "",
       serialNumber = "",
       tag = "",
-      specs = {},
       warranty = "",
       distributor = "",
       shipping = 0,
     } = req.body;
+
+    // specs için: ister JSON string, ister hiç gelmesin
+    let specs;
+    if (req.body.specs) {
+      try {
+        const parsed = JSON.parse(req.body.specs);
+        if (parsed && typeof parsed === "object") {
+          specs = parsed;
+        }
+      } catch {
+        // specs parse edilemezse yok sayıyoruz, istersen buraya validation ekleyebilirsin
+      }
+    }
 
     if (!id || !name || !price || !category || !seller) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -144,7 +212,17 @@ router.post("/", async (req, res) => {
 
     const existing = await Product.findOne({ id });
     if (existing) {
-      return res.status(400).json({ message: "Product with this ID already exists" });
+      return res
+        .status(400)
+        .json({ message: "Product with this ID already exists" });
+    }
+
+    // Image URL kararı:
+    // - Eğer file upload geldiyse => /images/<filename>
+    // - Yoksa body.imageURL varsa onu kullan
+    let finalImageURL = imageURL;
+    if (req.file) {
+      finalImageURL = `/images/${req.file.filename}`;
     }
 
     const product = new Product({
@@ -155,7 +233,7 @@ router.post("/", async (req, res) => {
       seller,
       stock,
       description,
-      imageURL,
+      imageURL: finalImageURL,
       model,
       serialNumber,
       tag,
@@ -169,6 +247,11 @@ router.post("/", async (req, res) => {
     return res.status(201).json({ message: "Product created", product });
   } catch (err) {
     console.error("Error creating product:", err);
+
+    if (err.message === "Only image files are allowed") {
+      return res.status(400).json({ message: err.message });
+    }
+
     return res.status(500).json({ message: "Server error" });
   }
 });
@@ -197,7 +280,9 @@ router.post("/:id/rating", auth, async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
 
     if (err.code === "NOT_DELIVERED")
-      return res.status(403).json({ message: "You can only rate delivered products" });
+      return res
+        .status(403)
+        .json({ message: "You can only rate delivered products" });
 
     if (err.code === "ALREADY_RATED")
       return res.status(409).json({ message: "You already rated this product" });
@@ -213,7 +298,11 @@ router.post("/:id/comment", auth, async (req, res) => {
     const productId = req.params.id;
     const { comment } = req.body;
 
-    const newComment = await commentService.addComment(userId, productId, comment);
+    const newComment = await commentService.addComment(
+      userId,
+      productId,
+      comment
+    );
 
     return res.status(201).json({
       message: "Comment submitted successfully (Pending approval)",
@@ -229,7 +318,9 @@ router.post("/:id/comment", auth, async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
 
     if (err.code === "NOT_DELIVERED")
-      return res.status(403).json({ message: "You can only comment after product is delivered" });
+      return res
+        .status(403)
+        .json({ message: "You can only comment after product is delivered" });
 
     return res.status(500).json({ message: "Failed to submit comment" });
   }
