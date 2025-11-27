@@ -122,7 +122,36 @@ async function getOrdersByUserId(userId) {
     .lean();
 }
 
+async function cancelOrder(orderId, userId) {
+  const order = await Order.findById(orderId);
+  if (!order) {
+    const err = new Error("Order not found");
+    err.code = "ORDER_NOT_FOUND";
+    throw err;
+  }
+
+  // Sipariş bu kullanıcıya mı ait?
+  if (String(order.userId) !== String(userId)) {
+    const err = new Error("Not your order");
+    err.code = "NOT_YOUR_ORDER";
+    throw err;
+  }
+
+  // Sadece "processing" status'ü iptal edilebilir
+  if (order.status !== "processing") {
+    const err = new Error("Order cannot be cancelled");
+    err.code = "NOT_CANCELLABLE";
+    throw err;
+  }
+
+  order.status = "cancelled";
+  await order.save();
+
+  return order.toJSON();
+}
+
 module.exports = {
   createOrderFromCart,
   getOrdersByUserId,
+  cancelOrder,
 };

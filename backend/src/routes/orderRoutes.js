@@ -11,4 +11,7 @@ router.post("/", auth, orderController.createOrder);
 // GET /api/orders/my-orders
 router.get("/my-orders", auth, orderController.getMyOrders);
 
+// PATCH /api/orders/:id/cancel
+router.patch("/:id/cancel", auth, orderController.cancelOrder);
+
 module.exports = router;

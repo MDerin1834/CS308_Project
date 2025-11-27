@@ -66,3 +66,31 @@ exports.getMyOrders = async (req, res) => {
     return res.status(500).json({ message: "Failed to fetch orders" });
   }
 };
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const orderId = req.params.id;
+
+    const order = await orderService.cancelOrder(orderId, userId);
+
+    return res.status(200).json({
+      message: "Order cancelled successfully",
+      order,
+    });
+  } catch (err) {
+    console.error("❌ cancelOrder error:", err);
+
+    if (err.code === "ORDER_NOT_FOUND") {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (err.code === "NOT_YOUR_ORDER") {
+      return res.status(403).json({ message: "You cannot cancel this order" });
+    }
+    if (err.code === "NOT_CANCELLABLE") {
+      return res.status(400).json({ message: "Order cannot be cancelled" });
+    }
+
+    return res.status(500).json({ message: "Failed to cancel order" });
+  }
+};
