@@ -8,6 +8,17 @@ const auth = require("../middleware/auth");
 const ratingService = require("../services/ratingService");
 const commentService = require("../services/commentService");
 
+/* ============== ROLE CHECK: PRODUCT MANAGER ============== */
+
+function requireProductManager(req, res, next) {
+  if (!req.user || req.user.role !== "product_manager") {
+    return res
+      .status(403)
+      .json({ message: "Only product managers can manage products" });
+  }
+  next();
+}
+
 /* ============== MULTER: IMAGE UPLOAD AYARI ============== */
 
 const storage = multer.diskStorage({
@@ -158,6 +169,31 @@ router.get("/:id", async (req, res) => {
 });
 
 /**
+ * DELETE /api/products/:id
+ * Backlog 35: Product Manager ürün silebilsin.
+ * - Sadece role === "product_manager" olan kullanıcılar
+ * - Product.id üzerinden silme
+ */
+router.delete("/:id", auth, requireProductManager, async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    const deleted = await Product.findOneAndDelete({ id: productId });
+    if (!deleted) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    return res.status(200).json({
+      message: "Product deleted successfully",
+      product: deleted,
+    });
+  } catch (err) {
+    console.error("Error deleting product:", err);
+    return res.status(500).json({ message: "Failed to delete product" });
+  }
+});
+
+/**
  * POST /api/products
  * Backlog 34: Product Manager yeni ürün ekler (image upload destekli).
  *
@@ -174,87 +210,93 @@ router.get("/:id", async (req, res) => {
  *    - image (file)  <-- buradan upload
  *    - specs (opsiyonel; JSON string olarak gönderilebilir)
  */
-router.post("/", upload.single("image"), async (req, res) => {
-  try {
-    const {
-      id,
-      name,
-      price,
-      category,
-      seller,
-      stock = 0,
-      description = "",
-      imageURL = "",
-      model = "",
-      serialNumber = "",
-      tag = "",
-      warranty = "",
-      distributor = "",
-      shipping = 0,
-    } = req.body;
+router.post(
+  "/",
+  auth,
+  requireProductManager,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const {
+        id,
+        name,
+        price,
+        category,
+        seller,
+        stock = 0,
+        description = "",
+        imageURL = "",
+        model = "",
+        serialNumber = "",
+        tag = "",
+        warranty = "",
+        distributor = "",
+        shipping = 0,
+      } = req.body;
 
-    // specs için: ister JSON string, ister hiç gelmesin
-    let specs;
-    if (req.body.specs) {
-      try {
-        const parsed = JSON.parse(req.body.specs);
-        if (parsed && typeof parsed === "object") {
-          specs = parsed;
+      // specs için: ister JSON string, ister hiç gelmesin
+      let specs;
+      if (req.body.specs) {
+        try {
+          const parsed = JSON.parse(req.body.specs);
+          if (parsed && typeof parsed === "object") {
+            specs = parsed;
+          }
+        } catch {
+          // specs parse edilemezse yok sayıyoruz
         }
-      } catch {
-        // specs parse edilemezse yok sayıyoruz, istersen buraya validation ekleyebilirsin
       }
+
+      if (!id || !name || !price || !category || !seller) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const existing = await Product.findOne({ id });
+      if (existing) {
+        return res
+          .status(400)
+          .json({ message: "Product with this ID already exists" });
+      }
+
+      // Image URL kararı:
+      // - Eğer file upload geldiyse => /images/<filename>
+      // - Yoksa body.imageURL varsa onu kullan
+      let finalImageURL = imageURL;
+      if (req.file) {
+        finalImageURL = `/images/${req.file.filename}`;
+      }
+
+      const product = new Product({
+        id,
+        name,
+        price,
+        category,
+        seller,
+        stock,
+        description,
+        imageURL: finalImageURL,
+        model,
+        serialNumber,
+        tag,
+        specs,
+        warranty,
+        distributor,
+        shipping,
+      });
+
+      await product.save();
+      return res.status(201).json({ message: "Product created", product });
+    } catch (err) {
+      console.error("Error creating product:", err);
+
+      if (err.message === "Only image files are allowed") {
+        return res.status(400).json({ message: err.message });
+      }
+
+      return res.status(500).json({ message: "Server error" });
     }
-
-    if (!id || !name || !price || !category || !seller) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    const existing = await Product.findOne({ id });
-    if (existing) {
-      return res
-        .status(400)
-        .json({ message: "Product with this ID already exists" });
-    }
-
-    // Image URL kararı:
-    // - Eğer file upload geldiyse => /images/<filename>
-    // - Yoksa body.imageURL varsa onu kullan
-    let finalImageURL = imageURL;
-    if (req.file) {
-      finalImageURL = `/images/${req.file.filename}`;
-    }
-
-    const product = new Product({
-      id,
-      name,
-      price,
-      category,
-      seller,
-      stock,
-      description,
-      imageURL: finalImageURL,
-      model,
-      serialNumber,
-      tag,
-      specs,
-      warranty,
-      distributor,
-      shipping,
-    });
-
-    await product.save();
-    return res.status(201).json({ message: "Product created", product });
-  } catch (err) {
-    console.error("Error creating product:", err);
-
-    if (err.message === "Only image files are allowed") {
-      return res.status(400).json({ message: err.message });
-    }
-
-    return res.status(500).json({ message: "Server error" });
   }
-});
+);
 
 // POST /api/products/:id/rating
 router.post("/:id/rating", auth, async (req, res) => {
