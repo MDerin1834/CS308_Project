@@ -4,13 +4,6 @@ Thumbs.db
 *.log
 *.tmp
 
-# --- Environment & credentials ---
-.env
-.env.local
-.env.development.local
-.env.production.local
-.env.test.local
-
 # --- Node.js dependencies ---
 node_modules/
 npm-debug.log*
