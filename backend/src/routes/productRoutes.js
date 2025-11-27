@@ -194,22 +194,41 @@ router.delete("/:id", auth, requireProductManager, async (req, res) => {
 });
 
 /**
- * POST /api/products
- * Backlog 34: Product Manager yeni ürün ekler (image upload destekli).
- *
- * Beklenen istek:
- *  Content-Type: multipart/form-data
- *  Alanlar:
- *    - id (string) *
- *    - name (string) *
- *    - price (number) *
- *    - category (string) *
- *    - seller (string) *
- *    - stock (number, optional)
- *    - description, model, serialNumber, tag, warranty, distributor, shipping
- *    - image (file)  <-- buradan upload
- *    - specs (opsiyonel; JSON string olarak gönderilebilir)
+ *  - Sadece product_manager rolü
+ *  - stock >= 0, sayı olmalı
+ *  - Product.id ile bulunup güncellenir
  */
+router.put("/:id/stock", auth, requireProductManager, async (req, res) => {
+  try {
+    const { stock } = req.body;
+
+    const newStock = Number(stock);
+    if (!Number.isFinite(newStock) || newStock < 0) {
+      return res
+        .status(400)
+        .json({ message: "Stock must be a non-negative number" });
+    }
+
+    const product = await Product.findOneAndUpdate(
+      { id: req.params.id },
+      { $set: { stock: newStock } },
+      { new: true, lean: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    return res.status(200).json({
+      message: "Stock updated successfully",
+      product,
+    });
+  } catch (err) {
+    console.error("Error updating stock:", err);
+    return res.status(500).json({ message: "Failed to update stock" });
+  }
+});
+
 router.post(
   "/",
   auth,
