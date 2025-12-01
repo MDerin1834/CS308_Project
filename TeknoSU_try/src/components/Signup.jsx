@@ -11,7 +11,7 @@ const Signup = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false); // ⭐ Loading state
 
-  const { signUpWithGmail, createUser } = useContext(AuthContext);
+  const { signUpWithGmail, registerUser } = useContext(AuthContext);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -38,10 +38,15 @@ const Signup = () => {
   const handleSignup = (event) => {
     event.preventDefault();
     const form = event.target;
-    const email = form.email.value;
-    const password = form.password.value;
-    const confirmPassword = form.confirmPassword.value;
+    const username = form.elements.name?.value?.trim();
+    const email = form.elements.email?.value?.trim();
+    const password = form.elements.password?.value;
+    const confirmPassword = form.elements.confirmPassword?.value;
 
+    if (!username) {
+      setErrorMessage("User name is required");
+      return;
+    }
     if (password !== confirmPassword) {
       setErrorMessage("Passwords don't match! Please provide correct password");
       return;
@@ -50,20 +55,16 @@ const Signup = () => {
     setErrorMessage("");
     setLoading(true); // ⭐ Show overlay
 
-    createUser(email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-
-        localStorage.setItem("user", JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName || "User",
-        }));
-
-        alert("Account Created Successfully!");
-        navigate(from, { replace: true });
+    registerUser(username, email, password)
+      .then((result) => {
+        if (result.success) {
+          alert(result.message || "Account Created Successfully!");
+          navigate(from, { replace: true });
+        } else {
+          setErrorMessage(result.message || "Registration failed");
+        }
       })
-      .catch((error) => setErrorMessage(error.message))
+      .catch((error) => setErrorMessage(error.message || "Registration failed"))
       .finally(() => setLoading(false)); // ⭐ Hide overlay
   };
 

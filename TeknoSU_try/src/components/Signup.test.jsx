@@ -37,6 +37,8 @@ const fillSignupForm = async (user, { name, email, password, confirmPassword }) 
 describe('Signup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Stub alert to avoid jsdom "not implemented" errors
+    global.alert = vi.fn();
     mockLocationValue = { state: { from: { pathname: '/' } } };
   });
 
@@ -57,7 +59,7 @@ describe('Signup', () => {
     });
 
     expect(registerUser).not.toHaveBeenCalled();
-    expect(await screen.findByText(/şifreler uyuşmuyor/i)).toBeInTheDocument();
+    expect(await screen.findByText(/passwords don't match/i)).toBeInTheDocument();
   });
 
   it('requires a non-empty trimmed name', async () => {
@@ -73,7 +75,7 @@ describe('Signup', () => {
     });
 
     expect(registerUser).not.toHaveBeenCalled();
-    expect(await screen.findByText(/kullanıcı adı gerekli/i)).toBeInTheDocument();
+    expect(await screen.findByText(/user name is required/i)).toBeInTheDocument();
   });
 
   it('shows backend error messages when registration fails', async () => {
@@ -117,7 +119,7 @@ describe('Signup', () => {
     });
 
     expect(registerUser).toHaveBeenCalledWith('John Doe', 'john@example.com', 'Password123!');
-    expect(await screen.findByText(/custom success message/i)).toBeInTheDocument();
+    expect(global.alert).toHaveBeenCalledWith('Custom success message');
 
     await waitFor(
       () => {

@@ -28,10 +28,17 @@ const AuthProvider = ({ children }) => {
       );
 
       if (response.status === 201 || response.status === 200) {
+        const { token, user } = response.data || {};
+        if (token && user) {
+          localStorage.setItem("token", token);
+          localStorage.setItem("user", JSON.stringify(user));
+          setUser(user);
+        }
         return {
           success: true,
           status: response.status,
           message: response.data?.message || "User registered successfully",
+          data: response.data,
         };
       }
 
@@ -50,6 +57,11 @@ const AuthProvider = ({ children }) => {
           "Sunucuyla iletişim kurulamadı. Lütfen tekrar deneyin.",
       };
     }
+  };
+
+  // Placeholder for future OAuth flow to prevent runtime errors on click
+  const signUpWithGmail = async () => {
+    return Promise.reject(new Error("Google signup is not configured yet."));
   };
 
   // ✅ LOGIN
@@ -95,7 +107,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, registerUser, login, logOut }}>
+    <AuthContext.Provider value={{ user, loading, registerUser, login, logOut, signUpWithGmail }}>
       {!loading && children}
     </AuthContext.Provider>
   );
