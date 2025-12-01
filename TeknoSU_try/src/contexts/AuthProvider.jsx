@@ -81,6 +81,8 @@ const AuthProvider = ({ children }) => {
           success: true,
           status: response.status,
           message: response.data.message || "Login successful",
+          user: response.data.user,
+          token: response.data.token,
         };
       }
 

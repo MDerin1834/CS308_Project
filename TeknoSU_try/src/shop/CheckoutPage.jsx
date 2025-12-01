@@ -19,6 +19,13 @@ const CheckoutPage = ({ cartItems = [], orderTotal = 0 }) => {
     country: "",
     postalCode: "",
   });
+  const [card, setCard] = useState({
+    cardHolder: "",
+    cardNumber: "",
+    expiryMonth: "",
+    expiryYear: "",
+    cvv: "",
+  });
   const navigate = useNavigate();
 
   // fallback: fetch cart if no props provided (route access)
@@ -51,23 +58,57 @@ const CheckoutPage = ({ cartItems = [], orderTotal = 0 }) => {
       return;
     }
 
+    if (!card.cardHolder || !card.cardNumber || !card.expiryMonth || !card.expiryYear || !card.cvv) {
+      setError("Please fill all required card fields");
+      return;
+    }
+
     try {
       setProcessing(true);
-      const res = await api.post(
+      const orderRes = await api.post(
         "/api/orders",
         { shippingAddress: shipping },
         { validateStatus: () => true }
       );
 
-      if (res.status === 201 || res.status === 200) {
+      if (orderRes.status !== 201 && orderRes.status !== 200) {
+        setError(orderRes.data?.message || "Order could not be created");
+        return;
+      }
+
+      const createdOrder = orderRes.data?.order;
+      const orderId = createdOrder?.id || createdOrder?._id;
+      const orderTotal = createdOrder?.total ?? total;
+
+      const payRes = await api.post(
+        "/api/payment/checkout",
+        {
+          orderId,
+          amount: orderTotal,
+          cardNumber: card.cardNumber,
+          expiryMonth: card.expiryMonth,
+          expiryYear: card.expiryYear,
+          cvv: card.cvv,
+          cardHolder: card.cardHolder,
+        },
+        { validateStatus: () => true }
+      );
+
+      if (payRes.status === 200) {
         alert("Your order placed successfully!");
         setItems([]);
         setTotal(0);
         navigate("/review-order", {
-          state: { items, total },
+          state: {
+            items,
+            total: orderTotal,
+            invoicePdfBase64: payRes.data?.invoicePdfBase64,
+            invoiceFileName: payRes.data?.invoiceFileName,
+            emailSent: payRes.data?.emailSent,
+          },
         });
       } else {
-        setError(res.data?.message || "Order could not be created");
+        setError(payRes.data?.message || "Payment failed");
       }
     } catch (err) {
       setError(err?.response?.data?.message || "Order could not be created");
@@ -162,20 +203,61 @@ const CheckoutPage = ({ cartItems = [], orderTotal = 0 }) => {
                       <div className="text-center"><h5>Credit card</h5></div>
                       <div className="form mt-3">
                         <div className="inputbox">
-                          <input type="text" name="name" className="form-control" required="required" />
+                          <input
+                            type="text"
+                            name="cardHolder"
+                            className="form-control"
+                            required="required"
+                            value={card.cardHolder}
+                            onChange={(e) => setCard({ ...card, cardHolder: e.target.value })}
+                          />
                           <span>Cardholder Name</span>
                         </div>
                         <div className="inputbox">
-                          <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
+                          <input
+                            type="text"
+                            name="cardNumber"
+                            className="form-control"
+                            required="required"
+                            value={card.cardNumber}
+                            onChange={(e) => setCard({ ...card, cardNumber: e.target.value })}
+                          />
                           <span>Card Number</span> <i className="fa fa-eye"></i>
                         </div>
                         <div className="d-flex flex-row">
                           <div className="inputbox">
-                            <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
+                            <input
+                              type="text"
+                              name="expiryMonth"
+                              className="form-control"
+                              required="required"
+                              placeholder="MM"
+                              value={card.expiryMonth}
+                              onChange={(e) => setCard({ ...card, expiryMonth: e.target.value })}
+                            />
                             <span>Expiration Date</span>
                           </div>
                           <div className="inputbox">
-                            <input type="text" name="name" min="1" max="999" className="form-control" required="required" />
+                            <input
+                              type="text"
+                              name="expiryYear"
+                              className="form-control"
+                              required="required"
+                              placeholder="YYYY"
+                              value={card.expiryYear}
+                              onChange={(e) => setCard({ ...card, expiryYear: e.target.value })}
+                            />
+                            <span>Expiration Year</span>
+                          </div>
+                          <div className="inputbox">
+                            <input
+                              type="text"
+                              name="cvv"
+                              className="form-control"
+                              required="required"
+                              value={card.cvv}
+                              onChange={(e) => setCard({ ...card, cvv: e.target.value })}
+                            />
                             <span>CVV</span>
                           </div>
                         </div>

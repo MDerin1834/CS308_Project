@@ -5,9 +5,32 @@ import { jsPDF } from "jspdf";
 const ReviewOrderPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items = [], total = 0 } = location.state || {};
+  const {
+    items = [],
+    total = 0,
+    invoicePdfBase64,
+    invoiceFileName = "invoice.pdf",
+    emailSent,
+  } = location.state || {};
 
-  const handleGenerateInvoice = () => {
+  const handleDownloadInvoice = () => {
+    if (invoicePdfBase64) {
+      const byteCharacters = atob(invoicePdfBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = invoiceFileName || "invoice.pdf";
+      link.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+    // Fallback: client-generated PDF if backend PDF yoksa
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("Invoice", 105, 20, { align: "center" });
@@ -33,6 +56,11 @@ const ReviewOrderPage = () => {
   return (
     <div className="container padding-tb">
       <h2>Review Your Order</h2>
+      {emailSent !== undefined && (
+        <p style={{ color: emailSent ? "green" : "orange" }}>
+          {emailSent ? "Invoice emailed to your address." : "Invoice email could not be sent."}
+        </p>
+      )}
       {items.length === 0 ? (
         <p>Your order is empty.</p>
       ) : (
@@ -58,8 +86,8 @@ const ReviewOrderPage = () => {
             </tbody>
           </table>
           <h3>Order Total: ${total.toFixed(2)}</h3>
-          <button className="btn btn-primary" onClick={handleGenerateInvoice}>
-            Generate Invoice (PDF)
+          <button className="btn btn-primary" onClick={handleDownloadInvoice}>
+            Download Invoice (PDF)
           </button>
           <button
             className="btn btn-secondary ms-2"
