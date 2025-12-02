@@ -48,6 +48,7 @@ import CheckoutPage from './shop/CheckoutPage.jsx';
 import ReviewOrderPage from './shop/ReviewOrderPage.jsx';
 import PastOrders from './shop/PastOrders.jsx';
 import ProductCreate from './shop/ProductCreate.jsx';
+import WishlistPage from './shop/WishList.jsx';
 
 
 
@@ -112,6 +113,11 @@ const router = createBrowserRouter([
       {
         path: "/past-orders",
         element: <PastOrders />
+      },
+  
+      {
+        path: "/wishlist",
+        element:<WishlistPage />
       },
       {
         path: "/products/new",
