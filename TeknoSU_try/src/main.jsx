@@ -47,6 +47,7 @@ import Signup from './components/Signup.jsx';
 import CheckoutPage from './shop/CheckoutPage.jsx';
 import ReviewOrderPage from './shop/ReviewOrderPage.jsx';
 import PastOrders from './shop/PastOrders.jsx';
+import ProductCreate from './shop/ProductCreate.jsx';
 
 
 
@@ -103,14 +104,22 @@ const router = createBrowserRouter([
   {
     path: "sign-up",
     element: <Signup />
-  },
-  {
+      },
+      {
         path: "/review-order",
         element: <ReviewOrderPage />
       },
       {
         path: "/past-orders",
         element: <PastOrders />
+      },
+      {
+        path: "/products/new",
+        element: (
+          <PrivateRoute allowedRoles={["product_manager"]}>
+            <ProductCreate />
+          </PrivateRoute>
+        ),
       }
 ]);
 

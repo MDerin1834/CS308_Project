@@ -1,14 +1,17 @@
 import React, { useEffect } from "react";
 import PageHeader from "../components/PageHeader";
-import { Component, Fragment, useState } from "react";
+import { Component, Fragment, useContext, useState } from "react";
 import Search from "./Search";
 import Pagination from "./Pagination";
 import ShopCategory from "./ShopCategory";
 import ProductCards from "./ProductCards";
 const showResult = "Showing 01 - 12 of 139 Results";
 import api from "../api/client";
+import { Link } from "react-router-dom";
+import { AuthContext } from "../contexts/AuthProvider";
 
 const Shop = () => {
+  const { user } = useContext(AuthContext);
   const [GridList, setGridList] = useState(true);
   const [products, setProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
@@ -80,6 +83,11 @@ const [selectedCategory, setSelectedCategory] = useState("All");
                       ? "Loading products..."
                       : `Showing ${currentProducts.length} of ${products.length} Results`}
                   </p>
+                  {user?.role === "product_manager" && (
+                    <Link className="lab-btn bg-primary" to="/products/new">
+                      <span>+ New Product</span>
+                    </Link>
+                  )}
                   <div
                     className={`product-view-mode ${
                       GridList ? "gridActive" : "listActive"
