@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthProvider";
-import LoadingOverlay from "../components/LoadingOverlay"; // ⭐ USE FULL-PAGE OVERLAY
+import LoadingOverlay from "../components/LoadingOverlay";
 
 const title = "Login";
 const socialTitle = "Login With Social Media";
@@ -9,14 +9,14 @@ const btnText = "Submit Now";
 
 const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false); // ⭐ LOADING STATE
+  const [loading, setLoading] = useState(false);
 
   const { signUpWithGmail, login } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const from = location.state?.from?.pathname || "/";
 
-  // ⭐ LOGIN WITH GOOGLE
+  // ⭐ HANDLE GOOGLE LOGIN
   const handleRegister = () => {
     setLoading(true);
     signUpWithGmail()
@@ -32,8 +32,13 @@ const Login = () => {
           })
         );
 
+        // ⭐ REDIRECT AFTER LOGIN (guest checkout)
+        const redirectPath =
+          localStorage.getItem("redirectAfterLogin") || from;
+        localStorage.removeItem("redirectAfterLogin");
+
         setLoading(false);
-        navigate(from, { replace: true });
+        navigate(redirectPath, { replace: true });
       })
       .catch((error) => {
         setErrorMessage(error.message);
@@ -41,7 +46,7 @@ const Login = () => {
       });
   };
 
-  // ⭐ LOGIN WITH EMAIL & PASSWORD
+  // ⭐ HANDLE EMAIL/PASSWORD LOGIN
   const handleLogin = (event) => {
     event.preventDefault();
     setLoading(true);
@@ -63,8 +68,13 @@ const Login = () => {
           })
         );
 
+        // ⭐ REDIRECT AFTER LOGIN (guest checkout)
+        const redirectPath =
+          localStorage.getItem("redirectAfterLogin") || from;
+        localStorage.removeItem("redirectAfterLogin");
+
         setLoading(false);
-        navigate(from, { replace: true });
+        navigate(redirectPath, { replace: true });
       })
       .catch((error) => {
         setErrorMessage("Invalid email or password.");
@@ -74,7 +84,6 @@ const Login = () => {
 
   return (
     <div>
-      {/* ⭐ SHOW FULL-PAGE LOADING OVERLAY */}
       {loading && <LoadingOverlay />}
 
       <div className="login-section padding-tb section-bg">
@@ -84,27 +93,14 @@ const Login = () => {
 
             <form className="account-form" onSubmit={handleLogin}>
               <div className="form-group">
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email Address *"
-                  required
-                />
+                <input type="email" name="email" placeholder="Email Address *" required />
               </div>
 
               <div className="form-group">
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Password *"
-                  required
-                />
+                <input type="password" name="password" placeholder="Password *" required />
               </div>
 
-              {/* ERROR MESSAGE */}
-              {errorMessage && (
-                <div className="text-danger mb-2">{errorMessage}</div>
-              )}
+              {errorMessage && <div className="text-danger mb-2">{errorMessage}</div>}
 
               <div className="form-group">
                 <div className="d-flex justify-content-between flex-wrap pt-sm-2">
@@ -128,40 +124,22 @@ const Login = () => {
                 Don’t Have an Account? <Link to="/sign-up">Sign Up</Link>
               </span>
 
-              <span className="or">
-                <span>or</span>
-              </span>
+              <span className="or"><span>or</span></span>
 
               <h5 className="subtitle">{socialTitle}</h5>
 
-              {/* SOCIAL LOGIN */}
               <ul className="lab-ul social-icons justify-content-center">
                 <li>
                   <button onClick={handleRegister} className="github">
                     <i className="icofont-github"></i>
                   </button>
                 </li>
-                <li>
-                  <a href="/" className="facebook">
-                    <i className="icofont-facebook"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="twitter">
-                    <i className="icofont-twitter"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="linkedin">
-                    <i className="icofont-linkedin"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="/" className="instagram">
-                    <i className="icofont-instagram"></i>
-                  </a>
-                </li>
+                <li><a href="/" className="facebook"><i className="icofont-facebook"></i></a></li>
+                <li><a href="/" className="twitter"><i className="icofont-twitter"></i></a></li>
+                <li><a href="/" className="linkedin"><i className="icofont-linkedin"></i></a></li>
+                <li><a href="/" className="instagram"><i className="icofont-instagram"></i></a></li>
               </ul>
+
             </div>
           </div>
         </div>
