@@ -22,6 +22,8 @@ const SingleProduct = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [stockValue, setStockValue] = useState("");
+  const [stockUpdating, setStockUpdating] = useState(false);
   const { id } = useParams();
   useEffect(() => {
     let mounted = true;
@@ -30,6 +32,7 @@ const SingleProduct = () => {
       .then((res) => {
         if (!mounted) return;
         setProduct(res.data);
+        setStockValue(res.data?.stock ?? 0);
       })
       .catch((err) => {
         if (!mounted) return;
@@ -53,6 +56,33 @@ const SingleProduct = () => {
       }
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to delete product");
+    }
+  };
+
+  const handleStockUpdate = async () => {
+    const nextStock = Number(stockValue);
+    if (!Number.isFinite(nextStock) || nextStock < 0) {
+      setError("Stock must be a non-negative number");
+      return;
+    }
+    setStockUpdating(true);
+    setError("");
+    try {
+      const res = await api.put(
+        `/api/products/${id}/stock`,
+        { stock: nextStock },
+        { validateStatus: () => true }
+      );
+      if (res.status === 200 && res.data?.product) {
+        setProduct((prev) => ({ ...prev, stock: res.data.product.stock }));
+        setStockValue(res.data.product.stock);
+      } else {
+        setError(res.data?.message || "Failed to update stock");
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to update stock");
+    } finally {
+      setStockUpdating(false);
     }
   };
 
@@ -112,9 +142,28 @@ const SingleProduct = () => {
                             result.map(item => <ProductDisplay item={item} key={item.id}/>)
                           }
                           {user?.role === "product_manager" && (
-                            <button className="lab-btn bg-danger mt-3" onClick={handleDelete}>
-                              <span>Delete Product</span>
-                            </button>
+                            <>
+                              <div className="d-flex align-items-center gap-2 mt-3">
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  style={{ maxWidth: "160px" }}
+                                  value={stockValue}
+                                  min="0"
+                                  onChange={(e) => setStockValue(e.target.value)}
+                                />
+                                <button
+                                  className="lab-btn bg-primary"
+                                  onClick={handleStockUpdate}
+                                  disabled={stockUpdating}
+                                >
+                                  <span>{stockUpdating ? "Updating..." : "Update Stock"}</span>
+                                </button>
+                              </div>
+                              <button className="lab-btn bg-danger mt-3" onClick={handleDelete}>
+                                <span>Delete Product</span>
+                              </button>
+                            </>
                           )}
                         </div>
                       </div>

@@ -107,6 +107,8 @@ const CheckoutPage = ({ cartItems = [], orderTotal = 0 }) => {
             emailSent: payRes.data?.emailSent,
           },
         });
+        // Refresh to ensure updated stock is reflected across the UI
+        window.location.reload();
       } else {
         setError(payRes.data?.message || "Payment failed");
       }
