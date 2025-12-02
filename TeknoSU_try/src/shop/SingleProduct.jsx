@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import Rating from "../components/Rating";
 
@@ -14,8 +14,11 @@ import ProductDisplay from "./ProductDisplay";
 import Tags from "./Tags";
 const reviwtitle = "Add a Review";
 import api from "../api/client";
+import { AuthContext } from "../contexts/AuthProvider";
 
 const SingleProduct = () => {
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,6 +40,21 @@ const SingleProduct = () => {
       mounted = false;
     };
   }, [id]);
+
+  const handleDelete = async () => {
+    if (!window.confirm("Delete this product? This action cannot be undone.")) return;
+    try {
+      const res = await api.delete(`/api/products/${id}`, { validateStatus: () => true });
+      if (res.status === 200) {
+        alert("Product deleted.");
+        navigate("/shop");
+      } else {
+        setError(res.data?.message || "Failed to delete product");
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to delete product");
+    }
+  };
 
 
   const result = product ? [product] : [];
@@ -93,6 +111,11 @@ const SingleProduct = () => {
                           {
                             result.map(item => <ProductDisplay item={item} key={item.id}/>)
                           }
+                          {user?.role === "product_manager" && (
+                            <button className="lab-btn bg-danger mt-3" onClick={handleDelete}>
+                              <span>Delete Product</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
