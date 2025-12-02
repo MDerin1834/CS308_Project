@@ -112,15 +112,15 @@ const CartPage = () => {
   );
   const orderTotal = cartSubtotal;
 
-  const handleCheckout = () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
-      localStorage.setItem("redirectAfterLogin", "/cart-page");
-      navigate("/login");
-    } else {
-      setShowCheckout(true);
-    }
-  };
+ const handleCheckout = () => {
+  if (!user) {
+    localStorage.setItem("redirectAfterLogin", "/cart-page");
+    navigate("/login");
+    return;
+  }
+
+  setShowCheckout(true);
+};
 
   return (
     <div>
