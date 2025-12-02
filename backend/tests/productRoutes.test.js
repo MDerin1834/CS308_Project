@@ -93,6 +93,7 @@ describe("Product Routes", () => {
       category: { $regex: "electronics", $options: "i" },
       $or: [
         { name: { $regex: "laptop", $options: "i" } },
+        { description: { $regex: "laptop", $options: "i" } },
         { seller: { $regex: "laptop", $options: "i" } },
       ],
     });

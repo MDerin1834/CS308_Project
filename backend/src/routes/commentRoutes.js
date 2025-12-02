@@ -6,7 +6,7 @@ const commentService = require("../services/commentService");
 
 // Only product manager can use these routes
 function requirePM(req, res, next) {
-  if (req.user.role !== "productManager") {
+  if (req.user.role !== "product_manager") {
     return res.status(403).json({ message: "Only product managers can perform this action" });
   }
   next();

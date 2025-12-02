@@ -101,7 +101,7 @@ exports.updateOrderStatus = async (req, res) => {
     const orderId = req.params.id;
     const { status } = req.body;
 
-    if (userRole !== "productManager") {
+    if (userRole !== "product_manager") {
       return res.status(403).json({ message: "Only product managers can update status" });
     }
 
