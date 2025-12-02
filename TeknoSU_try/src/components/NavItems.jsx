@@ -93,11 +93,18 @@ const NavItems = () => {
                 // Kullanıcı GİRİŞ YAPMIŞSA (user objesi varsa)
                 <>
                   <div className="d-none d-md-block">
-                    {/* Profil linki (isteğe bağlı) */}
+
+                    {/* ❤️ WISHLIST ICON — YENİ EKLENDİ */}
+                    <Link to="/wishlist" className="me-3">
+                      <i className="icofont-heart-alt"></i>
+                    </Link>
+
+                    {/* Profil yerine CART */}
                     <Link to="/cart-page" className="me-3"> 
                         <i className="icofont-cart-alt"></i>
                         {/* <span>{user.username || user.email}</span> */}
                     </Link>
+
                     {/* Logout Butonu */}
                     <a
                       href="#"
