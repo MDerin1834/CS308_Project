@@ -172,9 +172,29 @@ async function updateOrderStatus(orderId, newStatus) {
   return order.toJSON();
 }
 
+/**
+ * #37: Product managers need a quick delivery list.
+ * Returns latest orders with address + completion info.
+ */
+async function getAllDeliveries() {
+  const orders = await Order.find({})
+    .sort({ createdAt: -1 })
+    .select({ shippingAddress: 1, status: 1, createdAt: 1 })
+    .lean();
+
+  return orders.map((order) => ({
+    id: order._id?.toString(),
+    shippingAddress: order.shippingAddress,
+    status: order.status,
+    completed: order.status === "delivered",
+    createdAt: order.createdAt,
+  }));
+}
+
 module.exports = {
   createOrderFromCart,
   getOrdersByUserId,
   cancelOrder,
   updateOrderStatus,
+  getAllDeliveries,
 };

@@ -124,3 +124,23 @@ exports.updateOrderStatus = async (req, res) => {
     return res.status(500).json({ message: "Failed to update order status" });
   }
 };
+
+/**
+ * GET /api/orders/deliveries
+ * Only product managers
+ */
+exports.getDeliveries = async (req, res) => {
+  try {
+    if (req.user.role !== "product_manager") {
+      return res
+        .status(403)
+        .json({ message: "Only product managers can view deliveries" });
+    }
+
+    const deliveries = await orderService.getAllDeliveries();
+    return res.status(200).json({ deliveries });
+  } catch (err) {
+    console.error("❌ getDeliveries error:", err);
+    return res.status(500).json({ message: "Failed to fetch deliveries" });
+  }
+};
