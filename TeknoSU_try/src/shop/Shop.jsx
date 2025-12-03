@@ -1,11 +1,10 @@
 import React, { useEffect } from "react";
 import PageHeader from "../components/PageHeader";
-import { Component, Fragment, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import Search from "./Search";
 import Pagination from "./Pagination";
 import ShopCategory from "./ShopCategory";
 import ProductCards from "./ProductCards";
-const showResult = "Showing 01 - 12 of 139 Results";
 import api from "../api/client";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthProvider";

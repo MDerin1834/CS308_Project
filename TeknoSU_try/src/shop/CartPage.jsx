@@ -218,7 +218,12 @@ const CartPage = () => {
             {/* ⭐ BOTTOM SECTION */}
             <div className="cart-bottom">
               <div className="cart-checkout-box">
-                <form className="coupon" action="/">
+                <form
+                  className="coupon"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                  }}
+                >
                   <input
                     type="text"
                     placeholder="Coupon Code..."
@@ -228,8 +233,7 @@ const CartPage = () => {
                 </form>
 
                 <div className="cart-checkout">
-                  <input type="submit" value="Update Cart" />
-                  <button className="lab-btn bg-primary" onClick={handleCheckout}>
+                  <button type="button" className="lab-btn bg-primary" onClick={handleCheckout}>
                     Proceed to Checkout
                   </button>
                 </div>

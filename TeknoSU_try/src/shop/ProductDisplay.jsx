@@ -1,6 +1,6 @@
-/* eslint-disable react/prop-types */
+
 import React, { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { AuthContext } from "../contexts/AuthProvider";
 
@@ -13,7 +13,6 @@ const ProductDisplay = ({ item }) => {
   const { id, img, price, name, quantity, seller, stock } = item;
 
   const [prequantity, setQuantity] = useState(quantity);
-  const [coupon, setCoupon] = useState("");
   const [size, setSize] = useState("Select Size");
   const [color, setColor] = useState("Select Color");
 
@@ -67,7 +66,6 @@ const ProductDisplay = ({ item }) => {
     setQuantity(1);
     setSize("Select Size");
     setColor("Select Color");
-    setCoupon("");
   };
 
   // ✅ Quick checkout button logic
@@ -135,10 +133,6 @@ const ProductDisplay = ({ item }) => {
               onChange={(e) => setQuantity(Math.min(parseInt(e.target.value, 10) || 1, stock))}
             />
             <div className="inc qtybutton" onClick={handleIncrease}>+</div>
-          </div>
-
-          <div className="discount-code mb-2">
-            <input type="text" placeholder="Enter Discount Code" onChange={(e) => setCoupon(e.target.value)} />
           </div>
 
           <button

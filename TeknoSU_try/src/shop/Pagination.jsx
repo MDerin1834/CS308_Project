@@ -1,6 +1,4 @@
-/* eslint-disable react/prop-types */
-import React, { useState } from 'react'
-import { NavLink } from 'react-router-dom';
+import React from 'react'
 
 const Pagination = ({ productsPerPage, totalProducts, paginate, activePage }) => {
     const pageNumbers = [];

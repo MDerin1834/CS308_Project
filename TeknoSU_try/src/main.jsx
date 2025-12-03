@@ -84,7 +84,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/check-out",
-        element: <PrivateRoute><CheckoutPage/></PrivateRoute>
+        element: <PrivateRoute><CheckoutPage useModal={false} /></PrivateRoute>
       },
       // ❗️ HATA DÜZELTMESİ: Bu rota da, yukarıdaki import'a bağlı olduğu için yorum satırı yapıldı
       // {
@@ -112,9 +112,9 @@ const router = createBrowserRouter([
       },
       {
         path: "/past-orders",
-        element: <PastOrders />
+        element: <PrivateRoute><PastOrders /></PrivateRoute>
       },
-  
+
       {
         path: "/wishlist",
         element:<WishlistPage />

@@ -99,6 +99,11 @@ const NavItems = () => {
                       <i className="icofont-heart-alt"></i>
                     </Link>
 
+                    {/* 📦 MY ORDERS */}
+                    <Link to="/past-orders" className="me-3">
+                      <i className="icofont-box"></i>
+                    </Link>
+
                     {/* Profil yerine CART */}
                     <Link to="/cart-page" className="me-3"> 
                         <i className="icofont-cart-alt"></i>
