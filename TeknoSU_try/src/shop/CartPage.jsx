@@ -14,11 +14,13 @@ const CartPage = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  // ⭐ Kartı yükle
   const loadCart = async () => {
     setLoading(true);
     try {
       if (user) {
         const res = await api.get("/api/cart", { validateStatus: () => true });
+
         if (res.status === 200 && Array.isArray(res.data?.items)) {
           const normalized = res.data.items.map((it) => ({
             id: it.productId,
@@ -27,14 +29,16 @@ const CartPage = () => {
             quantity: it.quantity,
             img: it.img,
           }));
+
           setCartItems(normalized);
-          setLoading(false);
           return;
         }
       }
-      // fallback to local storage for guests or failed fetch
+
+      // ⭐ Guest fallback (localStorage)
       const storedCartItems = JSON.parse(localStorage.getItem("cart")) || [];
       setCartItems(storedCartItems);
+
     } catch (err) {
       const storedCartItems = JSON.parse(localStorage.getItem("cart")) || [];
       setCartItems(storedCartItems);
@@ -47,10 +51,13 @@ const CartPage = () => {
     loadCart();
   }, [user]);
 
+  // ⭐ Ürün toplam fiyatı
   const calculateTotalPrice = (item) => item.price * item.quantity;
 
+  // ⭐ Miktar güncelle
   const updateQuantity = async (item, nextQty) => {
     if (nextQty < 1) return;
+
     setLoading(true);
     try {
       if (user) {
@@ -59,6 +66,7 @@ const CartPage = () => {
           { productId: item.id, quantity: nextQty },
           { validateStatus: () => true }
         );
+
         if (res.status === 200 && Array.isArray(res.data?.items)) {
           const normalized = res.data.items.map((it) => ({
             id: it.productId,
@@ -67,12 +75,15 @@ const CartPage = () => {
             quantity: it.quantity,
             img: it.img,
           }));
+
           setCartItems(normalized);
         }
       } else {
+        // ⭐ Local fallback
         const updatedCart = cartItems.map((cartItem) =>
           cartItem.id === item.id ? { ...cartItem, quantity: nextQty } : cartItem
         );
+
         setCartItems(updatedCart);
         localStorage.setItem("cart", JSON.stringify(updatedCart));
       }
@@ -82,12 +93,13 @@ const CartPage = () => {
   };
 
   const handleIncrease = (item) => updateQuantity(item, item.quantity + 1);
-
   const handleDecrease = (item) =>
     item.quantity > 1 ? updateQuantity(item, item.quantity - 1) : null;
 
+  // ⭐ Ürün kaldır
   const handleRemoveItem = (item) => {
     setLoading(true);
+
     const removeLocal = () => {
       const updatedCart = cartItems.filter((cartItem) => cartItem.id !== item.id);
       setCartItems(updatedCart);
@@ -106,21 +118,24 @@ const CartPage = () => {
     }
   };
 
+  // ⭐ Toplam & subtotal
   const cartSubtotal = cartItems.reduce(
     (total, item) => total + calculateTotalPrice(item),
     0
   );
+
   const orderTotal = cartSubtotal;
 
- const handleCheckout = () => {
-  if (!user) {
-    localStorage.setItem("redirectAfterLogin", "/cart-page");
-    navigate("/login");
-    return;
-  }
+  // ⭐ Checkout butonu
+  const handleCheckout = () => {
+    if (!user) {
+      localStorage.setItem("redirectAfterLogin", "/cart-page");
+      navigate("/login");
+      return;
+    }
 
-  setShowCheckout(true);
-};
+    setShowCheckout(true);
+  };
 
   return (
     <div>
@@ -132,6 +147,8 @@ const CartPage = () => {
       <div className="shop-cart padding-tb">
         <div className="container">
           <div className="section-wrapper">
+            
+            {/* ⭐ CART TABLE */}
             <div className="cart-top">
               <table>
                 <thead>
@@ -143,6 +160,7 @@ const CartPage = () => {
                     <th className="cat-edit">Edit</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {cartItems.map((item, indx) => (
                     <tr key={indx}>
@@ -152,20 +170,40 @@ const CartPage = () => {
                         </div>
                         <div className="p-content">{item.name}</div>
                       </td>
+
                       <td className="cat-price">${item.price}</td>
+
+                      {/* ⭐ Quantity buttons */}
                       <td className="cat-quantity">
                         <div className="cart-plus-minus">
-                          <div className="dec qtybutton" onClick={() => handleDecrease(item)}>-</div>
+                          <div
+                            className="dec qtybutton"
+                            onClick={() => handleDecrease(item)}
+                          >
+                            -
+                          </div>
+
                           <input
                             className="cart-plus-minus-box"
                             type="text"
                             value={item.quantity}
                             readOnly
                           />
-                          <div className="inc qtybutton" onClick={() => handleIncrease(item)}>+</div>
+
+                          <div
+                            className="inc qtybutton"
+                            onClick={() => handleIncrease(item)}
+                          >
+                            +
+                          </div>
                         </div>
                       </td>
-                      <td className="cat-toprice">${calculateTotalPrice(item)}</td>
+
+                      <td className="cat-toprice">
+                        ${calculateTotalPrice(item)}
+                      </td>
+
+                      {/* ⭐ Delete */}
                       <td className="cat-edit">
                         <a href="#" onClick={() => handleRemoveItem(item)}>
                           <img src={delImgUrl} alt="Delete" />
@@ -177,12 +215,18 @@ const CartPage = () => {
               </table>
             </div>
 
+            {/* ⭐ BOTTOM SECTION */}
             <div className="cart-bottom">
               <div className="cart-checkout-box">
                 <form className="coupon" action="/">
-                  <input type="text" placeholder="Coupon Code..." className="cart-page-input-text" />
+                  <input
+                    type="text"
+                    placeholder="Coupon Code..."
+                    className="cart-page-input-text"
+                  />
                   <input type="submit" value="Apply Coupon" />
                 </form>
+
                 <div className="cart-checkout">
                   <input type="submit" value="Update Cart" />
                   <button className="lab-btn bg-primary" onClick={handleCheckout}>
@@ -191,42 +235,46 @@ const CartPage = () => {
                 </div>
               </div>
 
+              {/* ⭐ TOTALS SECTION */}
               <div className="shiping-box">
                 <div className="row">
-                  <div className="col-md-6 col-12">
-                    <div className="calculate-shiping">
-                      <h3>Calculate Shipping</h3>
-                      {/* Shipping form here */}
-                    </div>
-                  </div>
+                  
+                  <div className="col-md-6 col-12"></div>
+
                   <div className="col-md-6 col-12">
                     <div className="cart-overview">
                       <h3>Cart Totals</h3>
+
                       <ul className="lab-ul">
                         <li>
                           <span className="pull-left">Cart Subtotal</span>
                           <p className="pull-right">${cartSubtotal}</p>
                         </li>
+
                         <li>
-                          <span className="pull-left">Shipping and Handling</span>
+                          <span className="pull-left">Shipping</span>
                           <p className="pull-right">Free Shipping</p>
                         </li>
+
                         <li>
                           <span className="pull-left">Order Total</span>
                           <p className="pull-right">${orderTotal.toFixed(2)}</p>
                         </li>
                       </ul>
+
                     </div>
                   </div>
+
                 </div>
               </div>
 
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* ⭐ Checkout modal */}
+      {/* ⭐ CHECKOUT MODAL */}
       <CheckoutPage
         show={showCheckout}
         onClose={() => setShowCheckout(false)}
