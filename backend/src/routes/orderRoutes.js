@@ -11,9 +11,6 @@ router.post("/", auth, orderController.createOrder);
 // GET /api/orders/my-orders
 router.get("/my-orders", auth, orderController.getMyOrders);
 
-// GET /api/orders/deliveries  (product manager)
-router.get("/deliveries", auth, orderController.getDeliveries);
-
 // PATCH /api/orders/:id/cancel
 router.patch("/:id/cancel", auth, orderController.cancelOrder);
 

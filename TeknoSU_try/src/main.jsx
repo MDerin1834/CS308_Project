@@ -49,7 +49,6 @@ import ReviewOrderPage from './shop/ReviewOrderPage.jsx';
 import PastOrders from './shop/PastOrders.jsx';
 import ProductCreate from './shop/ProductCreate.jsx';
 import WishlistPage from './shop/WishList.jsx';
-import DeliveryList from './shop/DeliveryList.jsx';
 
 
 
@@ -82,14 +81,6 @@ const router = createBrowserRouter([
       {
         path: "/cart-page",
         element: <PrivateRoute><CartPage /></PrivateRoute>
-      },
-      {
-        path: "/deliveries",
-        element: (
-          <PrivateRoute allowedRoles={["product_manager"]}>
-            <DeliveryList />
-          </PrivateRoute>
-        ),
       },
       {
         path: "/check-out",
