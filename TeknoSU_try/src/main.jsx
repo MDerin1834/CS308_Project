@@ -3,14 +3,6 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 
-// ❗️ HATA DÜZELTMESİ: Bu iki satır, aşağıdaki './assets/css/' içindeki
-// dosyalarla çakışıyordu ve temanın stillerini bozuyordu.
-// O yüzden kaldırıldılar.
-// import 'swiper/css';
-// import 'bootstrap/dist/css/bootstrap.min.css';
-
-// ❗️ 'beyaz ekran' hatasına neden olan .js dosyası kaldırıldı (bu doğruydu)
-// import 'bootstrap/dist/js/bootstrap.min.js'; 
 
 
 // fonts and icons (Temanın kendi stil dosyaları)
@@ -112,9 +104,9 @@ const router = createBrowserRouter([
       },
       {
         path: "/past-orders",
-        element: <PrivateRoute><PastOrders /></PrivateRoute>
+        element: <PastOrders />
       },
-
+  
       {
         path: "/wishlist",
         element:<WishlistPage />

@@ -1,155 +1,108 @@
-import Rating from './Rating';
-
 import React, { useState } from "react";
+import Rating from "./Rating";
+import api from "../api/client";
 
-const reviwtitle = "Add a Review";
-let ReviewList = [
-  {
-    imgUrl: "/src/assets/images/instructor/01.jpg",
-    imgAlt: "Client thumb",
-    name: "Ganelon Boileau",
-    date: "Posted on Jun 10, 2022 at 6:57 am",
-    desc: "The platform has exceeded my expectations. Everything is intuitive, well-organized, and surprisingly fast. I managed to finish my first project in no time!",
-  },
-  {
-    imgUrl: "/src/assets/images/instructor/02.jpg",
-    imgAlt: "Client thumb",
-    name: "Morgana Cailot",
-    date: "Posted on Jun 10, 2022 at 6:57 am",
-    desc: "I really appreciate the attention to detail here. The lessons are clear, the instructors are engaging, and the design makes learning genuinely fun.",
-  },
-  {
-    imgUrl: "/src/assets/images/instructor/03.jpg",
-    imgAlt: "Client thumb",
-    name: "Telford Bois",
-    date: "Posted on Jun 10, 2022 at 6:57 am",
-    desc: "This has been one of the most helpful learning experiences I’ve had online. The support team responds quickly, and the community is super friendly.",
-  },
-  {
-    imgUrl: "/src/assets/images/instructor/04.jpg",
-    imgAlt: "Client thumb",
-    name: "Cher Daviau",
-    date: "Posted on Jun 10, 2022 at 6:57 am",
-    desc: "I was a bit skeptical at first, but the quality of the courses and the consistent updates won me over. Definitely worth recommending to anyone serious about improving their skills.",
-  },
-];
+const Review = ({ productId, canReview }) => {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+    if (!canReview) {
+      setError("You can only rate or comment after the product is delivered.");
+      return;
+    }
+    if (!rating || rating < 1 || rating > 5) {
+      setError("Please select a rating between 1 and 5.");
+      return;
+    }
+    if (!comment.trim()) {
+      setError("Please enter a comment.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      const ratingRes = await api.post(
+        `/api/products/${productId}/rating`,
+        { rating },
+        { validateStatus: () => true }
+      );
+      if (ratingRes.status < 200 || ratingRes.status >= 300) {
+        setError(ratingRes.data?.message || "Failed to submit rating.");
+        setSubmitting(false);
+        return;
+      }
 
-const Review = () => {
-  const [reviewShow, setReviewShow] = useState(true);
+      const commentRes = await api.post(
+        `/api/products/${productId}/comment`,
+        { comment },
+        { validateStatus: () => true }
+      );
+      if (commentRes.status < 200 || commentRes.status >= 300) {
+        setError(commentRes.data?.message || "Failed to submit comment.");
+        setSubmitting(false);
+        return;
+      }
+
+      setMessage("Rating submitted and comment sent for approval.");
+      setComment("");
+      setRating(0);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to submit review.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <>
-      {" "}
-      <ul
-        className={`review-nav lab-ul ${
-          reviewShow ? "RevActive" : "DescActive"
-        }`}
-      >
-        <li onClick={() => setReviewShow(!reviewShow)} className="desc">
-          Description
-        </li>
-        <li onClick={() => setReviewShow(!reviewShow)} className="rev">
-          Reviews 4
-        </li>
-      </ul>
-      
-      <div
-        className={`review-content ${
-          reviewShow ? "review-content-show" : "description-show"
-        }`}
-      >
-        <div className="review-showing">
-          <ul className="content lab-ul">
-            {ReviewList.map((review, i) => (
-              <li key={i}>
-                <div className="post-thumb">
-                  <img src={`${review.imgUrl}`} alt={`${review.imgAlt}`} />
-                </div>
-                <div className="post-content">
-                  <div className="entry-meta">
-                    <div className="posted-on">
-                      <a href="#">{review.name}</a>
-                      <p>{review.date}</p>
-                    </div>
-                    <Rating />
-                  </div>
-                  <div className="entry-content">
-                    <p>{review.desc}</p>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <div className="client-review">
-            <div className="review-form">
-              <div className="review-title">
-                <h5>{reviwtitle}</h5>
-              </div>
-              <form action="action" className="row">
-                <div className="col-md-4 col-12">
-                  <input type="text" name="name" placeholder="Full Name *" />
-                </div>
-                <div className="col-md-4 col-12">
-                  <input type="text" name="email" placeholder="Your Email *" />
-                </div>
-                <div className="col-md-4 col-12">
-                  <div className="rating">
-                    <span className="rating-title">Your Rating : </span>
-                    <Rating />
-                  </div>
-                </div>
-                <div className="col-md-12 col-12">
-                  <textarea
-                    rows="8"
-                    type="text"
-                    name="message"
-                    placeholder="Type Here Message"
-                  ></textarea>
-                </div>
-                <div className="col-12">
-                  <button className="default-button" type="submit">
-                    <span>Submit Review</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-        <div className="description">
-          <p>
-            Insert item description here and bellow
-          </p>
-          <div className="post-item">
-            <div className="post-thumb">
-              <img src="/src/assets/images/shop/01.jpg" alt="shop" />
-            </div>
-            <div className="post-content">
-              <ul className="lab-ul">
-                <li>Donec non est at libero vulputate rutrum.</li>
-                <li>Morbi ornare lectus quis justo gravida semper.</li>
-                <li>Pellentesque aliquet, sem eget laoreet ultrices.</li>
-                <li>
-                  Nulla tellus mi, vulputate adipiscing cursus eu, suscipit id
-                  nulla.
-                </li>
-                <li>Donec a neque libero.</li>
-                <li>Pellentesque aliquet, sem eget laoreet ultrices.</li>
-                <li>Morbi ornare lectus quis justo gravida semper..</li>
-              </ul>
-            </div>
-          </div>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
-          </p>
-        </div>
+    <div className="review-form">
+      <div className="review-title">
+        <h5>Add a Review</h5>
       </div>
-    </>
+      {message && <p style={{ color: "green" }}>{message}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form className="row" onSubmit={handleSubmit}>
+        <div className="col-md-4 col-12">
+          <div className="rating">
+            <span className="rating-title">Your Rating (1-5): </span>
+            <input
+              type="number"
+              min="1"
+              max="5"
+              className="form-control"
+              value={rating}
+              onChange={(e) => setRating(Number(e.target.value))}
+            />
+          </div>
+        </div>
+        <div className="col-md-8 col-12">
+          <textarea
+            rows="4"
+            type="text"
+            name="message"
+            placeholder="Type your comment (will be shown after manager approval)"
+            className="form-control"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          ></textarea>
+        </div>
+        <div className="col-12 mt-2">
+          <button className="default-button" type="submit" disabled={submitting}>
+            <span>{submitting ? "Submitting..." : "Submit Review"}</span>
+          </button>
+          {!canReview && (
+            <p style={{ color: "#777", marginTop: "6px" }}>
+              You need a delivered order for this product before rating or commenting.
+            </p>
+          )}
+        </div>
+      </form>
+    </div>
   );
 };
 

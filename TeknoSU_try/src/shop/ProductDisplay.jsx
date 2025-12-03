@@ -13,8 +13,7 @@ const ProductDisplay = ({ item }) => {
   const { id, img, price, name, quantity, seller, stock } = item;
 
   const [prequantity, setQuantity] = useState(quantity);
-  const [size, setSize] = useState("Select Size");
-  const [color, setColor] = useState("Select Color");
+  const [color, setColor] = useState("");
 
   const handleDecrease = () => {
     if (prequantity > 1) setQuantity(prequantity - 1);
@@ -25,7 +24,6 @@ const ProductDisplay = ({ item }) => {
     else alert(`⚠️ Maximum stock limit reached (${stock} units).`);
   };
 
-  const handleSizeChange = (e) => setSize(e.target.value);
   const handleColorChange = (e) => setColor(e.target.value);
 
   const handleSubmit = async (e) => {
@@ -39,6 +37,11 @@ const ProductDisplay = ({ item }) => {
 
     if (prequantity > availableStock) {
       alert(`⚠️ Only ${availableStock} units available. Please reduce quantity.`);
+      return;
+    }
+
+    if (!color) {
+      alert("Please select a color before adding to cart.");
       return;
     }
 
@@ -64,8 +67,7 @@ const ProductDisplay = ({ item }) => {
     }
 
     setQuantity(1);
-    setSize("Select Size");
-    setColor("Select Color");
+    setColor("");
   };
 
   // ✅ Quick checkout button logic
@@ -100,21 +102,9 @@ const ProductDisplay = ({ item }) => {
 
       <div>
         <form onSubmit={handleSubmit}>
-          <div className="select-product size">
-            <select value={size} onChange={handleSizeChange}>
-              <option>Select Size</option>
-              <option>SM</option>
-              <option>MD</option>
-              <option>LG</option>
-              <option>XL</option>
-              <option>XXL</option>
-            </select>
-            <i className="icofont-rounded-down"></i>
-          </div>
-
           <div className="select-product color">
-            <select value={color} onChange={handleColorChange}>
-              <option>Select Color</option>
+            <select value={color} onChange={handleColorChange} required>
+              <option value="">Select Color</option>
               <option>Pink</option>
               <option>Ash</option>
               <option>Red</option>

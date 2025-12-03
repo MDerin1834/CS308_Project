@@ -12,7 +12,6 @@ import { Autoplay } from "swiper/modules";
 import Review from "../components/Review";
 import ProductDisplay from "./ProductDisplay";
 import Tags from "./Tags";
-const reviwtitle = "Add a Review";
 import api from "../api/client";
 import { AuthContext } from "../contexts/AuthProvider";
 
@@ -22,6 +21,7 @@ const SingleProduct = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [canReview, setCanReview] = useState(false);
   const [stockValue, setStockValue] = useState("");
   const [stockUpdating, setStockUpdating] = useState(false);
   const { id } = useParams();
@@ -43,6 +43,27 @@ const SingleProduct = () => {
       mounted = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!user) {
+      setCanReview(false);
+      return;
+    }
+    api
+      .get("/api/orders/my-orders", { validateStatus: () => true })
+      .then((res) => {
+        if (res.status === 200 && Array.isArray(res.data?.orders)) {
+          const delivered = res.data.orders.some(
+            (o) =>
+              o.status === "delivered" &&
+              Array.isArray(o.items) &&
+              o.items.some((it) => it.productId === id)
+          );
+          setCanReview(delivered);
+        }
+      })
+      .catch(() => setCanReview(false));
+  }, [user, id]);
 
   const handleDelete = async () => {
     if (!window.confirm("Delete this product? This action cannot be undone.")) return;
@@ -172,7 +193,7 @@ const SingleProduct = () => {
                 </div>
                 
                 <div className="review">
-                  <Review />
+                  <Review productId={id} canReview={canReview} />
                 </div>
               </article>
             </div>
