@@ -1,80 +1,89 @@
-import { createContext, useState, useEffect, useContext } from "react";
-import api from "../api/client";
-import { AuthContext } from "./AuthProvider";
+import React, { useContext } from "react";
+import PageHeader from "../components/PageHeader";
+import { WishlistContext } from "../contexts/WishlistContext";
+import { AuthContext } from "../contexts/AuthProvider";
+import { useNavigate } from "react-router-dom";
+import LoadingOverlay from "../components/LoadingOverlay";
+import delImgUrl from "../assets/images/shop/del.png";
 
-export const WishlistContext = createContext();
-
-const WishlistProvider = ({ children }) => {
+const WishlistPage = () => {
+  const { wishlist, removeFromWishlist } = useContext(WishlistContext);
   const { user } = useContext(AuthContext);
-  const [wishlist, setWishlist] = useState([]);
+  const navigate = useNavigate();
 
-  // LOAD WISHLIST (User veya Guest)
-  const loadWishlist = async () => {
-    if (user) {
-      try {
-        const res = await api.get("/api/wishlist", { validateStatus: () => true });
-        if (res.status === 200 && Array.isArray(res.data?.items)) {
-          setWishlist(res.data.items);
-          return;
-        }
-      } catch (err) {}
-    }
-
-    // Guest fallback
-    const stored = JSON.parse(localStorage.getItem("wishlist")) || [];
-    setWishlist(stored);
-  };
-
-  useEffect(() => {
-    loadWishlist();
-  }, [user]);
-
-  // ADD
-  const addToWishlist = async (product) => {
-    if (user) {
-      await api.post(
-        "/api/wishlist",
-        { productId: product.id },
-        { validateStatus: () => true }
-      );
-      loadWishlist();
+  const moveToCart = (item) => {
+    if (!user) {
+      localStorage.setItem("redirectAfterLogin", "/wishlist");
+      navigate("/login");
       return;
     }
 
-    // Guest (localStorage)
-    const exists = wishlist.some((p) => p.id === product.id);
-    if (!exists) {
-      const updated = [...wishlist, product];
-      setWishlist(updated);
-      localStorage.setItem("wishlist", JSON.stringify(updated));
-    }
-  };
-
-  // REMOVE
-  const removeFromWishlist = async (productId) => {
-    if (user) {
-      await api.delete(`/api/wishlist/${productId}`, { validateStatus: () => true });
-      loadWishlist();
-      return;
-    }
-
-    const updated = wishlist.filter((item) => item.id !== productId);
-    setWishlist(updated);
-    localStorage.setItem("wishlist", JSON.stringify(updated));
+    // API OR CART LOGIC HERE
   };
 
   return (
-    <WishlistContext.Provider
-      value={{
-        wishlist,
-        addToWishlist,
-        removeFromWishlist,
-        reloadWishlist: loadWishlist,
-      }}
-    >
-      {children}
-    </WishlistContext.Provider>
+    <div>
+      <PageHeader title="My Wishlist" curPage="Wishlist" />
+
+      <div className="shop-cart padding-tb">
+        <div className="container">
+          <div className="section-wrapper">
+
+            <div className="cart-top">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {wishlist.length === 0 && (
+                    <tr>
+                      <td colSpan={2} className="text-center p-4">
+                        Your wishlist is empty.
+                      </td>
+                    </tr>
+                  )}
+
+                  {wishlist.map((item, i) => (
+                    <tr key={i}>
+                      <td className="product-item">
+                        <div className="p-thumb">
+                          <img src={item.img || item.imageURL} alt={item.name} />
+                        </div>
+                        <div className="p-content">{item.name}</div>
+                      </td>
+
+                      <td>
+                        <button
+                          className="lab-btn"
+                          onClick={() => moveToCart(item)}
+                        >
+                          Add to Cart
+                        </button>
+
+                        <button
+                          className="btn btn-danger ms-2"
+                          onClick={() => removeFromWishlist(item.id)}
+                        >
+                          <img src={delImgUrl} alt="remove" style={{ width: "20px" }} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                </tbody>
+
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default WishlistProvider;
+export default WishlistPage;
