@@ -48,16 +48,14 @@ const PastOrders = () => {
     }
   };
 
-  const visibleOrders = orders.filter((o) => (o.status || "").toLowerCase() !== "cancelled");
-
   return (
     <div className="orders-container">
       <h1 className="orders-title">My Orders</h1>
       {loading && <p>Loading orders...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
-      {!loading && visibleOrders.length === 0 && !error && <p>You have no orders yet.</p>}
+      {!loading && orders.length === 0 && !error && <p>You have no orders yet.</p>}
 
-      {visibleOrders.map((order) => {
+      {orders.map((order) => {
         const orderId = order.id || order._id;
         const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A";
         const total = Number(order.total || 0).toFixed(2);
