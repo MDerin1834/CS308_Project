@@ -11,7 +11,7 @@ const {
   getInvoicesByDateRange,
 } = require("../services/invoiceService");
 
-const { sendInvoiceEmail } = require("../services/emailService");
+const { sendInvoiceEmail, sendRefundEmail } = require("../services/emailService");
 
 function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) {
   if (!/^\d{16}$/.test(cardNumber || "")) return false;
@@ -188,6 +188,59 @@ router.get("/revenue", auth, authorizeRole("sales_manager"), async (req, res) =>
   } catch (err) {
     console.error("Revenue error:", err);
     return res.status(500).json({ message: "Failed to calculate revenue" });
+  }
+});
+
+router.post("/refund", auth, authorizeRole("sales_manager"), async (req, res) => {
+  try {
+    const { orderId, reason } = req.body;
+    if (!orderId) {
+      return res.status(400).json({ message: "Missing orderId for refund" });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "paid") {
+      return res.status(400).json({ message: "Only paid orders can be refunded" });
+    }
+
+    const user = await User.findById(order.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found for this order" });
+    }
+
+    order.status = "cancelled";
+    order.refundedAt = new Date();
+    order.refundAmount = order.total;
+    order.refundReason = reason || "";
+    await order.save();
+
+    let emailStatus = { skipped: true };
+    try {
+      emailStatus = await sendRefundEmail({
+        to: user.email,
+        username: user.username,
+        orderId: order.id,
+        amount: order.total,
+        reason,
+      });
+    } catch (emailErr) {
+      console.error("refund email failed:", emailErr);
+    }
+
+    return res.status(200).json({
+      message: "Refund processed successfully",
+      orderId: order.id,
+      refundAmount: order.total,
+      refundedAt: order.refundedAt,
+      emailSent: !emailStatus.skipped,
+    });
+  } catch (err) {
+    console.error("refund error:", err);
+    return res.status(500).json({ message: "Failed to process refund" });
   }
 });
 

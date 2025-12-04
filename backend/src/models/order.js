@@ -47,6 +47,9 @@ const orderSchema = new mongoose.Schema(
     },
     paidAt: { type: Date },
     invoiceNumber: { type: String },
+    refundedAt: { type: Date },
+    refundAmount: { type: Number },
+    refundReason: { type: String },
 
     shippingAddress: {
       type: shippingAddressSchema,

@@ -47,6 +47,41 @@ async function sendInvoiceEmail({ to, subject, text, pdfBuffer, fileName }) {
   return { skipped: false, result };
 }
 
+async function sendRefundEmail({ to, username, orderId, amount, reason }) {
+  if (!to) throw new Error("Missing recipient email");
+  if (amount === undefined || amount === null) {
+    throw new Error("Missing refund amount");
+  }
+
+  if (!transporter) {
+    console.warn("[email] SMTP settings missing; refund email skipped");
+    return { skipped: true };
+  }
+
+  const prettyAmount = `$${Number(amount || 0).toFixed(2)}`;
+  const lines = [
+    `Hi ${username || "customer"},`,
+    "",
+    `We processed your refund for order ${orderId || ""}.`,
+    `Amount: ${prettyAmount}`,
+  ];
+
+  if (reason) {
+    lines.push("", `Reason: ${reason}`);
+  }
+
+  lines.push("", "The amount will appear on your statement shortly.", "", "Thank you.");
+
+  const result = await transporter.sendMail({
+    from: process.env.SMTP_FROM || "no-reply@teknosu.local",
+    to,
+    subject: `Refund processed for order ${orderId || ""}`,
+    text: lines.join("\n"),
+  });
+
+  return { skipped: false, result };
+}
+
 async function sendWishlistDiscountEmail({ to, username, items }) {
   if (!to) throw new Error("Missing recipient email");
   if (!items || items.length === 0) return { skipped: true, reason: "no_discounted_items" };
@@ -98,5 +133,6 @@ async function sendWishlistDiscountEmail({ to, username, items }) {
 
 module.exports = {
   sendInvoiceEmail,
+  sendRefundEmail,
   sendWishlistDiscountEmail,
 };
