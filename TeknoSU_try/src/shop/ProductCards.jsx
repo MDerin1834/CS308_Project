@@ -11,7 +11,7 @@ const ProductCards = ({ products, GridList }) => {
   const navigate = useNavigate();
 
   // ❤️ Add to Wishlist tıklanınca çalışan fonksiyon
-  const handleAddWishlist = (product) => {
+  const handleAddWishlist = async (product) => {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user) {
@@ -21,7 +21,10 @@ const ProductCards = ({ products, GridList }) => {
       return;
     }
 
-    addToWishlist(product);
+    const result = await addToWishlist(product);
+    if (result?.message) {
+      alert(result.message);
+    }
   };
 
   return (

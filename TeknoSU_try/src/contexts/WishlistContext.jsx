@@ -22,7 +22,16 @@ const WishlistProvider = ({ children }) => {
 
     // Guest fallback
     const stored = JSON.parse(localStorage.getItem("wishlist")) || [];
-    setWishlist(stored);
+    const normalized = stored.map((item) => ({
+      productId: item.productId || item.id,
+      product: item.product || {
+        id: item.productId || item.id,
+        name: item.name,
+        img: item.img,
+        imageURL: item.imageURL,
+      },
+    }));
+    setWishlist(normalized);
   };
 
   useEffect(() => {
@@ -32,22 +41,33 @@ const WishlistProvider = ({ children }) => {
   // ADD
   const addToWishlist = async (product) => {
     if (user) {
-      await api.post(
+      const res = await api.post(
         "/api/wishlist",
         { productId: product.id },
         { validateStatus: () => true }
       );
       loadWishlist();
-      return;
+      return {
+        ok: res.status >= 200 && res.status < 300,
+        message:
+          res.status >= 200 && res.status < 300
+            ? "Added to wishlist"
+            : res.data?.message || "Could not add to wishlist",
+      };
     }
 
     // Guest (localStorage)
-    const exists = wishlist.some((p) => p.id === product.id);
+    const exists = wishlist.some((p) => (p.productId || p.id) === product.id);
     if (!exists) {
-      const updated = [...wishlist, product];
+      const entry = {
+        productId: product.id,
+        product,
+      };
+      const updated = [...wishlist, entry];
       setWishlist(updated);
       localStorage.setItem("wishlist", JSON.stringify(updated));
     }
+    return { ok: !exists, message: exists ? "Already in wishlist" : "Added to wishlist" };
   };
 
   // REMOVE
@@ -58,7 +78,9 @@ const WishlistProvider = ({ children }) => {
       return;
     }
 
-    const updated = wishlist.filter((item) => item.id !== productId);
+    const updated = wishlist.filter(
+      (item) => (item.productId || item.id) !== productId
+    );
     setWishlist(updated);
     localStorage.setItem("wishlist", JSON.stringify(updated));
   };

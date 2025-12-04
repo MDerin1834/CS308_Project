@@ -49,76 +49,27 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      {
-        path: "/",
-        element: <Home />
-      },
-      {
-        path: "/blog",
-        element: <Blog />
-      },
-      // ❗️ HATA DÜZELTMESİ: Bu rota, yukarıdaki import'a bağlı olduğu için yorum satırı yapıldı
-      // {
-      //   path: "/blog/:id",
-      //   element: <SingleBlog />
-      // },
-      {
-        path: "/shop",
-        element: <Shop />
-      },
-      {
-        path: "/shop/:id",
-        element: <SingleProduct />
-      },
-      {
-        path: "/cart-page",
-        element: <CartPage />
-      },
-      {
-        path: "/check-out",
-        element: <PrivateRoute><CheckoutPage useModal={false} /></PrivateRoute>
-      },
-      // ❗️ HATA DÜZELTMESİ: Bu rota da, yukarıdaki import'a bağlı olduğu için yorum satırı yapıldı
-      // {
-      //   path: "/about",
-      //   element: <About />
-      // },
-      // ❗️ HATA DÜZELTMESİ: Bu rota da, yukarıdaki import'a bağlı olduğu için yorum satırı yapıldı
-      // {
-      //   path: "/contact",
-      //   element: <Contact />
-      // }
-    ]
+      { path: "/", element: <Home /> },
+      { path: "/blog", element: <Blog /> },
+      // { path: "/blog/:id", element: <SingleBlog /> },
+      { path: "/shop", element: <Shop /> },
+      { path: "/shop/:id", element: <SingleProduct /> },
+      { path: "/cart-page", element: <CartPage /> },
+      { path: "/check-out", element: <PrivateRoute><CheckoutPage useModal={false} /></PrivateRoute> },
+      // { path: "/about", element: <About /> },
+      // { path: "/contact", element: <Contact /> },
+      { path: "/wishlist", element: <WishlistPage /> },
+      { path: "/products/new", element: (
+        <PrivateRoute allowedRoles={["product_manager"]}>
+          <ProductCreate />
+        </PrivateRoute>
+      ) },
+    ],
   },
-  {
-    path: "/login",
-    element: <Login />
-  },
-  {
-    path: "sign-up",
-    element: <Signup />
-      },
-      {
-        path: "/review-order",
-        element: <ReviewOrderPage />
-      },
-      {
-        path: "/past-orders",
-        element: <PastOrders />
-      },
-  
-      {
-        path: "/wishlist",
-        element:<WishlistPage />
-      },
-      {
-        path: "/products/new",
-        element: (
-          <PrivateRoute allowedRoles={["product_manager"]}>
-            <ProductCreate />
-          </PrivateRoute>
-        ),
-      }
+  { path: "/login", element: <Login /> },
+  { path: "sign-up", element: <Signup /> },
+  { path: "/review-order", element: <ReviewOrderPage /> },
+  { path: "/past-orders", element: <PastOrders /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
