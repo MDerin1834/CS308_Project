@@ -4,7 +4,12 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const Order = require("../models/Order");
 const User = require("../models/User");
-const { generateInvoicePdf, getInvoicesByDateRange } = require("../services/invoiceService");
+
+const {
+  generateInvoicePdf,
+  getInvoicesByDateRange,
+} = require("../services/invoiceService");
+
 const { sendInvoiceEmail } = require("../services/emailService");
 
 function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) {
@@ -12,31 +17,41 @@ function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) 
   if (!/^\d{3}$/.test(cvv || "")) return false;
 
   const month = parseInt(expiryMonth, 10);
-  if (Number.isNaN(month) || month < 1 || month > 12) return false;
+  if (!month || month < 1 || month > 12) return false;
 
   const year = parseInt(expiryYear, 10);
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
-  if (Number.isNaN(year) || year < currentYear) return false;
+
+  if (!year || year < currentYear) return false;
   if (year === currentYear && month < currentMonth) return false;
 
   if (!/^[A-Za-z ]+$/.test(cardHolder || "")) return false;
 
   return true;
 }
+
 function requireSalesManager(req, res, next) {
   if (!req.user || req.user.role !== "sales_manager") {
     return res
       .status(403)
-      .json({ message: "Only sales managers can view invoices" });
+      .json({ message: "Only sales managers can view invoices or revenue" });
   }
   next();
 }
 
 router.post("/checkout", auth, async (req, res) => {
   try {
-    const { cardNumber, expiryMonth, expiryYear, cvv, cardHolder, amount, orderId } = req.body;
+    const {
+      cardNumber,
+      expiryMonth,
+      expiryYear,
+      cvv,
+      cardHolder,
+      amount,
+      orderId,
+    } = req.body;
 
     if (!orderId) {
       return res.status(400).json({ message: "Missing orderId for payment" });
@@ -82,10 +97,15 @@ router.post("/checkout", auth, async (req, res) => {
 
     order.status = "paid";
     order.paidAt = new Date();
-    order.invoiceNumber = order.invoiceNumber || `INV-${String(order.id).slice(-6).toUpperCase()}`;
+    order.invoiceNumber =
+      order.invoiceNumber || `INV-${String(order.id).slice(-6).toUpperCase()}`;
     await order.save();
 
-    const { buffer: invoicePdf, invoiceNumber } = await generateInvoicePdf({ order, user });
+    const { buffer: invoicePdf, invoiceNumber } = await generateInvoicePdf({
+      order,
+      user,
+    });
+
     const invoiceFileName = `${invoiceNumber}.pdf`;
 
     let emailStatus = { skipped: true };
@@ -98,7 +118,7 @@ router.post("/checkout", auth, async (req, res) => {
         fileName: invoiceFileName,
       });
     } catch (emailErr) {
-      console.error("[email] Failed to send invoice:", emailErr);
+      console.error("email sending failed:", emailErr);
     }
 
     return res.status(200).json({
@@ -111,8 +131,8 @@ router.post("/checkout", auth, async (req, res) => {
       invoicePdfBase64: invoicePdf.toString("base64"),
       emailSent: !emailStatus.skipped,
     });
-  } catch (error) {
-    console.error("checkout error:", error);
+  } catch (err) {
+    console.error("checkout error:", err);
     return res.status(500).json({ message: "Failed to process payment" });
   }
 });
@@ -128,9 +148,54 @@ router.get("/invoices", auth, requireSalesManager, async (req, res) => {
       filters: { startDate, endDate },
       invoices,
     });
-  } catch (error) {
-    console.error("Error fetching invoices:", error);
+  } catch (err) {
+    console.error("Error fetching invoices:", err);
     return res.status(500).json({ message: "Failed to fetch invoices" });
+  }
+});
+
+router.get("/revenue", auth, requireSalesManager, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const filter = {
+      status: "paid",
+      paidAt: { $ne: null },
+    };
+
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      filter.paidAt.$gte = start;
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.paidAt.$lte = end;
+    }
+
+    const orders = await Order.find(filter).lean();
+
+    const revenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+    const costPercentage = 0.70; // ör: ürünlerin maliyeti satış fiyatının %70’i kabul edilir
+    const cost = revenue * costPercentage;
+
+    const profit = revenue - cost;
+
+    return res.status(200).json({
+      message: "Revenue and profit calculated successfully",
+      filters: { startDate, endDate },
+      revenue,
+      cost,
+      profit,
+      costPercentage,
+      ordersCount: orders.length,
+    });
+  } catch (err) {
+    console.error("Revenue error:", err);
+    return res.status(500).json({ message: "Failed to calculate revenue" });
   }
 });
 
