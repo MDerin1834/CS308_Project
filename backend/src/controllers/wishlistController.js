@@ -1,5 +1,6 @@
 const wishlistService = require("../services/wishlistService");
 const { notifyUserForWishlistDiscounts } = require("../services/wishlistNotificationService");
+const logger = require("../config/logger");
 
 exports.getWishlist = async (req, res) => {
   try {
@@ -11,7 +12,7 @@ exports.getWishlist = async (req, res) => {
       items,
     });
   } catch (err) {
-    console.error("Wishlist fetch error:", err);
+    logger.error("Wishlist fetch error", { error: err });
     return res.status(500).json({ message: "Failed to fetch wishlist" });
   }
 };
@@ -32,7 +33,7 @@ exports.addToWishlist = async (req, res) => {
       wishlist,
     });
   } catch (err) {
-    console.error("Add to wishlist error:", err);
+    logger.error("Add to wishlist error", { error: err });
 
     if (err.code === "NOT_FOUND") {
       return res.status(404).json({ message: "Product not found" });
@@ -60,7 +61,7 @@ exports.removeFromWishlist = async (req, res) => {
       wishlist,
     });
   } catch (err) {
-    console.error("Remove wishlist error:", err);
+    logger.error("Remove wishlist error", { error: err });
 
     if (err.code === "NOT_FOUND") {
       return res.status(404).json({ message: "Wishlist not found" });
@@ -90,7 +91,7 @@ exports.notifyDiscounts = async (req, res) => {
       count: result.count,
     });
   } catch (err) {
-    console.error("Wishlist discount notify error:", err);
+    logger.error("Wishlist discount notify error", { error: err });
 
     if (err.code === "NO_EMAIL") {
       return res.status(400).json({

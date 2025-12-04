@@ -5,6 +5,8 @@ const cors = require("cors");
 
 const connectDB = require("./config/db");
 const setupSecurity = require("./middleware/security");
+const { requestLogger, errorLogger } = require("./middleware/logger");
+const logger = require("./config/logger");
 
 // Routes
 const productRoutes = require("./routes/productRoutes");
@@ -30,6 +32,9 @@ app.use(cors(corsOptions));
 /* ---------- Body Parser ---------- */
 app.use(express.json());
 
+/* ---------- Logging ---------- */
+app.use(requestLogger);
+
 /* ---------- Güvenlik ---------- */
 setupSecurity(app);
 
@@ -49,15 +54,18 @@ app.use("/api/comments", require("./routes/commentRoutes"));
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/delivery", deliveryRoutes);
 
+/* ---------- Error Logging ---------- */
+app.use(errorLogger);
+
 /* ---------- Sunucu ---------- */
 const PORT = process.env.PORT || 5050;
 
 (async () => {
   try {
     await connectDB(process.env.MONGO_URI);
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () => logger.info(`🚀 Server running on port ${PORT}`));
   } catch (error) {
-    console.error("❌ Failed to connect to the database:", error);
+    logger.error("❌ Failed to connect to the database:", { error });
     process.exit(1);
   }
 })();

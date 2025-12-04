@@ -8,6 +8,7 @@ const authorizeRole = require("../middleware/authorizeRole");
 const Product = require("../models/Product");
 const ratingService = require("../services/ratingService");
 const commentService = require("../services/commentService");
+const logger = require("../config/logger");
 
 /* ============== MULTER: IMAGE UPLOAD AYARI ============== */
 
@@ -127,7 +128,7 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Error fetching products:", err);
+    logger.error("Error fetching products:", { error: err });
     return res.status(500).json({ message: "Server error" });
   }
 });
@@ -154,7 +155,7 @@ router.get("/:id", async (req, res) => {
 
     return res.status(200).json(data);
   } catch (err) {
-    console.error("Error fetching product:", err);
+    logger.error("Error fetching product:", { error: err });
     return res.status(500).json({ message: "Server error" });
   }
 });
@@ -183,7 +184,7 @@ router.delete(
       product: deleted,
     });
   } catch (err) {
-    console.error("Error deleting product:", err);
+    logger.error("Error deleting product:", { error: err });
     return res.status(500).json({ message: "Failed to delete product" });
   }
 });
@@ -219,7 +220,7 @@ router.put("/:id/stock", auth, authorizeRole("product_manager"), async (req, res
       product,
     });
   } catch (err) {
-    console.error("Error updating stock:", err);
+    logger.error("Error updating stock:", { error: err });
     return res.status(500).json({ message: "Failed to update stock" });
   }
 });
@@ -301,7 +302,7 @@ router.post(
       await product.save();
       return res.status(201).json({ message: "Product created", product });
     } catch (err) {
-      console.error("Error creating product:", err);
+      logger.error("Error creating product:", { error: err });
 
       if (err.message === "Only image files are allowed") {
         return res.status(400).json({ message: err.message });
@@ -327,7 +328,7 @@ router.post("/:id/rating", auth, async (req, res) => {
       product: result.product,
     });
   } catch (err) {
-    console.error("❌ Rating error:", err);
+    logger.error("❌ Rating error:", { error: err });
 
     if (err.code === "INVALID_RATING")
       return res.status(400).json({ message: "Rating must be between 1 and 5" });
@@ -365,7 +366,7 @@ router.post("/:id/comment", auth, async (req, res) => {
       comment: newComment,
     });
   } catch (err) {
-    console.error("❌ Comment error:", err);
+    logger.error("❌ Comment error:", { error: err });
 
     if (err.code === "INVALID_COMMENT")
       return res.status(400).json({ message: "Comment cannot be empty" });

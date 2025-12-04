@@ -1,4 +1,5 @@
 const orderService = require("../services/orderService");
+const logger = require("../config/logger");
 
 /**
  * POST /api/orders
@@ -21,7 +22,7 @@ exports.createOrder = async (req, res) => {
       order,
     });
   } catch (err) {
-    console.error("❌ createOrder error:", err);
+    logger.error("❌ createOrder error", { error: err });
 
     if (err.code === "EMPTY_CART") {
       return res.status(400).json({ message: "Cart is empty" });
@@ -62,7 +63,7 @@ exports.getMyOrders = async (req, res) => {
       orders,
     });
   } catch (err) {
-    console.error("❌ getMyOrders error:", err);
+    logger.error("❌ getMyOrders error", { error: err });
     return res.status(500).json({ message: "Failed to fetch orders" });
   }
 };
@@ -79,7 +80,7 @@ exports.cancelOrder = async (req, res) => {
       order,
     });
   } catch (err) {
-    console.error("❌ cancelOrder error:", err);
+    logger.error("❌ cancelOrder error", { error: err });
 
     if (err.code === "ORDER_NOT_FOUND") {
       return res.status(404).json({ message: "Order not found" });
@@ -112,7 +113,7 @@ exports.updateOrderStatus = async (req, res) => {
       order,
     });
   } catch (err) {
-    console.error("❌ updateOrderStatus error:", err);
+    logger.error("❌ updateOrderStatus error", { error: err });
 
     if (err.code === "ORDER_NOT_FOUND") {
       return res.status(404).json({ message: "Order not found" });
@@ -143,7 +144,7 @@ exports.markDelivered = async (req, res) => {
       order,
     });
   } catch (err) {
-    console.error("❌ markDelivered error:", err);
+    logger.error("❌ markDelivered error", { error: err });
 
     if (err.code === "ORDER_NOT_FOUND") {
       return res.status(404).json({ message: "Order not found" });
@@ -173,7 +174,7 @@ exports.getDeliveryList = async (req, res) => {
       deliveries,
     });
   } catch (err) {
-    console.error("❌ getDeliveryList error:", err);
+    logger.error("❌ getDeliveryList error", { error: err });
     return res.status(500).json({ message: "Failed to fetch deliveries" });
   }
 };

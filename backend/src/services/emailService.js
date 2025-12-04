@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const logger = require("../config/logger");
 
 function createTransporter() {
   if (!process.env.SMTP_HOST) {
@@ -26,7 +27,7 @@ async function sendInvoiceEmail({ to, subject, text, pdfBuffer, fileName }) {
   if (!pdfBuffer) throw new Error("Missing PDF buffer for invoice email");
 
   if (!transporter) {
-    console.warn("[email] SMTP settings missing; invoice email skipped");
+    logger.warn("[email] SMTP settings missing; invoice email skipped");
     return { skipped: true };
   }
 
@@ -54,7 +55,7 @@ async function sendRefundEmail({ to, username, orderId, amount, reason }) {
   }
 
   if (!transporter) {
-    console.warn("[email] SMTP settings missing; refund email skipped");
+    logger.warn("[email] SMTP settings missing; refund email skipped");
     return { skipped: true };
   }
 
@@ -87,7 +88,7 @@ async function sendWishlistDiscountEmail({ to, username, items }) {
   if (!items || items.length === 0) return { skipped: true, reason: "no_discounted_items" };
 
   if (!transporter) {
-    console.warn("[email] SMTP settings missing; wishlist discount email skipped");
+    logger.warn("[email] SMTP settings missing; wishlist discount email skipped");
     return { skipped: true };
   }
 

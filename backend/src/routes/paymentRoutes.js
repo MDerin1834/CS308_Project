@@ -12,6 +12,7 @@ const {
 } = require("../services/invoiceService");
 
 const { sendInvoiceEmail, sendRefundEmail } = require("../services/emailService");
+const logger = require("../config/logger");
 
 function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) {
   if (!/^\d{16}$/.test(cardNumber || "")) return false;
@@ -110,7 +111,7 @@ router.post("/checkout", auth, async (req, res) => {
         fileName: invoiceFileName,
       });
     } catch (emailErr) {
-      console.error("email sending failed:", emailErr);
+      logger.error("email sending failed", { error: emailErr });
     }
 
     return res.status(200).json({
@@ -124,7 +125,7 @@ router.post("/checkout", auth, async (req, res) => {
       emailSent: !emailStatus.skipped,
     });
   } catch (err) {
-    console.error("checkout error:", err);
+    logger.error("checkout error", { error: err });
     return res.status(500).json({ message: "Failed to process payment" });
   }
 });
@@ -141,7 +142,7 @@ router.get("/invoices", auth, authorizeRole("sales_manager"), async (req, res) =
       invoices,
     });
   } catch (err) {
-    console.error("Error fetching invoices:", err);
+    logger.error("Error fetching invoices:", { error: err });
     return res.status(500).json({ message: "Failed to fetch invoices" });
   }
 });
@@ -186,7 +187,7 @@ router.get("/revenue", auth, authorizeRole("sales_manager"), async (req, res) =>
       ordersCount: orders.length,
     });
   } catch (err) {
-    console.error("Revenue error:", err);
+    logger.error("Revenue error:", { error: err });
     return res.status(500).json({ message: "Failed to calculate revenue" });
   }
 });
@@ -228,7 +229,7 @@ router.post("/refund", auth, authorizeRole("sales_manager"), async (req, res) =>
         reason,
       });
     } catch (emailErr) {
-      console.error("refund email failed:", emailErr);
+      logger.error("refund email failed", { error: emailErr });
     }
 
     return res.status(200).json({
@@ -239,7 +240,7 @@ router.post("/refund", auth, authorizeRole("sales_manager"), async (req, res) =>
       emailSent: !emailStatus.skipped,
     });
   } catch (err) {
-    console.error("refund error:", err);
+    logger.error("refund error", { error: err });
     return res.status(500).json({ message: "Failed to process refund" });
   }
 });

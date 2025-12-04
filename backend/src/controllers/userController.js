@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const logger = require("../config/logger");
 
 // Helper function for JWT creation
 const generateToken = (user) => {
@@ -51,7 +52,7 @@ exports.registerUser = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Register error:", error);
+    logger.error("Register error", { error });
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -95,7 +96,7 @@ exports.loginUser = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Login error:", error);
+    logger.error("Login error", { error });
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -107,7 +108,7 @@ exports.logoutUser = async (req, res) => {
     // Clear the cookie here (If the token is stored in a cookie)
     res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
-    console.error("Logout error:", error);
+    logger.error("Logout error", { error });
     res.status(500).json({ message: "Server error" });
   }
 };
