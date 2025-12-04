@@ -4,7 +4,7 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const Order = require("../models/Order");
 const User = require("../models/User");
-const { generateInvoicePdf } = require("../services/invoiceService");
+const { generateInvoicePdf, getInvoicesByDateRange } = require("../services/invoiceService");
 const { sendInvoiceEmail } = require("../services/emailService");
 
 function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) {
@@ -24,6 +24,14 @@ function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) 
   if (!/^[A-Za-z ]+$/.test(cardHolder || "")) return false;
 
   return true;
+}
+function requireSalesManager(req, res, next) {
+  if (!req.user || req.user.role !== "sales_manager") {
+    return res
+      .status(403)
+      .json({ message: "Only sales managers can view invoices" });
+  }
+  next();
 }
 
 router.post("/checkout", auth, async (req, res) => {
@@ -106,6 +114,23 @@ router.post("/checkout", auth, async (req, res) => {
   } catch (error) {
     console.error("checkout error:", error);
     return res.status(500).json({ message: "Failed to process payment" });
+  }
+});
+
+router.get("/invoices", auth, requireSalesManager, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const invoices = await getInvoicesByDateRange(startDate, endDate);
+
+    return res.status(200).json({
+      message: "Invoices fetched successfully",
+      filters: { startDate, endDate },
+      invoices,
+    });
+  } catch (error) {
+    console.error("Error fetching invoices:", error);
+    return res.status(500).json({ message: "Failed to fetch invoices" });
   }
 });
 
