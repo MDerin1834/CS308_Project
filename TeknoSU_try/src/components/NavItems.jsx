@@ -89,51 +89,44 @@ const NavItems = () => {
               </div>
 
               {/* ❗️ GİRİŞ DURUMUNA GÖRE DEĞİŞEN BÖLÜM */}
-              {user ? (
-                // Kullanıcı GİRİŞ YAPMIŞSA (user objesi varsa)
-                <>
-                  <div className="d-none d-md-block">
+              <div className="d-none d-md-block">
+                {/* ❤️ WISHLIST ICON — sadece login için mantıklı, ama guestte de zarar yok; yine de login kontrolü */}
+                {user && (
+                  <Link to="/wishlist" className="me-3">
+                    <i className="icofont-heart-alt"></i>
+                  </Link>
+                )}
 
-                    {/* ❤️ WISHLIST ICON — YENİ EKLENDİ */}
-                    <Link to="/wishlist" className="me-3">
-                      <i className="icofont-heart-alt"></i>
-                    </Link>
+                {/* 📦 MY ORDERS yalnızca login için */}
+                {user && (
+                  <Link to="/past-orders" className="me-3">
+                    <i className="icofont-box"></i>
+                  </Link>
+                )}
 
-                    {/* 📦 MY ORDERS */}
-                    <Link to="/past-orders" className="me-3">
-                      <i className="icofont-box"></i>
-                    </Link>
+                {/* Cart her iki durumda da gösterilsin */}
+                <Link to="/cart-page" className="me-3">
+                  <i className="icofont-cart-alt"></i>
+                </Link>
 
-                    {/* Profil yerine CART */}
-                    <Link to="/cart-page" className="me-3"> 
-                        <i className="icofont-cart-alt"></i>
-                        {/* <span>{user.username || user.email}</span> */}
-                    </Link>
-
-                    {/* Logout Butonu */}
-                    <a
-                      href="#"
-                      onClick={handleLogout}
-                      className="lab-btn"
+                {user ? (
+                  <a href="#" onClick={handleLogout} className="lab-btn">
+                    <span>Log Out</span>
+                  </a>
+                ) : (
+                  <>
+                    <Link
+                      to="/sign-up"
+                      className="lab-btn me-3"
                     >
-                      <span>Log Out</span>
-                    </a>
-                  </div>
-                </>
-              ) : (
-                // Kullanıcı GİRİŞ YAPMAMIŞSA (user objesi null ise)
-                <>
-                  <Link
-                    to="/sign-up"
-                    className="lab-btn me-3 d-none d-md-block"
-                  >
-                    <span>Create Account</span>
-                  </Link>
-                  <Link to="/login" className="d-none d-md-block">
-                    <span>Log In</span>
-                  </Link>
-                </>
-              )}
+                      <span>Create Account</span>
+                    </Link>
+                    <Link to="/login">
+                      <span>Log In</span>
+                    </Link>
+                  </>
+                )}
+              </div>
 
               {/* Mobile Menu Toggler */}
               <div

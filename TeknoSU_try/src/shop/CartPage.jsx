@@ -14,6 +14,8 @@ const CartPage = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const isGuest = !user;
+
   // ⭐ Kartı yükle
   const loadCart = async () => {
     setLoading(true);
@@ -218,6 +220,11 @@ const CartPage = () => {
             {/* ⭐ BOTTOM SECTION */}
             <div className="cart-bottom">
               <div className="cart-checkout-box">
+                {isGuest && (
+                  <div className="alert alert-warning" role="alert">
+                    Please sign in to proceed to checkout.
+                  </div>
+                )}
                 <form
                   className="coupon"
                   onSubmit={(e) => {
@@ -233,8 +240,14 @@ const CartPage = () => {
                 </form>
 
                 <div className="cart-checkout">
-                  <button type="button" className="lab-btn bg-primary" onClick={handleCheckout}>
-                    Proceed to Checkout
+                  <button
+                    type="button"
+                    className="lab-btn bg-primary"
+                    onClick={handleCheckout}
+                    disabled={isGuest}
+                    style={{ opacity: isGuest ? 0.7 : 1, cursor: isGuest ? "not-allowed" : "pointer" }}
+                  >
+                    {isGuest ? "Sign in to Checkout" : "Proceed to Checkout"}
                   </button>
                 </div>
               </div>

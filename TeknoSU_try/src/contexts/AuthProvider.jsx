@@ -9,6 +9,28 @@ const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const mergeGuestCart = async (token) => {
+    const guestCart = JSON.parse(localStorage.getItem("cart")) || [];
+    if (!guestCart.length || !token) return;
+    try {
+      const cartItems = guestCart.map((item) => ({
+        productId: item.id || item.productId,
+        quantity: item.quantity || 1,
+      }));
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5050"}/api/cart/merge`,
+        { items: cartItems },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          validateStatus: () => true,
+        }
+      );
+      localStorage.removeItem("cart");
+    } catch {
+      // Sessiz geç; login akışını bloklamasın
+    }
+  };
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
@@ -33,6 +55,7 @@ const AuthProvider = ({ children }) => {
           localStorage.setItem("token", token);
           localStorage.setItem("user", JSON.stringify(user));
           setUser(user);
+          await mergeGuestCart(token);
         }
         return {
           success: true,
@@ -77,6 +100,7 @@ const AuthProvider = ({ children }) => {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
         setUser(response.data.user);
+        await mergeGuestCart(response.data.token);
         return {
           success: true,
           status: response.status,

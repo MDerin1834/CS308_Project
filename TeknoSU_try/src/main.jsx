@@ -72,7 +72,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/cart-page",
-        element: <PrivateRoute><CartPage /></PrivateRoute>
+        element: <CartPage />
       },
       {
         path: "/check-out",

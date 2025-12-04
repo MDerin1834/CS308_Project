@@ -15,6 +15,29 @@ const ProductDisplay = ({ item }) => {
   const [prequantity, setQuantity] = useState(quantity);
   const [color, setColor] = useState("");
 
+  const saveGuestCart = () => {
+    const existing = JSON.parse(localStorage.getItem("cart")) || [];
+    const idx = existing.findIndex((it) => it.id === id || it.productId === id);
+    const next = [...existing];
+    if (idx === -1) {
+      next.push({
+        id,
+        name,
+        price,
+        quantity: prequantity,
+        img: img || item.imageURL,
+      });
+    } else {
+      next[idx] = {
+        ...next[idx],
+        quantity: (next[idx].quantity || 0) + prequantity,
+        price,
+        img: img || item.imageURL,
+      };
+    }
+    localStorage.setItem("cart", JSON.stringify(next));
+  };
+
   const handleDecrease = () => {
     if (prequantity > 1) setQuantity(prequantity - 1);
   };
@@ -42,6 +65,15 @@ const ProductDisplay = ({ item }) => {
 
     if (!color) {
       alert("Please select a color before adding to cart.");
+      return;
+    }
+
+    // Guest kullanıcı: localStorage sepetine ekle ve çık
+    if (!user) {
+      saveGuestCart();
+      alert("Added to cart. Please sign in to checkout.");
+      setQuantity(1);
+      setColor("");
       return;
     }
 

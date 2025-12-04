@@ -94,18 +94,20 @@ exports.mergeGuestCart = async (req, res) => {
   if (!cart) cart = await Cart.create({ userId: req.user.id, items: [] });
 
   for (const it of incoming) {
-    if (!it || !it.productId) continue;
+    // `productId` anahtarını bekliyoruz; ancak frontend localStorage'da `id` olarak saklıyorsa onu da kabul edelim.
+    const pid = it?.productId || it?.id;
+    if (!pid) continue;
     const q = Math.max(1, Number(it.quantity || 1));
 
-    const product = await Product.findOne({ id: it.productId }).lean();
+    const product = await Product.findOne({ id: pid }).lean();
     if (!product) continue;
     const allowed = Math.min(q, product.stock ?? 0);
     if (allowed < 1) continue;
 
-    const idx = cart.items.findIndex((c) => c.productId === it.productId);
+    const idx = cart.items.findIndex((c) => c.productId === pid);
     if (idx === -1) {
       cart.items.push({
-        productId: it.productId,
+        productId: pid,
         quantity: allowed,
         priceSnapshot: product.price,
       });
