@@ -126,6 +126,37 @@ exports.updateOrderStatus = async (req, res) => {
 };
 
 /**
+ * PATCH /api/delivery/:id
+ * Marks an order as delivered (product manager only).
+ */
+exports.markDelivered = async (req, res) => {
+  try {
+    if (req.user.role !== "product_manager") {
+      return res.status(403).json({ message: "Only product managers can update deliveries" });
+    }
+
+    const orderId = req.params.id;
+    const order = await orderService.updateOrderStatus(orderId, "delivered");
+
+    return res.status(200).json({
+      message: "Order marked as delivered",
+      order,
+    });
+  } catch (err) {
+    console.error("❌ markDelivered error:", err);
+
+    if (err.code === "ORDER_NOT_FOUND") {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (err.code === "INVALID_STATUS") {
+      return res.status(400).json({ message: "Invalid order status" });
+    }
+
+    return res.status(500).json({ message: "Failed to update delivery status" });
+  }
+};
+
+/**
  * GET /api/orders/deliveries
  * Only product managers can access the delivery list.
  */

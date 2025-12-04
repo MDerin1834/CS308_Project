@@ -12,6 +12,7 @@ const userRoutes = require("./routes/userRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const deliveryRoutes = require("./routes/deliveryRoutes");
 
 const app = express();
 const wishlistRoutes = require("./routes/wishlistRoutes"); 
@@ -46,6 +47,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/comments", require("./routes/commentRoutes"));
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/delivery", deliveryRoutes);
 
 /* ---------- Sunucu ---------- */
 const PORT = process.env.PORT || 5050;
