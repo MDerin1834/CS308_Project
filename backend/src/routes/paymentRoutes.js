@@ -147,6 +147,43 @@ router.get("/invoices", auth, authorizeRole("sales_manager"), async (req, res) =
   }
 });
 
+router.get("/invoices/:id/pdf", auth, authorizeRole("sales_manager"), async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (!order.paidAt) {
+      return res.status(400).json({ message: "Invoice available only for paid orders" });
+    }
+
+    const user = await User.findById(order.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found for this order" });
+    }
+
+    if (!order.invoiceNumber) {
+      order.invoiceNumber = `INV-${String(order.id).slice(-6).toUpperCase()}`;
+      await order.save();
+    }
+
+    const { buffer: invoicePdf, invoiceNumber } = await generateInvoicePdf({
+      order,
+      user,
+    });
+
+    const filename = `${invoiceNumber}.pdf`;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=\"${filename}\"`);
+    res.setHeader("Content-Length", invoicePdf.length);
+
+    return res.send(invoicePdf);
+  } catch (err) {
+    logger.error("Error exporting invoice PDF", { error: err, orderId: req.params.id });
+    return res.status(500).json({ message: "Failed to export invoice" });
+  }
+});
+
 router.get("/revenue", auth, authorizeRole("sales_manager"), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
