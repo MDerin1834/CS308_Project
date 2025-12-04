@@ -5,7 +5,9 @@ const auth = require("../middleware/auth");
 const authorizeRole = require("../middleware/authorizeRole");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const User = require("../models/User");
 const logger = require("../config/logger");
+const { sendRefundEmail } = require("../services/emailService");
 
 /**
  * POST /api/refunds
@@ -103,6 +105,11 @@ router.patch("/:id/approve", auth, authorizeRole("sales_manager"), async (req, r
 
     await restockProducts(order);
 
+    const user = await User.findById(order.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found for this order" });
+    }
+
     order.refundRequestStatus = "approved";
     order.refundedAt = new Date();
     order.refundAmount = order.total;
@@ -110,11 +117,25 @@ router.patch("/:id/approve", auth, authorizeRole("sales_manager"), async (req, r
     order.status = "cancelled";
     await order.save();
 
+    let emailStatus = { skipped: true };
+    try {
+      emailStatus = await sendRefundEmail({
+        to: user.email,
+        username: user.username,
+        orderId: order.id,
+        amount: order.refundAmount,
+        reason: order.refundReason,
+      });
+    } catch (emailErr) {
+      logger.error("Refund approval email failed", { error: emailErr, orderId: order.id });
+    }
+
     return res.status(200).json({
       message: "Refund approved",
       orderId: order.id,
       refundAmount: order.refundAmount,
       refundRequestStatus: order.refundRequestStatus,
+      emailSent: !emailStatus.skipped,
     });
   } catch (err) {
     logger.error("Refund approve error", { error: err, orderId: req.params.id });
