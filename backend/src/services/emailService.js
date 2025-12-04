@@ -22,13 +22,8 @@ function createTransporter() {
 const transporter = createTransporter();
 
 async function sendInvoiceEmail({ to, subject, text, pdfBuffer, fileName }) {
-  if (!to) {
-    throw new Error("Missing recipient email");
-  }
-
-  if (!pdfBuffer) {
-    throw new Error("Missing PDF buffer for invoice email");
-  }
+  if (!to) throw new Error("Missing recipient email");
+  if (!pdfBuffer) throw new Error("Missing PDF buffer for invoice email");
 
   if (!transporter) {
     console.warn("[email] SMTP settings missing; invoice email skipped");
@@ -38,7 +33,7 @@ async function sendInvoiceEmail({ to, subject, text, pdfBuffer, fileName }) {
   const result = await transporter.sendMail({
     from: process.env.SMTP_FROM || "no-reply@teknosu.local",
     to,
-    subject,
+    subject: subject || "Your Invoice",
     text: text || "Thank you for your purchase. Your invoice is attached.",
     attachments: [
       {
@@ -52,6 +47,56 @@ async function sendInvoiceEmail({ to, subject, text, pdfBuffer, fileName }) {
   return { skipped: false, result };
 }
 
+async function sendWishlistDiscountEmail({ to, username, items }) {
+  if (!to) throw new Error("Missing recipient email");
+  if (!items || items.length === 0) return { skipped: true, reason: "no_discounted_items" };
+
+  if (!transporter) {
+    console.warn("[email] SMTP settings missing; wishlist discount email skipped");
+    return { skipped: true };
+  }
+
+  const lines = items.map(
+    (item) =>
+      `• ${item.name} → ${item.currentPrice} (was ${item.basePrice}, -${item.discountPercent}%)`
+  );
+
+  const textBody = [
+    `Hello ${username || "customer"},`,
+    "",
+    "Some items in your wishlist are now discounted:",
+    "",
+    ...lines,
+    "",
+    "Don't miss the deals!",
+  ].join("\n");
+
+  const htmlBody = `
+    <p>Hello <strong>${username || "customer"}</strong>,</p>
+    <p>The following wishlist items are currently discounted:</p>
+    <ul>
+      ${items
+        .map(
+          (item) =>
+            `<li><strong>${item.name}</strong>: ${item.currentPrice} (was ${item.basePrice}, -${item.discountPercent}%)</li>`
+        )
+        .join("")}
+    </ul>
+    <p>Don't miss the deals!</p>
+  `;
+
+  const result = await transporter.sendMail({
+    from: process.env.SMTP_FROM || "no-reply@teknosu.local",
+    to,
+    subject: "Discounted Items in Your Wishlist",
+    text: textBody,
+    html: htmlBody,
+  });
+
+  return { skipped: false, result };
+}
+
 module.exports = {
   sendInvoiceEmail,
+  sendWishlistDiscountEmail,
 };

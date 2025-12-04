@@ -10,4 +10,10 @@ router.post("/", auth, wishlistController.addToWishlist);
 
 router.delete("/:productId", auth, wishlistController.removeFromWishlist);
 
+router.post(
+  "/notify-discounts",
+  auth,
+  wishlistController.notifyDiscounts
+);
+
 module.exports = router;

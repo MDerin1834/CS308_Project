@@ -11,7 +11,7 @@ const WishlistSchema = new mongoose.Schema(
     items: [
       {
         productId: {
-          type: String,
+          type: String, // Product modelindeki "id" alanıyla eşleşiyor
           required: true,
         },
         addedAt: {

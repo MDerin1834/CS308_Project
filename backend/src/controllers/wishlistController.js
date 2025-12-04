@@ -1,4 +1,5 @@
 const wishlistService = require("../services/wishlistService");
+const { notifyUserForWishlistDiscounts } = require("../services/wishlistNotificationService");
 
 exports.getWishlist = async (req, res) => {
   try {
@@ -52,10 +53,7 @@ exports.removeFromWishlist = async (req, res) => {
     const userId = req.user.id;
     const { productId } = req.params;
 
-    const wishlist = await wishlistService.removeFromWishlist(
-      userId,
-      productId
-    );
+    const wishlist = await wishlistService.removeFromWishlist(userId, productId);
 
     return res.status(200).json({
       message: "Removed from wishlist",
@@ -69,5 +67,37 @@ exports.removeFromWishlist = async (req, res) => {
     }
 
     return res.status(500).json({ message: "Failed to remove from wishlist" });
+  }
+};
+
+
+exports.notifyDiscounts = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const result = await notifyUserForWishlistDiscounts(userId);
+
+    if (!result.sent) {
+      return res.status(200).json({
+        message: "No discounted items in wishlist at the moment",
+        sent: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Discount email sent successfully",
+      sent: true,
+      count: result.count,
+    });
+  } catch (err) {
+    console.error("Wishlist discount notify error:", err);
+
+    if (err.code === "NO_EMAIL") {
+      return res.status(400).json({
+        message: "User does not have a valid email address",
+      });
+    }
+
+    return res.status(500).json({ message: "Failed to send discount email" });
   }
 };
