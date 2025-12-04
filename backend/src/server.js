@@ -15,6 +15,7 @@ const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
+const refundRoutes = require("./routes/refundRoutes");
 
 const app = express();
 const wishlistRoutes = require("./routes/wishlistRoutes"); 
@@ -53,6 +54,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/comments", require("./routes/commentRoutes"));
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/delivery", deliveryRoutes);
+app.use("/api/refunds", refundRoutes);
 
 /* ---------- Error Logging ---------- */
 app.use(errorLogger);

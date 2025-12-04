@@ -50,6 +50,13 @@ const orderSchema = new mongoose.Schema(
     refundedAt: { type: Date },
     refundAmount: { type: Number },
     refundReason: { type: String },
+    refundRequestedAt: { type: Date },
+    refundRequestReason: { type: String },
+    refundRequestStatus: {
+      type: String,
+      enum: ["pending", "approved", "declined"],
+      default: "pending",
+    },
 
     shippingAddress: {
       type: shippingAddressSchema,
