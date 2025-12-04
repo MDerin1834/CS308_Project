@@ -3,6 +3,7 @@ const Product = require("../models/Product");
 const Order = require("../models/Order");
 
 const VALID_STATUSES = ["processing", "paid", "cancelled", "in-transit", "delivered"];
+const COMPLETABLE_STATUSES = ["processing", "paid", "in-transit", "delivered"];
 
 /**
  * #25: Kullanıcının sepetinden order oluşturur.
@@ -172,9 +173,40 @@ async function updateOrderStatus(orderId, newStatus) {
   return order.toJSON();
 }
 
+/**
+ * Backlog 37: Delivery list for product managers.
+ * Returns minimal delivery info for table view:
+ *  - id
+ *  - shipping address
+ *  - completion flag derived from status === "delivered"
+ */
+async function getDeliveryList() {
+  const orders = await Order.find(
+    { status: { $in: COMPLETABLE_STATUSES } },
+    {
+      shippingAddress: 1,
+      status: 1,
+      createdAt: 1,
+      updatedAt: 1,
+    }
+  )
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return orders.map((order) => ({
+    id: order._id?.toString(),
+    shippingAddress: order.shippingAddress,
+    status: order.status,
+    completion: order.status === "delivered",
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+  }));
+}
+
 module.exports = {
   createOrderFromCart,
   getOrdersByUserId,
   cancelOrder,
   updateOrderStatus,
+  getDeliveryList,
 };
