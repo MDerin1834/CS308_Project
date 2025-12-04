@@ -18,16 +18,30 @@ describe("wishlistService", () => {
     jest.clearAllMocks();
   });
 
+  // Helper to mock Product.find().lean()
+  const mockProductQuery = (returnValue) => ({
+    lean: jest.fn().mockResolvedValue(returnValue),
+  });
+
+  // Helper to mock Wishlist.findOne().lean()
+  const mockWishlistQuery = (returnValue) => ({
+    lean: jest.fn().mockResolvedValue(returnValue),
+  });
+
   describe("getWishlist", () => {
     it("should return wishlist with product details", async () => {
-      Wishlist.findOne.mockResolvedValue({
-        userId: "u1",
-        items: [{ productId: "p1" }],
-      });
+      Wishlist.findOne.mockReturnValue(
+        mockWishlistQuery({
+          userId: "u1",
+          items: [{ productId: "p1" }],
+        })
+      );
 
-      Product.find.mockResolvedValue([
-        { id: "p1", name: "Mouse", price: 100 },
-      ]);
+      Product.find.mockReturnValue(
+        mockProductQuery([
+          { id: "p1", name: "Mouse", price: 100 },
+        ])
+      );
 
       const result = await wishlistService.getWishlist("u1");
 
@@ -36,13 +50,15 @@ describe("wishlistService", () => {
     });
 
     it("should create wishlist if none exists", async () => {
-      Wishlist.findOne.mockResolvedValue(null);
+      Wishlist.findOne.mockReturnValue(
+        mockWishlistQuery(null)
+      );
 
       Wishlist.create.mockResolvedValue({
         toJSON: () => ({ userId: "u1", items: [] }),
       });
 
-      Product.find.mockResolvedValue([]);
+      Product.find.mockReturnValue(mockProductQuery([]));
 
       const result = await wishlistService.getWishlist("u1");
 
@@ -56,15 +72,18 @@ describe("wishlistService", () => {
 
   describe("addToWishlist", () => {
     it("should add product if not exists", async () => {
-      Product.findOne.mockResolvedValue({ id: "p1" }); // product exists
+      Product.findOne.mockResolvedValue({ id: "p1" });
+
+      const saveMock = jest.fn();
       Wishlist.findOne.mockResolvedValue({
         items: [],
-        save: jest.fn(),
+        save: saveMock,
       });
 
       const wishlist = await wishlistService.addToWishlist("u1", "p1");
 
-      expect(wishlist.save).toHaveBeenCalled();
+      expect(saveMock).toHaveBeenCalled();
+      expect(wishlist.items[0].productId).toBe("p1");
     });
 
     it("should throw if product not found", async () => {
@@ -99,7 +118,7 @@ describe("wishlistService", () => {
 
       const result = await wishlistService.removeFromWishlist("u1", "p1");
 
-      expect(result.items.some((i) => i.productId === "p1")).toBe(false);
+      expect(result.items.some(i => i.productId === "p1")).toBe(false);
       expect(saveMock).toHaveBeenCalled();
     });
 
@@ -114,14 +133,27 @@ describe("wishlistService", () => {
 
   describe("findDiscountedWishlistItems", () => {
     it("should return discounted items only", async () => {
-      Wishlist.findOne.mockResolvedValue({
-        items: [{ productId: "p1" }, { productId: "p2" }],
-      });
+      Wishlist.findOne.mockReturnValue(
+        mockWishlistQuery({
+          items: [{ productId: "p1" }, { productId: "p2" }],
+        })
+      );
 
-      Product.find.mockResolvedValue([
-        { id: "p1", name: "Laptop", price: 900, originalPrice: 1000 }, // discounted
-        { id: "p2", name: "Mouse", price: 50 }, // no discount
-      ]);
+      Product.find.mockReturnValue(
+        mockProductQuery([
+          {
+            id: "p1",
+            name: "Laptop",
+            price: 900,
+            originalPrice: 1000,
+          },
+          {
+            id: "p2",
+            name: "Mouse",
+            price: 50,
+          },
+        ])
+      );
 
       const result = await wishlistService.findDiscountedWishlistItems("u1");
 
@@ -131,9 +163,13 @@ describe("wishlistService", () => {
     });
 
     it("should return empty array if wishlist empty", async () => {
-      Wishlist.findOne.mockResolvedValue({
-        items: [],
-      });
+      Wishlist.findOne.mockReturnValue(
+        mockWishlistQuery({
+          items: [],
+        })
+      );
+
+      Product.find.mockReturnValue(mockProductQuery([]));
 
       const result = await wishlistService.findDiscountedWishlistItems("u1");
 
