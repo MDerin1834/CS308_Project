@@ -143,7 +143,7 @@ describe("Product Routes", () => {
     const res = await request(app).delete("/api/products/p1");
 
     expect(res.statusCode).toBe(403);
-    expect(res.body.message).toBe("Only product managers can manage products");
+    expect(res.body.message).toBe("Insufficient permissions");
     expect(Product.findOneAndDelete).not.toHaveBeenCalled();
   });
 

@@ -23,6 +23,16 @@ const deliveryRoutes = require("../src/routes/deliveryRoutes");
 
 describe("Order Routes - Backlog 37 Deliveries", () => {
   let app;
+  let consoleErrorSpy;
+
+  beforeAll(() => {
+    // Silence expected error logs for cleaner test output
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    consoleErrorSpy.mockRestore();
+  });
 
   beforeEach(() => {
     app = express();
@@ -39,7 +49,7 @@ describe("Order Routes - Backlog 37 Deliveries", () => {
     const res = await request(app).get("/api/orders/deliveries");
 
     expect(res.statusCode).toBe(403);
-    expect(res.body.message).toBe("Only product managers can view deliveries");
+    expect(res.body.message).toBe("Insufficient permissions");
     expect(orderService.getDeliveryList).not.toHaveBeenCalled();
   });
 
@@ -68,7 +78,7 @@ describe("Order Routes - Backlog 37 Deliveries", () => {
     const res = await request(app).patch("/api/delivery/ord-1");
 
     expect(res.statusCode).toBe(403);
-    expect(res.body.message).toBe("Only product managers can update deliveries");
+    expect(res.body.message).toBe("Insufficient permissions");
     expect(orderService.updateOrderStatus).not.toHaveBeenCalled();
   });
 
