@@ -2,18 +2,11 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../middleware/auth");
+const authorizeRole = require("../middleware/authorizeRole");
 const commentService = require("../services/commentService");
 
-// Only product manager can use these routes
-function requirePM(req, res, next) {
-  if (req.user.role !== "product_manager") {
-    return res.status(403).json({ message: "Only product managers can perform this action" });
-  }
-  next();
-}
-
 // GET /api/comments/pending
-router.get("/pending", auth, requirePM, async (req, res) => {
+router.get("/pending", auth, authorizeRole("product_manager"), async (req, res) => {
   try {
     const comments = await commentService.getPendingComments();
     return res.status(200).json({ comments });
@@ -24,7 +17,7 @@ router.get("/pending", auth, requirePM, async (req, res) => {
 });
 
 // PATCH /api/comments/:id/approve
-router.patch("/:id/approve", auth, requirePM, async (req, res) => {
+router.patch("/:id/approve", auth, authorizeRole("product_manager"), async (req, res) => {
   try {
     const comment = await commentService.approveComment(req.params.id);
     return res.status(200).json({ message: "Comment approved", comment });
@@ -39,7 +32,7 @@ router.patch("/:id/approve", auth, requirePM, async (req, res) => {
 });
 
 // PATCH /api/comments/:id/reject
-router.patch("/:id/reject", auth, requirePM, async (req, res) => {
+router.patch("/:id/reject", auth, authorizeRole("product_manager"), async (req, res) => {
   try {
     const comment = await commentService.rejectComment(req.params.id);
     return res.status(200).json({ message: "Comment rejected", comment });

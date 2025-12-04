@@ -3,21 +3,11 @@ const router = express.Router();
 const path = require("path");
 const multer = require("multer");
 
-const Product = require("../models/Product");
 const auth = require("../middleware/auth");
+const authorizeRole = require("../middleware/authorizeRole");
+const Product = require("../models/Product");
 const ratingService = require("../services/ratingService");
 const commentService = require("../services/commentService");
-
-/* ============== ROLE CHECK: PRODUCT MANAGER ============== */
-
-function requireProductManager(req, res, next) {
-  if (!req.user || req.user.role !== "product_manager") {
-    return res
-      .status(403)
-      .json({ message: "Only product managers can manage products" });
-  }
-  next();
-}
 
 /* ============== MULTER: IMAGE UPLOAD AYARI ============== */
 
@@ -175,7 +165,11 @@ router.get("/:id", async (req, res) => {
  * - Sadece role === "product_manager" olan kullanıcılar
  * - Product.id üzerinden silme
  */
-router.delete("/:id", auth, requireProductManager, async (req, res) => {
+router.delete(
+  "/:id",
+  auth,
+  authorizeRole("product_manager"),
+  async (req, res) => {
   try {
     const productId = req.params.id;
 
@@ -199,7 +193,7 @@ router.delete("/:id", auth, requireProductManager, async (req, res) => {
  *  - stock >= 0, sayı olmalı
  *  - Product.id ile bulunup güncellenir
  */
-router.put("/:id/stock", auth, requireProductManager, async (req, res) => {
+router.put("/:id/stock", auth, authorizeRole("product_manager"), async (req, res) => {
   try {
     const { stock } = req.body;
 
@@ -233,7 +227,7 @@ router.put("/:id/stock", auth, requireProductManager, async (req, res) => {
 router.post(
   "/",
   auth,
-  requireProductManager,
+  authorizeRole("product_manager"),
   upload.single("image"),
   async (req, res) => {
     try {

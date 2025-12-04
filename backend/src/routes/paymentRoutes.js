@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../middleware/auth");
+const authorizeRole = require("../middleware/authorizeRole");
 const Order = require("../models/Order");
 const User = require("../models/User");
 
@@ -30,15 +31,6 @@ function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) 
   if (!/^[A-Za-z ]+$/.test(cardHolder || "")) return false;
 
   return true;
-}
-
-function requireSalesManager(req, res, next) {
-  if (!req.user || req.user.role !== "sales_manager") {
-    return res
-      .status(403)
-      .json({ message: "Only sales managers can view invoices or revenue" });
-  }
-  next();
 }
 
 router.post("/checkout", auth, async (req, res) => {
@@ -137,7 +129,7 @@ router.post("/checkout", auth, async (req, res) => {
   }
 });
 
-router.get("/invoices", auth, requireSalesManager, async (req, res) => {
+router.get("/invoices", auth, authorizeRole("sales_manager"), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -154,7 +146,7 @@ router.get("/invoices", auth, requireSalesManager, async (req, res) => {
   }
 });
 
-router.get("/revenue", auth, requireSalesManager, async (req, res) => {
+router.get("/revenue", auth, authorizeRole("sales_manager"), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
