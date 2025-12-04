@@ -14,6 +14,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
+const wishlistRoutes = require("./routes/wishlistRoutes"); 
 
 /* ---------- CORS (ÖNCE) ---------- */
 const corsOptions = {
@@ -44,6 +45,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/comments", require("./routes/commentRoutes"));
+app.use("/api/wishlist", wishlistRoutes);
 
 /* ---------- Sunucu ---------- */
 const PORT = process.env.PORT || 5050;
