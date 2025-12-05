@@ -16,6 +16,7 @@ const Shop = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sort, setSort] = useState("newest");
 
   //   category active colors
 const [selectedCategory, setSelectedCategory] = useState("All");
@@ -48,8 +49,9 @@ const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
     let mounted = true;
+    setLoading(true);
     api
-      .get("/api/products", { params: { limit: 200 } })
+      .get("/api/products", { params: { limit: 200, sort } })
       .then((res) => {
         if (!mounted) return;
         const items = res.data?.items || [];
@@ -64,7 +66,7 @@ const [selectedCategory, setSelectedCategory] = useState("All");
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [sort]);
 
   return (
     <div>
@@ -87,6 +89,26 @@ const [selectedCategory, setSelectedCategory] = useState("All");
                       <span>+ New Product</span>
                     </Link>
                   )}
+                  <div className="d-flex align-items-center gap-2">
+                    <label htmlFor="sort" className="mb-0">
+                      Sort by:
+                    </label>
+                    <select
+                      id="sort"
+                      value={sort}
+                      onChange={(e) => {
+                        setSort(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="form-select form-select-sm"
+                      style={{ width: "auto", minWidth: "160px", display: "inline-block" }}
+                    >
+                      <option value="newest">Newest</option>
+                      <option value="price_asc">Price: Low to High</option>
+                      <option value="price_desc">Price: High to Low</option>
+                      <option value="popularity">Popularity</option>
+                    </select>
+                  </div>
                   <div
                     className={`product-view-mode ${
                       GridList ? "gridActive" : "listActive"
