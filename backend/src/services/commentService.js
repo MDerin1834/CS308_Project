@@ -49,6 +49,25 @@ async function getPendingComments() {
 }
 
 // -----------------------------
+// 2b) Get Approved Comments by product
+// -----------------------------
+async function getApprovedCommentsByProduct(productId) {
+  const comments = await Comment.find({
+    productId,
+    status: "approved",
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return comments.map((c) => ({
+    ...c,
+    id: c._id?.toString(),
+    _id: undefined,
+    __v: undefined,
+  }));
+}
+
+// -----------------------------
 // 3) Approve a comment
 // -----------------------------
 async function approveComment(commentId) {
@@ -85,6 +104,7 @@ async function rejectComment(commentId) {
 module.exports = {
   addComment,
   getPendingComments,
+  getApprovedCommentsByProduct,
   approveComment,
   rejectComment,
 };

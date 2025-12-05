@@ -24,6 +24,9 @@ const SingleProduct = () => {
   const [canReview, setCanReview] = useState(false);
   const [stockValue, setStockValue] = useState("");
   const [stockUpdating, setStockUpdating] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState("");
   const { id } = useParams();
   useEffect(() => {
     let mounted = true;
@@ -64,6 +67,31 @@ const SingleProduct = () => {
       })
       .catch(() => setCanReview(false));
   }, [user, id]);
+
+  useEffect(() => {
+    let mounted = true;
+    setCommentsLoading(true);
+    setCommentsError("");
+    api
+      .get(`/api/comments/product/${id}`, { validateStatus: () => true })
+      .then((res) => {
+        if (!mounted) return;
+        if (res.status === 200 && Array.isArray(res.data?.comments)) {
+          setComments(res.data.comments);
+        } else {
+          setCommentsError(res.data?.message || "Failed to load comments");
+        }
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setCommentsError(err?.response?.data?.message || "Failed to load comments");
+      })
+      .finally(() => mounted && setCommentsLoading(false));
+
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
 
   const handleDelete = async () => {
     if (!window.confirm("Delete this product? This action cannot be undone.")) return;
@@ -193,6 +221,28 @@ const SingleProduct = () => {
                 </div>
                 
                 <div className="review">
+                  <div className="mb-3">
+                    <h5>Approved Comments</h5>
+                    {commentsLoading && <p>Loading comments...</p>}
+                    {commentsError && <p style={{ color: "red" }}>{commentsError}</p>}
+                    {!commentsLoading && !commentsError && comments.length === 0 && (
+                      <p>No comments yet.</p>
+                    )}
+                    {!commentsLoading && !commentsError && comments.length > 0 && (
+                      <ul className="list-unstyled">
+                        {comments.map((c) => (
+                          <li key={c.id || c._id} className="mb-2 border-bottom pb-2">
+                            <p style={{ marginBottom: "4px" }}>{c.comment}</p>
+                            {c.createdAt && (
+                              <small style={{ color: "#666" }}>
+                                {new Date(c.createdAt).toLocaleString()}
+                              </small>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                   <Review productId={id} canReview={canReview} />
                 </div>
               </article>

@@ -6,6 +6,19 @@ const authorizeRole = require("../middleware/authorizeRole");
 const commentService = require("../services/commentService");
 const logger = require("../config/logger");
 
+// GET /api/comments/product/:productId (approved comments, public)
+router.get("/product/:productId", async (req, res) => {
+  try {
+    const comments = await commentService.getApprovedCommentsByProduct(
+      req.params.productId
+    );
+    return res.status(200).json({ comments });
+  } catch (err) {
+    logger.error("❌ getApprovedCommentsByProduct error", { error: err });
+    return res.status(500).json({ message: "Failed to fetch comments" });
+  }
+});
+
 // GET /api/comments/pending
 router.get("/pending", auth, authorizeRole("product_manager"), async (req, res) => {
   try {

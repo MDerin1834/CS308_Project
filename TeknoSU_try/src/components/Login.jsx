@@ -57,16 +57,14 @@ const Login = () => {
 
     login(email, password)
       .then((result) => {
-        const user = result.user;
-
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            uid: user.uid,
-            email: user.email,
-            name: user.displayName || "User",
-          })
-        );
+        // AuthProvider.login zaten token + user'ı (rol dahil) localStorage'a yazıyor.
+        // Yine de güncel user'ı rol bilgisiyle birlikte saklayalım.
+        if (result?.user) {
+          localStorage.setItem("user", JSON.stringify(result.user));
+        }
+        if (result?.token) {
+          localStorage.setItem("token", result.token);
+        }
 
         // ⭐ REDIRECT AFTER LOGIN (guest checkout)
         const redirectPath =
