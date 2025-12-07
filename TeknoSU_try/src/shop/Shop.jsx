@@ -6,7 +6,7 @@ import Pagination from "./Pagination";
 import ShopCategory from "./ShopCategory";
 import ProductCards from "./ProductCards";
 import api from "../api/client";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthProvider";
 
 const Shop = () => {
@@ -17,6 +17,9 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sort, setSort] = useState("newest");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
 
   //   category active colors
 const [selectedCategory, setSelectedCategory] = useState("All");
@@ -51,7 +54,7 @@ const [selectedCategory, setSelectedCategory] = useState("All");
     let mounted = true;
     setLoading(true);
     api
-      .get("/api/products", { params: { limit: 200, sort } })
+      .get("/api/products", { params: { limit: 200, sort, search: searchTerm } })
       .then((res) => {
         if (!mounted) return;
         const items = res.data?.items || [];
@@ -66,7 +69,21 @@ const [selectedCategory, setSelectedCategory] = useState("All");
     return () => {
       mounted = false;
     };
-  }, [sort]);
+  }, [sort, searchTerm]);
+
+  useEffect(() => {
+    const urlSearch = searchParams.get("search") || "";
+    setSearchTerm((prev) => (prev === urlSearch ? prev : urlSearch));
+  }, [searchParams]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    const params = {};
+    if (searchTerm) {
+      params.search = searchTerm;
+    }
+    setSearchParams(params, { replace: true });
+  }, [searchTerm, setSearchParams]);
 
   return (
     <div>
@@ -139,7 +156,11 @@ const [selectedCategory, setSelectedCategory] = useState("All");
             </div>
             <div className="col-lg-4 col-12">
               <aside>
-                <Search products={products} GridList={GridList} />
+                <Search
+                  products={products}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                />
                 {/* <ShopCategory /> */}
                 <ShopCategory
                   filterItem={filterItem}

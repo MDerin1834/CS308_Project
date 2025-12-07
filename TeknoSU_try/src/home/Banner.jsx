@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SelectedCategory from "../components/SelectedCategory";
 import api from "../api/client";
 
@@ -30,6 +30,7 @@ const Banner = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -57,13 +58,19 @@ const Banner = () => {
     setSearchInput(e.target.value);
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const term = searchInput.trim();
+    navigate(term ? `/shop?search=${encodeURIComponent(term)}` : "/shop");
+  };
+
   return (
     <div className="banner-section style-4">
       <div className="container">
         <div className="banner-content">
           {title}
           {error && <p style={{ color: "red" }}>{error}</p>}
-          <form>
+          <form onSubmit={handleSubmit}>
             <SelectedCategory select={"all"}/>
             <input
               type="text"
@@ -78,11 +85,13 @@ const Banner = () => {
           </form>
           <p>{desc}</p>
           <ul className="lab-ul">
-          {searchInput && !loading && filteredProducts.map((product, i) => (
-              <li key={i}>
-               <Link to={`/shop/${product.id}`}> {product.name}</Link>
-              </li>
-            ))}
+            {searchInput &&
+              !loading &&
+              filteredProducts.map((product, i) => (
+                <li key={i}>
+                  <Link to={`/shop/${product.id}`}>{product.name}</Link>
+                </li>
+              ))}
           </ul>
         </div>
       </div>

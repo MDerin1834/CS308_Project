@@ -57,6 +57,12 @@ const Login = () => {
 
     login(email, password)
       .then((result) => {
+        if (!result?.success) {
+          setErrorMessage(result?.message || "Invalid email or password.");
+          setLoading(false);
+          return;
+        }
+
         // AuthProvider.login zaten token + user'ı (rol dahil) localStorage'a yazıyor.
         // Yine de güncel user'ı rol bilgisiyle birlikte saklayalım.
         if (result?.user) {
