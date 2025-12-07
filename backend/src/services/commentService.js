@@ -1,6 +1,7 @@
 const Comment = require("../models/Comment");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const Rating = require("../models/Rating");
 
 // -----------------------------
 // 1) Add Comment (from backlog 32)
@@ -45,7 +46,20 @@ async function addComment(userId, productId, commentText) {
 // 2) Get Pending Comments
 // -----------------------------
 async function getPendingComments() {
-  return Comment.find({ status: "pending" }).sort({ createdAt: -1 }).lean();
+  const comments = await Comment.find({ status: "pending" })
+    .populate("userId", "email username")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return comments.map((c) => ({
+    ...c,
+    id: c._id?.toString(),
+    _id: undefined,
+    __v: undefined,
+    userEmail: c.userId?.email,
+    userName: c.userId?.username,
+    userId: c.userId?._id?.toString() || c.userId?.toString(),
+  }));
 }
 
 // -----------------------------
@@ -56,14 +70,29 @@ async function getApprovedCommentsByProduct(productId) {
     productId,
     status: "approved",
   })
+    .populate("userId", "email username")
     .sort({ createdAt: -1 })
     .lean();
+
+  // Fetch ratings for these users/products
+  const ratings = await Rating.find({
+    productId,
+    userId: { $in: comments.map((c) => c.userId?._id || c.userId) },
+  }).lean();
+
+  const ratingMap = new Map(
+    ratings.map((r) => [(r.userId || "").toString(), r.rating])
+  );
 
   return comments.map((c) => ({
     ...c,
     id: c._id?.toString(),
     _id: undefined,
     __v: undefined,
+    userEmail: c.userId?.email,
+    userName: c.userId?.username,
+    userId: c.userId?._id?.toString() || c.userId?.toString(),
+    rating: ratingMap.get((c.userId?._id || c.userId || "").toString()),
   }));
 }
 

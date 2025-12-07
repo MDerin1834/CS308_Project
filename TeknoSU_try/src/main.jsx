@@ -41,6 +41,8 @@ import ReviewOrderPage from './shop/ReviewOrderPage.jsx';
 import PastOrders from './shop/PastOrders.jsx';
 import ProductCreate from './shop/ProductCreate.jsx';
 import WishlistPage from './shop/WishList.jsx';
+import Deliveries from './shop/Deliveries.jsx';
+import PendingComments from './shop/PendingComments.jsx';
 
 
 
@@ -62,6 +64,16 @@ const router = createBrowserRouter([
       { path: "/products/new", element: (
         <PrivateRoute allowedRoles={["product_manager"]}>
           <ProductCreate />
+        </PrivateRoute>
+      ) },
+      { path: "/deliveries", element: (
+        <PrivateRoute allowedRoles={["product_manager"]}>
+          <Deliveries />
+        </PrivateRoute>
+      ) },
+      { path: "/comments/pending", element: (
+        <PrivateRoute allowedRoles={["product_manager"]}>
+          <PendingComments />
         </PrivateRoute>
       ) },
     ],

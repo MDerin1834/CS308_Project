@@ -232,12 +232,27 @@ const SingleProduct = () => {
                       <ul className="list-unstyled">
                         {comments.map((c) => (
                           <li key={c.id || c._id} className="mb-2 border-bottom pb-2">
-                            <p style={{ marginBottom: "4px" }}>{c.comment}</p>
-                            {c.createdAt && (
-                              <small style={{ color: "#666" }}>
-                                {new Date(c.createdAt).toLocaleString()}
-                              </small>
-                            )}
+                            <div className="d-flex justify-content-between align-items-start">
+                              <div>
+                                <p style={{ marginBottom: "4px" }}>{c.comment}</p>
+                                {c.userName && (
+                                  <small style={{ color: "#666", display: "block" }}>
+                                    {c.userName}
+                                  </small>
+                                )}
+                                {c.createdAt && (
+                                  <small style={{ color: "#666" }}>
+                                    {new Date(c.createdAt).toLocaleString()}
+                                  </small>
+                                )}
+                              </div>
+                              {c.rating ? (
+                                <div className="d-flex align-items-center gap-1">
+                                  <span style={{ fontWeight: 600 }}>{c.rating}</span>
+                                  <i className="icofont-star text-warning"></i>
+                                </div>
+                              ) : null}
+                            </div>
                           </li>
                         ))}
                       </ul>

@@ -91,23 +91,35 @@ const NavItems = () => {
               {/* ❗️ GİRİŞ DURUMUNA GÖRE DEĞİŞEN BÖLÜM */}
               <div className="d-none d-md-block">
                 {/* ❤️ WISHLIST ICON — sadece login için mantıklı, ama guestte de zarar yok; yine de login kontrolü */}
-                {user && (
+                {user && user.role !== "product_manager" && (
                   <Link to="/wishlist" className="me-3">
                     <i className="icofont-heart-alt"></i>
                   </Link>
                 )}
 
                 {/* 📦 MY ORDERS yalnızca login için */}
-                {user && (
+                {user && user.role !== "product_manager" && (
                   <Link to="/past-orders" className="me-3">
                     <i className="icofont-box"></i>
                   </Link>
                 )}
+                {user && user.role === "product_manager" && (
+                  <Link to="/deliveries" className="me-3">
+                    <i className="icofont-vehicle-delivery-van"></i>
+                  </Link>
+                )}
+                {user && user.role === "product_manager" && (
+                  <Link to="/comments/pending" className="me-3">
+                    <i className="icofont-speech-comments"></i>
+                  </Link>
+                )}
 
-                {/* Cart her iki durumda da gösterilsin */}
-                <Link to="/cart-page" className="me-3">
-                  <i className="icofont-cart-alt"></i>
-                </Link>
+                {/* Cart sadece product_manager olmayanlar için */}
+                {(!user || user.role !== "product_manager") && (
+                  <Link to="/cart-page" className="me-3">
+                    <i className="icofont-cart-alt"></i>
+                  </Link>
+                )}
 
                 {user ? (
                   <a href="#" onClick={handleLogout} className="lab-btn">

@@ -188,6 +188,9 @@ async function getDeliveryList() {
       status: 1,
       createdAt: 1,
       updatedAt: 1,
+      userId: 1,
+      total: 1,
+      items: 1,
     }
   )
     .sort({ createdAt: -1 })
@@ -195,8 +198,16 @@ async function getDeliveryList() {
 
   return orders.map((order) => ({
     id: order._id?.toString(),
+    customerId: order.userId?.toString(),
     shippingAddress: order.shippingAddress,
     status: order.status,
+    total: order.total,
+    items: order.items?.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      lineTotal: item.lineTotal,
+      name: item.name,
+    })) || [],
     completion: order.status === "delivered",
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
