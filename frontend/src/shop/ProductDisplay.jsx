@@ -3,6 +3,7 @@ import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { AuthContext } from "../contexts/AuthProvider";
+import Rating from "../components/Rating";
 
 const ProductDisplay = ({ item }) => {
   const navigate = useNavigate(); // ✅ Added for checkout redirect
@@ -110,14 +111,9 @@ const ProductDisplay = ({ item }) => {
     <div>
       <div>
         <h4>{name}</h4>
-        <p className="rating">
-          <i className="icofont-star"></i>
-          <i className="icofont-star"></i>
-          <i className="icofont-star"></i>
-          <i className="icofont-star"></i>
-          <i className="icofont-star"></i>
-          (3 review)
-        </p>
+        <div className="rating">
+          <Rating value={item?.ratings} count={item?.ratingsCount} />
+        </div>
         <h4>${price}</h4>
         <h6>{seller}</h6>
 

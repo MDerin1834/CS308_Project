@@ -68,7 +68,7 @@ const ProductCards = ({ products, GridList }) => {
                 <Link to={`/shop/${product.id}`}>{product.name}</Link>
               </h5>
               <p className="productRating">
-                <Rating />
+                <Rating value={product?.ratings} count={product?.ratingsCount} />
               </p>
               <h6>${product.price}</h6>
             </div>
@@ -103,7 +103,7 @@ const ProductCards = ({ products, GridList }) => {
             <div className="product-content">
               <Link to={`/shop/${product.id}`}>{product.name}</Link>
               <p className="productRating">
-                <Rating />
+                <Rating value={product?.ratings} count={product?.ratingsCount} />
               </p>
               <h6>${product.price}</h6>
               <p>{product.seller}</p>

@@ -66,7 +66,7 @@ const CategoryShowCase = () => {
                                                 <a href="#">{category}</a>
                                             </div>
                                             <div className="course-reiew">
-                                                <Rating />
+                                                <Rating value={product?.ratings} count={product?.ratingsCount} />
                                             </div>
                                         </div>
                                     </div>

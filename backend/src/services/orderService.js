@@ -1,6 +1,7 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const User = require("../models/User");
 
 const VALID_STATUSES = ["processing", "paid", "cancelled", "in-transit", "delivered"];
 const COMPLETABLE_STATUSES = ["processing", "paid", "in-transit", "delivered"];
@@ -196,9 +197,15 @@ async function getDeliveryList() {
     .sort({ createdAt: -1 })
     .lean();
 
+  // Map userId -> username for display
+  const userIds = orders.map((o) => o.userId).filter(Boolean);
+  const users = await User.find({ _id: { $in: userIds } }, { username: 1 }).lean();
+  const userMap = new Map(users.map((u) => [u._id.toString(), u.username || ""]));
+
   return orders.map((order) => ({
     id: order._id?.toString(),
     customerId: order.userId?.toString(),
+    customerUsername: order.userId ? userMap.get(order.userId.toString()) || "" : "",
     shippingAddress: order.shippingAddress,
     status: order.status,
     total: order.total,

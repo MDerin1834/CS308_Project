@@ -71,6 +71,7 @@ const Deliveries = () => {
               <tr>
                 <th>Delivery ID</th>
                 <th>Customer ID</th>
+                <th>Customer Username</th>
                 <th>Products</th>
                 <th>Total</th>
                 <th>Address</th>
@@ -83,6 +84,7 @@ const Deliveries = () => {
                 <tr key={d.id}>
                   <td>{d.id}</td>
                   <td>{d.customerId || "-"}</td>
+                  <td>{d.customerUsername || "-"}</td>
                   <td>
                     {d.items?.map((item, idx) => (
                       <div key={idx}>
