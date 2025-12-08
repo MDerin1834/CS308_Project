@@ -39,12 +39,32 @@ const Signup = () => {
     event.preventDefault();
     const form = event.target;
     const username = form.elements.name?.value?.trim();
+    const fullName = form.elements.fullName?.value?.trim();
     const email = form.elements.email?.value?.trim();
     const password = form.elements.password?.value;
     const confirmPassword = form.elements.confirmPassword?.value;
+    const taxId = form.elements.taxId?.value?.trim();
+    const addressLine1 = form.elements.addressLine1?.value?.trim();
+    const addressLine2 = form.elements.addressLine2?.value?.trim();
+    const city = form.elements.city?.value?.trim();
+    const country = form.elements.country?.value?.trim();
+    const postalCode = form.elements.postalCode?.value?.trim();
+    const phone = form.elements.phone?.value?.trim();
 
     if (!username) {
       setErrorMessage("User name is required");
+      return;
+    }
+    if (!fullName) {
+      setErrorMessage("Full name is required");
+      return;
+    }
+    if (!taxId) {
+      setErrorMessage("Tax ID is required");
+      return;
+    }
+    if (!addressLine1 || !city || !country || !postalCode) {
+      setErrorMessage("Address is incomplete");
       return;
     }
     if (password !== confirmPassword) {
@@ -55,7 +75,18 @@ const Signup = () => {
     setErrorMessage("");
     setLoading(true); // ⭐ Show overlay
 
-    registerUser(username, email, password)
+    registerUser(username, email, password, {
+      fullName,
+      taxId,
+      homeAddress: {
+        addressLine1,
+        addressLine2,
+        city,
+        country,
+        postalCode,
+        phone,
+      },
+    })
       .then((result) => {
         if (result.success) {
           alert(result.message || "Account Created Successfully!");
@@ -82,7 +113,31 @@ const Signup = () => {
                 <input type="text" name="name" placeholder="User Name" required />
               </div>
               <div className="form-group">
+                <input type="text" name="fullName" placeholder="Full Name" required />
+              </div>
+              <div className="form-group">
                 <input type="email" name="email" placeholder="Email" required />
+              </div>
+              <div className="form-group">
+                <input type="text" name="taxId" placeholder="Tax ID" required />
+              </div>
+              <div className="form-group">
+                <input type="text" name="addressLine1" placeholder="Address Line 1" required />
+              </div>
+              <div className="form-group">
+                <input type="text" name="addressLine2" placeholder="Address Line 2 (Optional)" />
+              </div>
+              <div className="form-group">
+                <input type="text" name="city" placeholder="City" required />
+              </div>
+              <div className="form-group">
+                <input type="text" name="country" placeholder="Country" required />
+              </div>
+              <div className="form-group">
+                <input type="text" name="postalCode" placeholder="Postal Code" required />
+              </div>
+              <div className="form-group">
+                <input type="text" name="phone" placeholder="Phone (Optional)" />
               </div>
               <div className="form-group">
                 <input type="password" name="password" placeholder="Password" required />

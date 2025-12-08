@@ -43,6 +43,7 @@ import ProductCreate from './shop/ProductCreate.jsx';
 import WishlistPage from './shop/WishList.jsx';
 import Deliveries from './shop/Deliveries.jsx';
 import PendingComments from './shop/PendingComments.jsx';
+import Profile from './components/Profile.jsx';
 
 
 
@@ -74,6 +75,11 @@ const router = createBrowserRouter([
       { path: "/comments/pending", element: (
         <PrivateRoute allowedRoles={["product_manager"]}>
           <PendingComments />
+        </PrivateRoute>
+      ) },
+      { path: "/profile", element: (
+        <PrivateRoute allowedRoles={["customer"]}>
+          <Profile />
         </PrivateRoute>
       ) },
     ],

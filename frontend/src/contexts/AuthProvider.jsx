@@ -41,11 +41,18 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   // ✅ REGISTER
-  const registerUser = async (username, email, password) => {
+  const registerUser = async (username, email, password, extra = {}) => {
     try {
       const response = await axios.post(
         `${API_URL}/register`,
-        { username, email, password },
+        {
+          username,
+          email,
+          password,
+          fullName: extra.fullName,
+          taxId: extra.taxId,
+          homeAddress: extra.homeAddress,
+        },
         { validateStatus: () => true }
       );
 
@@ -132,8 +139,56 @@ const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    const response = await axios.get(`${API_URL}/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      validateStatus: () => true,
+    });
+    if (response.status === 200 && response.data?.user) {
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      setUser(response.data.user);
+      return response.data.user;
+    }
+    return null;
+  };
+
+  const updateProfile = async (payload) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return { success: false, status: 401, message: "Not authenticated" };
+    }
+    const response = await axios.put(`${API_URL}/me`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+      validateStatus: () => true,
+    });
+    if (response.status === 200 && response.data?.user) {
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      setUser(response.data.user);
+      return { success: true, status: 200, message: response.data.message, user: response.data.user };
+    }
+    return {
+      success: false,
+      status: response.status,
+      message: response.data?.message || "Failed to update profile",
+    };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, registerUser, login, logOut, signUpWithGmail }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        registerUser,
+        login,
+        logOut,
+        signUpWithGmail,
+        fetchProfile,
+        updateProfile,
+        setUser,
+      }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );

@@ -36,7 +36,7 @@
 
 /* 🔧 TeknoSU Logo Position Fix */
 header .logo img {
-  max-width: 150px !important;
+  max-width: 110px !important;
   height: auto !important;
   position: relative !important;
   top: 0 !important;
@@ -44,4 +44,5 @@ header .logo img {
   transform: none !important;
   z-index: 1 !important;
   display: inline-block !important;
+  margin-left: 4px;
 }

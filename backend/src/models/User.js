@@ -9,6 +9,17 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
 
+    fullName: { type: String, default: "" },
+    taxId: { type: String, default: "" },
+    homeAddress: {
+      addressLine1: { type: String, default: "" },
+      addressLine2: { type: String, default: "" },
+      city: { type: String, default: "" },
+      country: { type: String, default: "" },
+      postalCode: { type: String, default: "" },
+      phone: { type: String, default: "" },
+    },
+
     // 🔹 Kullanıcı rolü (authorization için)
     role: {
       type: String,

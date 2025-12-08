@@ -103,6 +103,11 @@ const NavItems = () => {
                     <i className="icofont-box"></i>
                   </Link>
                 )}
+                {user && user.role === "customer" && (
+                  <Link to="/profile" className="me-3">
+                    <i className="icofont-user"></i>
+                  </Link>
+                )}
                 {user && user.role === "product_manager" && (
                   <Link to="/deliveries" className="me-3">
                     <i className="icofont-vehicle-delivery-van"></i>

@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const logger = require("../config/logger");
+const auth = require("../middleware/auth");
 
 // Helper function for JWT creation
 const generateToken = (user) => {
@@ -15,11 +16,31 @@ const generateToken = (user) => {
 // REGISTER
 exports.registerUser = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role, fullName, taxId, homeAddress } = req.body;
+
+    const isCustomer = !role || role === "customer";
 
     // Required field check
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+    if (!fullName || !fullName.trim()) {
+      return res.status(400).json({ message: "fullName is required" });
+    }
+
+    if (isCustomer) {
+      if (!taxId) {
+        return res.status(400).json({ message: "taxId is required for customers" });
+      }
+      if (
+        !homeAddress ||
+        !homeAddress.addressLine1 ||
+        !homeAddress.city ||
+        !homeAddress.country ||
+        !homeAddress.postalCode
+      ) {
+        return res.status(400).json({ message: "homeAddress is incomplete for customers" });
+      }
     }
 
     // Check if email or username exists
@@ -33,9 +54,12 @@ exports.registerUser = async (req, res) => {
     // Create new user
     const newUser = await User.create({
       username,
+      fullName: fullName || username,
       email,
       password,
       role: role || "customer",
+      taxId: taxId || "",
+      homeAddress: homeAddress || {},
     });
 
     // Create token
@@ -46,8 +70,11 @@ exports.registerUser = async (req, res) => {
       user: {
         id: newUser._id,
         username: newUser.username,
+        fullName: newUser.fullName,
         email: newUser.email,
         role: newUser.role,
+        taxId: newUser.taxId,
+        homeAddress: newUser.homeAddress,
       },
       token,
     });
@@ -90,8 +117,11 @@ exports.loginUser = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
+        fullName: user.fullName,
         email: user.email,
         role: user.role,
+        taxId: user.taxId,
+        homeAddress: user.homeAddress,
       },
       token,
     });
@@ -100,6 +130,98 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// GET /api/users/me
+exports.getCurrentUser = [
+  auth,
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.user.id).lean();
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      return res.status(200).json({
+        message: "Profile fetched successfully",
+        user: {
+          id: user._id,
+          username: user.username,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          taxId: user.taxId,
+          homeAddress: user.homeAddress,
+        },
+      });
+    } catch (error) {
+      logger.error("Get current user error", { error });
+      return res.status(500).json({ message: "Server error" });
+    }
+  },
+];
+
+// PUT /api/users/me
+exports.updateCurrentUser = [
+  auth,
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (user.role !== "customer") {
+        return res.status(403).json({ message: "Only customers can update profile fields" });
+      }
+
+      const { fullName, taxId, homeAddress } = req.body || {};
+
+      if (!taxId) {
+        return res.status(400).json({ message: "taxId is required" });
+      }
+      if (
+        !homeAddress ||
+        !homeAddress.addressLine1 ||
+        !homeAddress.city ||
+        !homeAddress.country ||
+        !homeAddress.postalCode
+      ) {
+        return res.status(400).json({ message: "homeAddress is incomplete" });
+      }
+
+      if (fullName && fullName.trim()) {
+        user.fullName = fullName.trim();
+      }
+      user.taxId = taxId;
+      user.homeAddress = {
+        addressLine1: homeAddress.addressLine1,
+        addressLine2: homeAddress.addressLine2 || "",
+        city: homeAddress.city,
+        country: homeAddress.country,
+        postalCode: homeAddress.postalCode,
+        phone: homeAddress.phone || "",
+      };
+
+      await user.save();
+
+      return res.status(200).json({
+        message: "Profile updated successfully",
+        user: {
+          id: user._id,
+          username: user.username,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          taxId: user.taxId,
+          homeAddress: user.homeAddress,
+        },
+      });
+    } catch (error) {
+      logger.error("Update current user error", { error });
+      return res.status(500).json({ message: "Server error" });
+    }
+  },
+];
 
 // LOGOUT
 exports.logoutUser = async (req, res) => {

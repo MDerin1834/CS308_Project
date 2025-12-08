@@ -130,7 +130,7 @@ router.post("/checkout", auth, async (req, res) => {
   }
 });
 
-router.get("/invoices", auth, authorizeRole("sales_manager"), async (req, res) => {
+router.get("/invoices", auth, authorizeRole("sales_manager", "product_manager"), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -147,7 +147,7 @@ router.get("/invoices", auth, authorizeRole("sales_manager"), async (req, res) =
   }
 });
 
-router.get("/invoices/:id/pdf", auth, authorizeRole("sales_manager"), async (req, res) => {
+router.get("/invoices/:id/pdf", auth, authorizeRole("sales_manager", "product_manager"), async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) {

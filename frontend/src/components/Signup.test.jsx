@@ -25,10 +25,36 @@ const renderSignup = (registerUser = vi.fn()) =>
     </AuthContext.Provider>,
   );
 
-const fillSignupForm = async (user, { name, email, password, confirmPassword }) => {
+const fillSignupForm = async (
+  user,
+  {
+    name,
+    email,
+    password,
+    confirmPassword,
+    fullName = "Full Name",
+    taxId = "TAX-123",
+    addressLine1 = "Street 1",
+    addressLine2 = "Apt 1",
+    city = "Istanbul",
+    country = "TR",
+    postalCode = "34000",
+    phone = "5555555",
+  },
+) => {
   await user.clear(screen.getByPlaceholderText(/user name/i));
   await user.type(screen.getByPlaceholderText(/user name/i), name);
+  await user.type(screen.getByPlaceholderText(/full name/i), fullName);
   await user.type(screen.getByPlaceholderText(/email/i), email);
+  await user.type(screen.getByPlaceholderText(/tax id/i), taxId);
+  await user.type(screen.getByPlaceholderText(/address line 1/i), addressLine1);
+  if (addressLine2) {
+    await user.type(screen.getByPlaceholderText(/address line 2/i), addressLine2);
+  }
+  await user.type(screen.getByPlaceholderText(/city/i), city);
+  await user.type(screen.getByPlaceholderText(/country/i), country);
+  await user.type(screen.getByPlaceholderText(/postal code/i), postalCode);
+  await user.type(screen.getByPlaceholderText(/phone/i), phone);
   await user.type(screen.getByPlaceholderText(/^password/i), password);
   await user.type(screen.getByPlaceholderText(/confirm password/i), confirmPassword);
   await user.click(screen.getByRole('button', { name: /get started now/i }));
@@ -93,11 +119,7 @@ describe('Signup', () => {
       confirmPassword: 'Password123!',
     });
 
-    expect(registerUser).toHaveBeenCalledWith(
-      'Backend Failure',
-      'existing@example.com',
-      'Password123!',
-    );
+    expect(registerUser).toHaveBeenCalledWith('Backend Failure', 'existing@example.com', 'Password123!', expect.any(Object));
     expect(await screen.findByText(/email already in use/i)).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
@@ -118,7 +140,20 @@ describe('Signup', () => {
       confirmPassword: 'Password123!',
     });
 
-    expect(registerUser).toHaveBeenCalledWith('John Doe', 'john@example.com', 'Password123!');
+    expect(registerUser).toHaveBeenCalledWith(
+      'John Doe',
+      'john@example.com',
+      'Password123!',
+      expect.objectContaining({
+        taxId: 'TAX-123',
+        homeAddress: expect.objectContaining({
+          addressLine1: 'Street 1',
+          city: 'Istanbul',
+          country: 'TR',
+          postalCode: '34000',
+        }),
+      }),
+    );
     expect(global.alert).toHaveBeenCalledWith('Custom success message');
 
     await waitFor(
