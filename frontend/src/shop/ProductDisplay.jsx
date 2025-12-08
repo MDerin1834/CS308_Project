@@ -4,13 +4,10 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { AuthContext } from "../contexts/AuthProvider";
 
-const desc =
-  "Energistia an deliver atactica metrcs after avsionary Apropria trnsition enterpris an sources applications emerging psd template.";
-
 const ProductDisplay = ({ item }) => {
   const navigate = useNavigate(); // ✅ Added for checkout redirect
   const { user } = useContext(AuthContext);
-  const { id, img, price, name, quantity, seller, stock } = item;
+  const { id, img, price, name, quantity, seller, stock, description } = item;
 
   const [prequantity, setQuantity] = useState(quantity);
   const [color, setColor] = useState("");
@@ -129,7 +126,7 @@ const ProductDisplay = ({ item }) => {
         ) : (
           <p style={{ color: "red", fontWeight: "500" }}>❌ Out of Stock</p>
         )}
-        <p>{desc}</p>
+        <p>{description || "Description not available."}</p>
       </div>
 
       <div>
