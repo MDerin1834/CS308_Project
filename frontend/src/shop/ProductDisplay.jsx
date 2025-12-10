@@ -13,7 +13,13 @@ const ProductDisplay = ({ item }) => {
   const [prequantity, setQuantity] = useState(quantity);
   const [color, setColor] = useState("");
 
+  const quantityError = "productId and positive quantity are required";
+
   const saveGuestCart = () => {
+    if (prequantity < 1) {
+      alert(quantityError);
+      return;
+    }
     const existing = JSON.parse(localStorage.getItem("cart")) || [];
     const idx = existing.findIndex((it) => it.id === id || it.productId === id);
     const next = [...existing];
@@ -58,6 +64,11 @@ const ProductDisplay = ({ item }) => {
 
     if (prequantity > availableStock) {
       alert(`⚠️ Only ${availableStock} units available. Please reduce quantity.`);
+      return;
+    }
+
+    if (prequantity < 1) {
+      alert(quantityError);
       return;
     }
 
