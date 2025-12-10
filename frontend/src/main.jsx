@@ -62,6 +62,7 @@ const router = createBrowserRouter([
       // { path: "/about", element: <About /> },
       // { path: "/contact", element: <Contact /> },
       { path: "/wishlist", element: <WishlistPage /> },
+      { path: "/past-orders", element: <PastOrders /> },
       { path: "/products/new", element: (
         <PrivateRoute allowedRoles={["product_manager"]}>
           <ProductCreate />
@@ -87,7 +88,6 @@ const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
   { path: "sign-up", element: <Signup /> },
   { path: "/review-order", element: <ReviewOrderPage /> },
-  { path: "/past-orders", element: <PastOrders /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
