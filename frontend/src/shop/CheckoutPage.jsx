@@ -184,30 +184,18 @@ const CheckoutPage = (props = {}) => {
       style={{
         padding: "20px",
         position: "relative",
-        paddingTop: error ? "72px" : "20px",
         paddingBottom: "80px",
         maxHeight: "70vh",
         overflowY: "auto",
       }}
     >
-      {error && (
-        <div
-          className="alert alert-danger"
-          style={{
-            position: "absolute",
-            top: "12px",
-            left: "12px",
-            right: "12px",
-            fontSize: "14px",
-            padding: "8px 12px",
-            marginBottom: 0,
-            transition: "opacity 160ms ease",
-            zIndex: 1,
-          }}
-        >
-          {error}
-        </div>
-      )}
+      <div style={{ minHeight: "48px", marginBottom: "10px" }}>
+        {error && (
+          <div className="alert alert-danger" style={{ fontSize: "14px", padding: "8px 12px" }}>
+            {error}
+          </div>
+        )}
+      </div>
       <div className="mb-3">
         <h6>Shipping Information</h6>
         <input
