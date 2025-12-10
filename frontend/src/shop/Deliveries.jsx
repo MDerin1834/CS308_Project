@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/client";
 
-const statusOptions = ["processing", "paid", "in-transit", "delivered", "cancelled"];
+const statusOptions = ["processing", "in-transit", "delivered", "cancelled"];
 
 const Deliveries = () => {
   const [deliveries, setDeliveries] = useState([]);

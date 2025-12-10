@@ -3,8 +3,8 @@ const Product = require("../models/Product");
 const Order = require("../models/Order");
 const User = require("../models/User");
 
-const VALID_STATUSES = ["processing", "paid", "cancelled", "in-transit", "delivered"];
-const COMPLETABLE_STATUSES = ["processing", "paid", "in-transit", "delivered"];
+const VALID_STATUSES = ["processing", "cancelled", "in-transit", "delivered"];
+const COMPLETABLE_STATUSES = ["processing", "in-transit", "delivered"];
 
 /**
  * #25: Kullanıcının sepetinden order oluşturur.
@@ -87,13 +87,7 @@ async function createOrderFromCart(userId, payload) {
     throw err;
   }
 
-  // 6) Stok düş
-  for (const item of cart.items) {
-    const product = productMap.get(item.productId);
-    product.stock = (product.stock ?? 0) - item.quantity;
-    if (product.stock < 0) product.stock = 0;
-  }
-  await Promise.all(products.map((p) => p.save()));
+  // 6) Stok düşmeyi ödeme sonrasına bırakıyoruz; burada sadece yeterlilik kontrolü yaptık.
 
   // 7) Order oluştur
   const order = await Order.create({

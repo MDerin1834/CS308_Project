@@ -8,7 +8,7 @@ import Rating from "../components/Rating";
 const ProductDisplay = ({ item }) => {
   const navigate = useNavigate(); // ✅ Added for checkout redirect
   const { user } = useContext(AuthContext);
-  const { id, img, price, name, quantity, seller, stock, description } = item;
+  const { id, img, price, name, quantity, seller, stock, description, model, serialNumber, warranty, distributor } = item;
 
   const [prequantity, setQuantity] = useState(quantity);
   const [color, setColor] = useState("");
@@ -123,6 +123,13 @@ const ProductDisplay = ({ item }) => {
           <p style={{ color: "red", fontWeight: "500" }}>❌ Out of Stock</p>
         )}
         <p>{description || "Description not available."}</p>
+        <div className="mt-3">
+          <div><strong>ID:</strong> {id || "-"}</div>
+          <div><strong>Model:</strong> {model || "-"}</div>
+          <div><strong>Serial Number:</strong> {serialNumber || "-"}</div>
+          <div><strong>Warranty:</strong> {warranty || "-"}</div>
+          <div><strong>Distributor:</strong> {distributor || seller || "-"}</div>
+        </div>
       </div>
 
       <div>

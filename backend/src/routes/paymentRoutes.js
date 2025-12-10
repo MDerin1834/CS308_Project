@@ -6,6 +6,7 @@ const authorizeRole = require("../middleware/authorizeRole");
 const Order = require("../models/Order");
 const User = require("../models/User");
 const Cart = require("../models/Cart");
+const Product = require("../models/Product");
 
 const {
   generateInvoicePdf,
@@ -68,7 +69,7 @@ router.post("/checkout", auth, async (req, res) => {
       return res.status(403).json({ message: "You cannot pay for this order" });
     }
 
-    if (order.status === "paid") {
+    if (order.paidAt) {
       return res.status(409).json({ message: "Order is already paid", orderId: order.id });
     }
 
@@ -84,12 +85,41 @@ router.post("/checkout", auth, async (req, res) => {
       });
     }
 
+    // Re-check stock at payment time and decrement
+    const productIds = (order.items || []).map((it) => it.productId);
+    const products = await Product.find({ id: { $in: productIds } });
+    const productMap = new Map(products.map((p) => [p.id, p]));
+
+    for (const item of order.items || []) {
+      const product = productMap.get(item.productId);
+      const availableStock = product?.stock ?? 0;
+      if (!product) {
+        return res.status(404).json({
+          message: "One of the products in the order no longer exists",
+          productId: item.productId,
+        });
+      }
+      if (availableStock < item.quantity) {
+        return res.status(409).json({
+          message: "Insufficient stock for some items",
+          productId: item.productId,
+          available: availableStock,
+        });
+      }
+    }
+
+    for (const item of order.items || []) {
+      const product = productMap.get(item.productId);
+      product.stock = (product.stock ?? 0) - item.quantity;
+      if (product.stock < 0) product.stock = 0;
+    }
+    await Promise.all(products.map((p) => p.save()));
+
     const user = await User.findById(order.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found for this order" });
     }
 
-    order.status = "paid";
     order.paidAt = new Date();
     order.invoiceNumber =
       order.invoiceNumber || `INV-${String(order.id).slice(-6).toUpperCase()}`;
@@ -197,7 +227,6 @@ router.get("/revenue", auth, authorizeRole("sales_manager"), async (req, res) =>
     const { startDate, endDate } = req.query;
 
     const filter = {
-      status: "paid",
       paidAt: { $ne: null },
     };
 
@@ -249,7 +278,7 @@ router.post("/refund", auth, authorizeRole("sales_manager"), async (req, res) =>
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (order.status !== "paid") {
+    if (!order.paidAt) {
       return res.status(400).json({ message: "Only paid orders can be refunded" });
     }
 

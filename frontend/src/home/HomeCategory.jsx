@@ -34,7 +34,7 @@ const categoryList = [
         imgUrl: 'src/assets/images/category/05.jpg',
         imgAlt: 'category rajibraj91 rajibraj',
         iconName: 'icofont-brand-windows',
-        title: 'Printers',
+        title: 'Others',
     },
     {
         imgUrl: 'src/assets/images/category/06.jpg',
@@ -59,7 +59,7 @@ const HomeCategory = () => {
                 <div className='row g-4 justify-content-center row-cols-md-3 row-cols-sm-2 row-cols-1'>
                     {
                         categoryList.map((val, i) => (<div className='col' key={i}>
-                            <Link to="/shop" className='category-item'>
+                            <Link to={{ pathname: "/shop", search: `?category=${encodeURIComponent(val.title)}` }} className='category-item'>
                                 <div className='category-inner'>
                                     {/* image thumb */}
                                     <div className='category-thumb' style={{

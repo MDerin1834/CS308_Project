@@ -44,7 +44,7 @@ async function seed() {
             model: p.model || "",
             serialNumber: p.serialNumber || "",
             warranty: p.warranty || "",
-            distributor: p.distributor || "",
+            distributor: p.distributor || p.seller || "TeknoSU Distribution",
             specs: p.specs || undefined,
           },
         },

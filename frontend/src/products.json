@@ -16,7 +16,8 @@
       "batteryLifeHours": 30,
       "charging": "MagSafe/Lightning"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "Apple Distribution"
   },
   {
     "id": 1002,
@@ -35,7 +36,8 @@
       "cameraMP": 48,
       "chip": "A16 Bionic"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "Apple Distribution"
   },
   {
     "id": 1003,
@@ -54,7 +56,8 @@
       "storageGB": 256,
       "screen": "6.8-inch AMOLED"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "Samsung Electronics"
   },
   {
     "id": 1004,
@@ -73,7 +76,8 @@
       "batteryLifeHours": 30,
       "connection": "Bluetooth 5.2"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1005,
@@ -91,7 +95,8 @@
       "dpi": 8000,
       "connection": "Bluetooth / Logi Bolt"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1006,
@@ -109,7 +114,8 @@
       "connection": "USB-C",
       "features": "Haptic feedback, Adaptive triggers"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1007,
@@ -127,7 +133,8 @@
       "storageGB": 64,
       "screen": "7-inch OLED"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1008,
@@ -146,7 +153,8 @@
       "storageGB": 256,
       "ramGB": 8
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Apple Distribution"
   },
   {
     "id": 1009,
@@ -164,7 +172,8 @@
       "noiseCancelling": true,
       "batteryLifeHours": 18
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "Samsung Electronics"
   },
   {
     "id": 1010,
@@ -182,7 +191,8 @@
       "capacitymAh": 20000,
       "fastCharge": true
     },
-    "warranty": "18 months"
+    "warranty": "18 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1011,
@@ -200,7 +210,8 @@
       "videoResolution": "5.3K",
       "waterproof": true
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1012,
@@ -218,7 +229,8 @@
       "megapixels": 24.2,
       "lensMount": "RF"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1013,
@@ -236,7 +248,8 @@
       "weightG": 249,
       "video": "4K60"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1014,
@@ -254,7 +267,8 @@
       "ramGB": 16,
       "storageGB": 512
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "HP Channel"
   },
   {
     "id": 1015,
@@ -272,7 +286,8 @@
       "batteryLifeHours": 17,
       "waterResistance": "IP55"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1016,
@@ -290,7 +305,8 @@
       "gps": true,
       "batteryLifeDays": 7
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "Wearable Supplies Co."
   },
   {
     "id": 1017,
@@ -308,7 +324,8 @@
       "switchType": "Green",
       "connection": "USB-C"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1018,
@@ -326,7 +343,8 @@
       "dpi": 25600,
       "buttons": 11
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1019,
@@ -344,7 +362,8 @@
       "resolution": "2560x1440",
       "refreshRateHz": 144
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Samsung Electronics"
   },
   {
     "id": 1020,
@@ -362,7 +381,8 @@
       "batteryLifeHours": 20,
       "waterResistance": "IP67"
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "JBL Pro Audio"
   },
   {
     "id": 1021,
@@ -381,7 +401,8 @@
       "ramGB": 16,
       "storageGB": 512
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Global PC Dist."
   },
   {
     "id": 1022,
@@ -400,7 +421,8 @@
       "ramGB": 16,
       "storageGB": 512
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Dell Channel"
   },
   {
     "id": 1023,
@@ -419,7 +441,8 @@
       "ramGB": 16,
       "storageGB": 1
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Global PC Dist."
   },
   {
     "id": 1024,
@@ -438,7 +461,8 @@
       "ramGB": 16,
       "storageGB": 256
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1025,
@@ -456,7 +480,8 @@
       "storageGB": 128,
       "cameraMP": 50
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Google Store"
   },
   {
     "id": 1026,
@@ -474,7 +499,8 @@
       "ramGB": 12,
       "storageGB": 256
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1027,
@@ -492,7 +518,8 @@
       "storageGB": 256,
       "batterymAh": 5000
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1028,
@@ -510,7 +537,8 @@
       "screen": "10.9-inch",
       "storageGB": 256
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Apple Distribution"
   },
   {
     "id": 1029,
@@ -528,7 +556,8 @@
       "storageGB": 8,
       "waterproof": true
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1030,
@@ -546,7 +575,8 @@
       "sizeInches": 55,
       "resolution": "3840x2160"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1031,
@@ -564,7 +594,8 @@
       "sizeInches": 48,
       "hdmi2_1": true
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1032,
@@ -582,7 +613,8 @@
       "memoryGB": 12,
       "ports": "HDMI 2.1, DP 1.4a"
     },
-    "warranty": "36 months"
+    "warranty": "36 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1033,
@@ -600,7 +632,8 @@
       "memoryGB": 16,
       "ports": "HDMI 2.1, DP 2.1"
     },
-    "warranty": "36 months"
+    "warranty": "36 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1034,
@@ -618,7 +651,8 @@
       "capacityGB": 32,
       "speedMHz": 6000
     },
-    "warranty": "36 months"
+    "warranty": "36 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1035,
@@ -636,7 +670,8 @@
       "capacityGB": 1000,
       "interface": "PCIe 4.0 x4"
     },
-    "warranty": "60 months"
+    "warranty": "60 months",
+    "distributor": "Samsung Electronics"
   },
   {
     "id": 1036,
@@ -654,7 +689,8 @@
       "capacityTB": 4,
       "interface": "USB 3.0"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1037,
@@ -672,7 +708,8 @@
       "socket": "AM5",
       "formFactor": "ATX"
     },
-    "warranty": "36 months"
+    "warranty": "36 months",
+    "distributor": "ASUS Partner"
   },
   {
     "id": 1038,
@@ -690,7 +727,8 @@
       "keys": 15,
       "connection": "USB-C"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1039,
@@ -708,7 +746,8 @@
       "resolution": "1080p30",
       "microphone": "Stereo"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1040,
@@ -731,7 +770,8 @@
       ],
       "connection": "USB"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1041,
@@ -749,7 +789,8 @@
       "connection": "2.4GHz + Bluetooth",
       "batteryLifeHours": 38
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1042,
@@ -767,7 +808,8 @@
       "connection": "USB",
       "surround": "7.1 virtual"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1043,
@@ -785,7 +827,8 @@
       "wifiStandard": "802.11ax",
       "bands": "2.4 GHz + 5 GHz"
     },
-    "warranty": "36 months"
+    "warranty": "36 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1044,
@@ -803,7 +846,8 @@
       "wifiStandard": "WiFi 6E",
       "bands": "2.4/5/6 GHz"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1045,
@@ -821,7 +865,8 @@
       "bulbs": 3,
       "supportsRGB": true
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1046,
@@ -839,7 +884,8 @@
       "assistant": "Alexa",
       "microphones": 4
     },
-    "warranty": "12 months"
+    "warranty": "12 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1047,
@@ -857,7 +903,8 @@
       "screen": "7-inch",
       "assistant": "Google Assistant"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1048,
@@ -875,7 +922,8 @@
       "resolution": "1080p",
       "power": "Battery/Wired"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1049,
@@ -893,7 +941,8 @@
       "resolution": "2K",
       "connection": "WiFi"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1050,
@@ -911,7 +960,8 @@
       "gps": true,
       "waterResistance": "50m"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Apple Distribution"
   },
   {
     "id": 1051,
@@ -929,7 +979,8 @@
       "gps": true,
       "batteryLifeDays": 18
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1052,
@@ -947,7 +998,8 @@
       "batteryLifeHours": 24,
       "waterResistance": "IP67"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Audio House Ltd."
   },
   {
     "id": 1053,
@@ -968,7 +1020,8 @@
         "RCA"
       ]
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "Audio House Ltd."
   },
   {
     "id": 1054,
@@ -989,7 +1042,8 @@
         "Dolby Vision"
       ]
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1055,
@@ -1007,7 +1061,8 @@
       "forceFeedback": true,
       "pedals": 3
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1056,
@@ -1025,7 +1080,8 @@
       "storageGB": 256,
       "tracking": "Inside-out"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1057,
@@ -1043,7 +1099,8 @@
       "capture": "1080p60",
       "passthrough": "4K60 HDR"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1058,
@@ -1061,7 +1118,8 @@
       "maxPowerW": 120,
       "ports": 3
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1059,
@@ -1079,7 +1137,8 @@
       "supportsMagSafe": true,
       "devices": 3
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   },
   {
     "id": 1060,
@@ -1097,6 +1156,7 @@
       "capacityGB": 128,
       "speedClass": "V30 U3"
     },
-    "warranty": "24 months"
+    "warranty": "24 months",
+    "distributor": "TeknoSU Distribution"
   }
 ]

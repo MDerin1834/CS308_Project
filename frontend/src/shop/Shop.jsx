@@ -23,7 +23,9 @@ const Shop = () => {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
 
   //   category active colors
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const initialCategoryParam = searchParams.get("category");
+  const initialCategory = categories.includes(initialCategoryParam) ? initialCategoryParam : "All";
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
 
   // pagination
   // Get current products to display
@@ -115,7 +117,11 @@ const Shop = () => {
 
   useEffect(() => {
     const urlSearch = searchParams.get("search") || "";
+    const urlCategory = searchParams.get("category") || "All";
     setSearchTerm((prev) => (prev === urlSearch ? prev : urlSearch));
+    setSelectedCategory((prev) =>
+      prev === urlCategory ? prev : urlCategory
+    );
   }, [searchParams]);
 
   useEffect(() => {
@@ -124,8 +130,11 @@ const Shop = () => {
     if (searchTerm) {
       params.search = searchTerm;
     }
+    if (selectedCategory && selectedCategory !== "All") {
+      params.category = selectedCategory;
+    }
     setSearchParams(params, { replace: true });
-  }, [searchTerm, setSearchParams]);
+  }, [searchTerm, selectedCategory, setSearchParams]);
 
   return (
     <div>
