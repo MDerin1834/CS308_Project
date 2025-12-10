@@ -2,7 +2,7 @@ import React from 'react';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthContext } from '../contexts/AuthProvider';
-import Signup from './Signup';
+import Signup from '../components/Signup';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockNavigate = vi.fn();
@@ -18,12 +18,18 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-const renderSignup = (registerUser = vi.fn()) =>
-  render(
-    <AuthContext.Provider value={{ registerUser }}>
-      <Signup />
-    </AuthContext.Provider>,
-  );
+const renderWithAuth = (ui, value) =>
+  render(<AuthContext.Provider value={value}>{ui}</AuthContext.Provider>);
+
+const createMockStorage = () => {
+  const store = new Map();
+  return {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => store.set(key, String(value)),
+    removeItem: (key) => store.delete(key),
+    clear: () => store.clear(),
+  };
+};
 
 const fillSignupForm = async (
   user,
@@ -32,14 +38,14 @@ const fillSignupForm = async (
     email,
     password,
     confirmPassword,
-    fullName = "Full Name",
-    taxId = "TAX-123",
-    addressLine1 = "Street 1",
-    addressLine2 = "Apt 1",
-    city = "Istanbul",
-    country = "TR",
-    postalCode = "34000",
-    phone = "5555555",
+    fullName = 'Full Name',
+    taxId = 'TAX-123',
+    addressLine1 = 'Street 1',
+    addressLine2 = 'Apt 1',
+    city = 'Istanbul',
+    country = 'TR',
+    postalCode = '34000',
+    phone = '5555555',
   },
 ) => {
   await user.clear(screen.getByPlaceholderText(/user name/i));
@@ -63,8 +69,8 @@ const fillSignupForm = async (
 describe('Signup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Stub alert to avoid jsdom "not implemented" errors
-    global.alert = vi.fn();
+    globalThis.localStorage = createMockStorage();
+    globalThis.alert = vi.fn();
     mockLocationValue = { state: { from: { pathname: '/' } } };
   });
 
@@ -74,7 +80,7 @@ describe('Signup', () => {
 
   it('blocks submission when passwords do not match', async () => {
     const registerUser = vi.fn();
-    renderSignup(registerUser);
+    renderWithAuth(<Signup />, { registerUser, signUpWithGmail: vi.fn() });
     const user = userEvent.setup();
 
     await fillSignupForm(user, {
@@ -90,7 +96,7 @@ describe('Signup', () => {
 
   it('requires a non-empty trimmed name', async () => {
     const registerUser = vi.fn();
-    renderSignup(registerUser);
+    renderWithAuth(<Signup />, { registerUser, signUpWithGmail: vi.fn() });
     const user = userEvent.setup();
 
     await fillSignupForm(user, {
@@ -109,7 +115,7 @@ describe('Signup', () => {
       success: false,
       message: 'Email already in use',
     });
-    renderSignup(registerUser);
+    renderWithAuth(<Signup />, { registerUser, signUpWithGmail: vi.fn() });
     const user = userEvent.setup();
 
     await fillSignupForm(user, {
@@ -119,7 +125,12 @@ describe('Signup', () => {
       confirmPassword: 'Password123!',
     });
 
-    expect(registerUser).toHaveBeenCalledWith('Backend Failure', 'existing@example.com', 'Password123!', expect.any(Object));
+    expect(registerUser).toHaveBeenCalledWith(
+      'Backend Failure',
+      'existing@example.com',
+      'Password123!',
+      expect.any(Object),
+    );
     expect(await screen.findByText(/email already in use/i)).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
@@ -131,7 +142,7 @@ describe('Signup', () => {
     });
     mockLocationValue = { state: { from: { pathname: '/dashboard' } } };
     const user = userEvent.setup();
-    renderSignup(registerUser);
+    renderWithAuth(<Signup />, { registerUser, signUpWithGmail: vi.fn() });
 
     await fillSignupForm(user, {
       name: ' John Doe ',
@@ -154,7 +165,7 @@ describe('Signup', () => {
         }),
       }),
     );
-    expect(global.alert).toHaveBeenCalledWith('Custom success message');
+    expect(globalThis.alert).toHaveBeenCalledWith('Custom success message');
 
     await waitFor(
       () => {

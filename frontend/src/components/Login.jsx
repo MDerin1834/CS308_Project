@@ -51,9 +51,9 @@ const Login = () => {
     event.preventDefault();
     setLoading(true);
 
-    const form = event.target;
-    const email = form.email.value;
-    const password = form.password.value;
+    const form = event.currentTarget;
+    const email = form.elements.email?.value;
+    const password = form.elements.password?.value;
 
     login(email, password)
       .then((result) => {
