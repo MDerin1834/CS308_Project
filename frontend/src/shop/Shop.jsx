@@ -10,6 +10,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthProvider";
 
 const Shop = () => {
+  const categories = ["All", "Phones", "Computers", "Speakers", "Headphones", "Watchs", "Others"];
   const { user } = useContext(AuthContext);
   const [GridList, setGridList] = useState(true);
   const [products, setProducts] = useState([]);
@@ -22,7 +23,7 @@ const Shop = () => {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
 
   //   category active colors
-const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   // pagination
   // Get current products to display
@@ -41,14 +42,55 @@ const [selectedCategory, setSelectedCategory] = useState("All");
     setCurrentPage(pageNumber);
   };
 
-  // category based filtering
-  const menuItems = [...new Set(allProducts.map((Val) => Val.category))];
+  const normalizeCategory = (value) => (value || "").toString().trim().toLowerCase();
 
-  const filterItem = (curcat) => {
-    const newItem = allProducts.filter((newVal) => newVal.category === curcat);
-    setSelectedCategory(curcat);
-    setProducts(newItem);
+  const categorizeProduct = (item) => {
+    const tagText = normalizeCategory(item.tag);
+    const tags = tagText
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    const searchPool = [
+      normalizeCategory(item.category),
+      normalizeCategory(item.name),
+      ...tags,
+    ].join(" ");
+
+    if (/(headphone|headset|earbud|earphone|ear pod|airpod)/.test(searchPool))
+      return "Headphones";
+    if (
+      /(\bphone\b|\bphones\b|\bmobile\b|\bcell\b|\bsmartphone\b|\biphone\b|\bandroid\b|\bgalaxy\b|\bpixel\b)/.test(
+        searchPool
+      )
+    )
+      return "Phones";
+    if (/(laptop|notebook|macbook|pc|computer|desktop|imac|monitor)/.test(searchPool))
+      return "Computers";
+    if (/(speaker|soundbar|home theater|boom|sonos|jbl|bluetooth speaker)/.test(searchPool))
+      return "Speakers";
+    if (/(watch|wearable|smartwatch|fitness|fitbit|band)/.test(searchPool))
+      return "Watchs";
+
+    return "Others";
   };
+
+  const filterItem = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    const normalized = normalizeCategory(selectedCategory);
+    if (normalized === "all") {
+      setProducts(allProducts);
+      return;
+    }
+    const filtered = allProducts.filter(
+      (item) => normalizeCategory(categorizeProduct(item)) === normalized
+    );
+    setProducts(filtered);
+  }, [allProducts, selectedCategory]);
 
   useEffect(() => {
     let mounted = true;
@@ -163,11 +205,9 @@ const [selectedCategory, setSelectedCategory] = useState("All");
                 />
                 {/* <ShopCategory /> */}
                 <ShopCategory
+                  categories={categories}
                   filterItem={filterItem}
-                  menuItems={menuItems}
-                  setProducts={setProducts}
-                  selectedCategory={selectedCategory }
-                  allProducts={allProducts}
+                  selectedCategory={selectedCategory}
                 />
 
               </aside>

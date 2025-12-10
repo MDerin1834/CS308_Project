@@ -9,7 +9,7 @@ const connectDB = require("../src/config/db");
 // Ensure .env in backend/ is loaded
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
-const dataPath = path.join(__dirname, "..", "..", "TeknoSU_try", "src", "products.json");
+const dataPath = path.join(__dirname, "..", "..", "frontend", "src", "products.json");
 
 async function seed() {
   try {
@@ -40,6 +40,12 @@ async function seed() {
             imageURL: p.img || p.imageURL || "",
             img: p.img || p.imageURL || "",
             description: p.description || "",
+            tag: p.tag || "",
+            model: p.model || "",
+            serialNumber: p.serialNumber || "",
+            warranty: p.warranty || "",
+            distributor: p.distributor || "",
+            specs: p.specs || undefined,
           },
         },
         upsert: true,
