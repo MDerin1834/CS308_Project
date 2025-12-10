@@ -12,17 +12,42 @@ const WishlistPage = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const moveToCart = async (item) => {
-    const product = item.product || item;
-    const productId = product.id || item.productId;
-    const price = product.price || product.discountPrice || product.discountedPrice || product.basePrice || 0;
+  // Safe getter helper (product or plain item)
+  const safeProduct = (item) => item.product || item;
 
+  // Extract price logic
+  const getPrice = (product) => {
+    return (
+      product.discountPrice ||
+      product.discountedPrice ||
+      product.basePrice ||
+      product.price ||
+      0
+    );
+  };
+
+  const getOriginalPrice = (product) => product.price || product.basePrice || null;
+
+  const getDiscountPercentage = (product) => {
+    const p = product.price || product.basePrice;
+    const dp = product.discountPrice || product.discountedPrice;
+    if (!p || !dp || dp >= p) return null;
+    return Math.round(((p - dp) / p) * 100);
+  };
+
+  const moveToCart = async (item) => {
+    const product = safeProduct(item);
+    const productId = product.id || item.productId;
+    const price = getPrice(product);
+
+    // Guest
     if (!user) {
       localStorage.setItem("redirectAfterLogin", "/wishlist");
-      // Guest sepeti
+
       const existing = JSON.parse(localStorage.getItem("cart")) || [];
       const idx = existing.findIndex((it) => it.id === productId);
       const next = [...existing];
+
       if (idx === -1) {
         next.push({
           id: productId,
@@ -32,19 +57,22 @@ const WishlistPage = () => {
           img: product.img || product.imageURL,
         });
       } else {
-        next[idx] = { ...next[idx], quantity: (next[idx].quantity || 0) + 1 };
+        next[idx].quantity += 1;
       }
+
       localStorage.setItem("cart", JSON.stringify(next));
       alert("Added to cart");
       return;
     }
 
+    // Logged-in
     try {
       const res = await api.post(
         "/api/cart",
         { productId, quantity: 1 },
         { validateStatus: () => true }
       );
+
       if (res.status >= 200 && res.status < 300) {
         alert("Added to cart");
       } else {
@@ -81,45 +109,65 @@ const WishlistPage = () => {
                     </tr>
                   )}
 
-                  {wishlist.map((item, i) => (
-                    <tr key={i}>
-                      <td className="product-item">
-                        <div className="p-thumb">
-                          <img
-                            src={
-                              item.product?.img ||
-                              item.product?.imageURL ||
-                              item.img ||
-                              item.imageURL
+                  {wishlist.map((item, i) => {
+                    const product = safeProduct(item);
+                    const price = getPrice(product);
+                    const original = getOriginalPrice(product);
+                    const discountPerc = getDiscountPercentage(product);
+
+                    return (
+                      <tr key={i}>
+                        <td className="product-item">
+                          <div className="p-thumb">
+                            <img
+                              src={
+                                product.img ||
+                                product.imageURL ||
+                                item.img ||
+                                item.imageURL
+                              }
+                              alt={product.name}
+                            />
+                          </div>
+
+                          <div className="p-content">
+                            <h5>{product.name}</h5>
+
+                            {/* Discount UI */}
+                            {discountPerc ? (
+                              <div className="wishlist-price">
+                                <span className="discount-price">${price}</span>
+                                <span className="old-price">${original}</span>
+                                <span className="discount-badge">-{discountPerc}%</span>
+                              </div>
+                            ) : (
+                              <div className="wishlist-price">
+                                <span className="normal-price">${price}</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        <td>
+                          <button
+                            className="lab-btn"
+                            onClick={() => moveToCart(item)}
+                          >
+                            Add to Cart
+                          </button>
+
+                          <button
+                            className="btn btn-danger ms-2"
+                            onClick={() =>
+                              removeFromWishlist(product.id || item.productId)
                             }
-                            alt={item.product?.name || item.name}
-                          />
-                        </div>
-                        <div className="p-content">
-                          {item.product?.name || item.name}
-                        </div>
-                      </td>
-
-                      <td>
-                        <button
-                          className="lab-btn"
-                          onClick={() => moveToCart(item)}
-                        >
-                          Add to Cart
-                        </button>
-
-                        <button
-                          className="btn btn-danger ms-2"
-                          onClick={() =>
-                            removeFromWishlist(item.productId || item.id)
-                          }
-                        >
-                          <img src={delImgUrl} alt="remove" style={{ width: "20px" }} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-
+                          >
+                            <img src={delImgUrl} alt="remove" style={{ width: "20px" }} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
 
               </table>
