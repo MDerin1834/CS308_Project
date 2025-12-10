@@ -5,6 +5,7 @@ const auth = require("../middleware/auth");
 const authorizeRole = require("../middleware/authorizeRole");
 const Order = require("../models/Order");
 const User = require("../models/User");
+const Cart = require("../models/Cart");
 
 const {
   generateInvoicePdf,
@@ -112,6 +113,13 @@ router.post("/checkout", auth, async (req, res) => {
       });
     } catch (emailErr) {
       logger.error("email sending failed", { error: emailErr });
+    }
+
+    try {
+      // Clear the user's cart only after successful payment
+      await Cart.findOneAndUpdate({ userId: req.user.id }, { $set: { items: [] } });
+    } catch (cartErr) {
+      logger.error("Failed to clear cart after payment", { error: cartErr });
     }
 
     return res.status(200).json({

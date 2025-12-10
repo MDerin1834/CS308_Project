@@ -109,8 +109,11 @@ async function createOrderFromCart(userId, payload) {
   });
 
   // 8) Sepeti temizle
-  cart.items = [];
-  await cart.save();
+  const clearCartOnCreate = payload?.clearCartOnCreate === true;
+  if (clearCartOnCreate) {
+    cart.items = [];
+    await cart.save();
+  }
 
   return order.toJSON();
 }

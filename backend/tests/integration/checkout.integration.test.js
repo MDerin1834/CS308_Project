@@ -92,7 +92,7 @@ describe("Checkout integration (order + payment)", () => {
     expect(res.body.order.total).toBe(100);
 
     const cart = await Cart.findOne({ userId: mockUserId }).lean();
-    expect(cart.items).toHaveLength(0);
+    expect(cart.items).toHaveLength(1);
 
     const product = await Product.findOne({ id: "p1" }).lean();
     expect(product.stock).toBe(3);
@@ -147,5 +147,8 @@ describe("Checkout integration (order + payment)", () => {
     expect(updatedOrder.status).toBe("paid");
     expect(updatedOrder.paidAt).toBeTruthy();
     expect(updatedOrder.invoiceNumber).toBeTruthy();
+
+    const cart = await Cart.findOne({ userId: mockUserId }).lean();
+    expect(cart.items).toHaveLength(0);
   });
 });
