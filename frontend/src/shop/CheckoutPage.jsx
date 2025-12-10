@@ -179,11 +179,31 @@ const CheckoutPage = (props = {}) => {
   };
 
   const renderForm = () => (
-    <div className="modal-body" style={{ padding: "16px 20px" }}>
+    <div
+      className="modal-body"
+      style={{
+        padding: "20px",
+        position: "relative",
+        paddingTop: error ? "72px" : "20px",
+        paddingBottom: "80px",
+        maxHeight: "70vh",
+        overflowY: "auto",
+      }}
+    >
       {error && (
         <div
           className="alert alert-danger"
-          style={{ fontSize: "14px", padding: "8px 12px", marginBottom: "12px" }}
+          style={{
+            position: "absolute",
+            top: "12px",
+            left: "12px",
+            right: "12px",
+            fontSize: "14px",
+            padding: "8px 12px",
+            marginBottom: 0,
+            transition: "opacity 160ms ease",
+            zIndex: 1,
+          }}
         >
           {error}
         </div>
