@@ -16,7 +16,6 @@ const Login = () => {
   const navigate = useNavigate();
   const from = location.state?.from?.pathname || "/";
 
-  // ⭐ HANDLE GOOGLE LOGIN
   const handleRegister = () => {
     setLoading(true);
     signUpWithGmail()
@@ -32,7 +31,6 @@ const Login = () => {
           })
         );
 
-        // ⭐ REDIRECT AFTER LOGIN (guest checkout)
         const redirectPath =
           localStorage.getItem("redirectAfterLogin") || from;
         localStorage.removeItem("redirectAfterLogin");
@@ -46,7 +44,6 @@ const Login = () => {
       });
   };
 
-  // ⭐ HANDLE EMAIL/PASSWORD LOGIN
   const handleLogin = (event) => {
     event.preventDefault();
     setLoading(true);
@@ -63,8 +60,6 @@ const Login = () => {
           return;
         }
 
-        // AuthProvider.login zaten token + user'ı (rol dahil) localStorage'a yazıyor.
-        // Yine de güncel user'ı rol bilgisiyle birlikte saklayalım.
         if (result?.user) {
           localStorage.setItem("user", JSON.stringify(result.user));
         }
@@ -72,7 +67,6 @@ const Login = () => {
           localStorage.setItem("token", result.token);
         }
 
-        // ⭐ REDIRECT AFTER LOGIN (guest checkout)
         const redirectPath =
           localStorage.getItem("redirectAfterLogin") || from;
         localStorage.removeItem("redirectAfterLogin");

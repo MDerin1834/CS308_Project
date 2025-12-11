@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // useNavigate eklendi
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo/logo.png";
-import { AuthContext } from "../contexts/AuthProvider"; // ❗️ CONTEXT'İ BURADAN ALIYOR
+import { AuthContext } from "../contexts/AuthProvider";
 
 
 const NavItems = () => {
@@ -9,15 +9,12 @@ const NavItems = () => {
   const [socialToggle, setSocialToggle] = useState(false);
   const [headerFixed, setHeaderFixed] = useState(false);
 
-  // AuthProvider'dan kullanıcı bilgilerini ve logout fonksiyonunu al
-  const { user, logOut } = useContext(AuthContext); // ❗️ KULLANICIYI DİNLİYOR
+  const { user, logOut } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Logout işlemi
   const handleLogout = () => {
     logOut()
       .then(() => {
-        // Başarılı logout sonrası ana sayfaya yönlendir
         navigate("/");
       })
       .catch((error) => {
@@ -25,7 +22,6 @@ const NavItems = () => {
       });
   };
 
-  // Listen for scroll
   window.addEventListener("scroll", () => {
     if (window.scrollY > 200) {
       setHeaderFixed(true);
@@ -40,7 +36,6 @@ const NavItems = () => {
         headerFixed ? "header-fixed fadeInUp" : ""
       }`}
     >
-      {/* Header Top (Adres, Sosyal Medya vb.) */}
       <div className={`header-top d-md-none ${socialToggle ? "open" : ""}`}>
         <div className="container">
           <div className="header-top-area">
@@ -54,11 +49,9 @@ const NavItems = () => {
         </div>
       </div>
 
-      {/* Header Bottom (Logo, Menü, Login/Logout) */}
       <div className="header-bottom">
         <div className="container">
           <div className="header-wrapper">
-            {/* Logo */}
             <div className="logo-search-acte">
               <div className="logo">
                 <Link to="/">
@@ -67,7 +60,6 @@ const NavItems = () => {
               </div>
             </div>
 
-            {/* Menü Alanı */}
             <div className="menu-area">
               <div className="menu">
                 <ul className={`lab-ul ${menuToggle ? "active" : ""}`}>
@@ -83,16 +75,13 @@ const NavItems = () => {
                 </ul>
               </div>
 
-              {/* ❗️ GİRİŞ DURUMUNA GÖRE DEĞİŞEN BÖLÜM */}
               <div className="d-none d-md-block">
-                {/* ❤️ WISHLIST ICON — sadece login için mantıklı, ama guestte de zarar yok; yine de login kontrolü */}
                 {user && user.role !== "product_manager" && (
                   <Link to="/wishlist" className="me-3">
                     <i className="icofont-heart-alt"></i>
                   </Link>
                 )}
 
-                {/* 📦 MY ORDERS yalnızca login için */}
                 {user && user.role !== "product_manager" && (
                   <Link to="/past-orders" className="me-3">
                     <i className="icofont-box"></i>
@@ -114,7 +103,6 @@ const NavItems = () => {
                   </Link>
                 )}
 
-                {/* Cart sadece product_manager olmayanlar için */}
                 {(!user || user.role !== "product_manager") && (
                   <Link to="/cart-page" className="me-3">
                     <i className="icofont-cart-alt"></i>
@@ -140,7 +128,6 @@ const NavItems = () => {
                 )}
               </div>
 
-              {/* Mobile Menu Toggler */}
               <div
                 className={`header-bar d-lg-none ${menuToggle ? "active" : ""}`}
                 onClick={() => setMenuToggle(!menuToggle)}
@@ -150,7 +137,6 @@ const NavItems = () => {
                 <span></span>
               </div>
 
-              {/* Social Toggler (Mobile) */}
               <div
                 className="ellepsis-bar d-md-none"
                 onClick={() => setSocialToggle(!socialToggle)}
