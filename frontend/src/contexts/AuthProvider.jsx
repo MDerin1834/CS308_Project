@@ -120,7 +120,7 @@ const AuthProvider = ({ children }) => {
       return {
         success: false,
         status: response.status,
-        message: response.data?.message || "Geçersiz e-posta veya şifre.",
+        message: response.data?.message || "Invalied email or password!",
       };
     } catch (error) {
       return {
@@ -128,7 +128,7 @@ const AuthProvider = ({ children }) => {
         status: 500,
         message:
           error.response?.data?.message ||
-          "Sunucuyla iletişim kurulamadı. Lütfen tekrar deneyin.",
+          "Failed to connect to the server, please try again!",
       };
     }
   };
