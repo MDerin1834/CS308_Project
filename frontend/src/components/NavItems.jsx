@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"; // useNavigate eklendi
 import logo from "../assets/images/logo/logo.png";
 import { AuthContext } from "../contexts/AuthProvider"; // ❗️ CONTEXT'İ BURADAN ALIYOR
 
+
 const NavItems = () => {
   const [menuToggle, setMenuToggle] = useState(false);
   const [socialToggle, setSocialToggle] = useState(false);
@@ -78,12 +79,6 @@ const NavItems = () => {
                   </li>
                   <li>
                     <Link to="/blog">Blog</Link>
-                  </li>
-                  <li>
-                    <Link to="/about">About</Link>
-                  </li>
-                  <li>
-                    <Link to="/contact">Contact</Link>
                   </li>
                 </ul>
               </div>
