@@ -51,6 +51,20 @@ async function getPendingComments() {
     .sort({ createdAt: -1 })
     .lean();
 
+  const userIds = comments
+    .map((c) => (c.userId?._id || c.userId || "").toString())
+    .filter(Boolean);
+  const productIds = comments.map((c) => c.productId).filter(Boolean);
+
+  const ratings = await Rating.find({
+    userId: { $in: userIds },
+    productId: { $in: productIds },
+  }).lean();
+
+  const ratingMap = new Map(
+    ratings.map((r) => [`${(r.userId || "").toString()}-${r.productId}`, r.rating])
+  );
+
   return comments.map((c) => ({
     ...c,
     id: c._id?.toString(),
@@ -59,6 +73,9 @@ async function getPendingComments() {
     userEmail: c.userId?.email,
     userName: c.userId?.username,
     userId: c.userId?._id?.toString() || c.userId?.toString(),
+    rating: ratingMap.get(
+      `${(c.userId?._id || c.userId || "").toString()}-${c.productId}`
+    ),
   }));
 }
 
