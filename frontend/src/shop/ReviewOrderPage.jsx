@@ -8,6 +8,13 @@ const ReviewOrderPage = () => {
   const {
     items = [],
     total = 0,
+    subtotal,
+    tax,
+    shipping,
+    orderId,
+    invoiceNumber,
+    shippingAddress,
+    paidAt,
     invoicePdfBase64,
     invoiceFileName = "invoice.pdf",
     emailSent,
@@ -56,6 +63,28 @@ const ReviewOrderPage = () => {
   return (
     <div className="container padding-tb">
       <h2>Review Your Order</h2>
+      <div className="mb-3">
+        {invoiceNumber && <div><strong>Invoice No:</strong> {invoiceNumber}</div>}
+        {orderId && <div><strong>Order ID:</strong> {orderId}</div>}
+        {paidAt && (
+          <div>
+            <strong>Date:</strong>{" "}
+            {new Date(paidAt).toLocaleDateString()}
+          </div>
+        )}
+      </div>
+      {shippingAddress && (
+        <div className="mb-3">
+          <h5>Shipping Address</h5>
+          <div>{shippingAddress.fullName}</div>
+          <div>{shippingAddress.addressLine1}</div>
+          {shippingAddress.addressLine2 && <div>{shippingAddress.addressLine2}</div>}
+          <div>
+            {shippingAddress.city}, {shippingAddress.country} {shippingAddress.postalCode}
+          </div>
+          {shippingAddress.phone && <div>Phone: {shippingAddress.phone}</div>}
+        </div>
+      )}
       {emailSent !== undefined && (
         <p style={{ color: emailSent ? "green" : "orange" }}>
           {emailSent ? "Invoice emailed to your address." : "Invoice email could not be sent."}
@@ -69,23 +98,33 @@ const ReviewOrderPage = () => {
             <thead>
               <tr>
                 <th>Product</th>
-                <th>Price</th>
+                <th>Unit Price</th>
                 <th>Quantity</th>
-                <th>Total</th>
+                <th>Line Total</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item, idx) => (
                 <tr key={idx}>
                   <td>{item.name}</td>
-                  <td>${item.price}</td>
+                  <td>${Number(item.unitPrice ?? item.price).toFixed(2)}</td>
                   <td>{item.quantity}</td>
-                  <td>${(item.price * item.quantity).toFixed(2)}</td>
+                  <td>
+                    $
+                    {Number(
+                      item.lineTotal ?? (item.price && item.quantity ? item.price * item.quantity : 0)
+                    ).toFixed(2)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <h3>Order Total: ${total.toFixed(2)}</h3>
+          <div className="mb-3">
+            <div>Subtotal: ${Number(subtotal ?? total).toFixed(2)}</div>
+            <div>Tax: ${Number(tax || 0).toFixed(2)}</div>
+            <div>Shipping: ${Number(shipping || 0).toFixed(2)}</div>
+            <h3>Order Total: ${Number(total).toFixed(2)}</h3>
+          </div>
           <button className="btn btn-primary" onClick={handleDownloadInvoice}>
             Download Invoice (PDF)
           </button>

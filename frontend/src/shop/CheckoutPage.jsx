@@ -163,8 +163,15 @@ const CheckoutPage = (props = {}) => {
           state: {
             items: createdOrder?.items || items,
             total: newOrderTotal,
+            subtotal: createdOrder?.subtotal,
+            tax: createdOrder?.tax,
+            shipping: createdOrder?.shipping,
+            orderId,
+            invoiceNumber: payRes.data?.invoiceNumber,
             invoicePdfBase64: payRes.data?.invoicePdfBase64,
             invoiceFileName: payRes.data?.invoiceFileName,
+            shippingAddress: createdOrder?.shippingAddress,
+            paidAt: createdOrder?.paidAt || new Date().toISOString(),
             emailSent: payRes.data?.emailSent,
           },
         });

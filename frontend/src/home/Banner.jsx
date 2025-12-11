@@ -27,10 +27,43 @@ const bannerList = [
 
 const Banner = () => {
   const [searchInput, setSearchInput] = useState("");
+  const [category, setCategory] = useState("all");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  const normalizeCategory = (value) => (value || "").toString().trim().toLowerCase();
+  const categorizeProduct = (item) => {
+    const tagText = normalizeCategory(item.tag);
+    const tags = tagText
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    const searchPool = [
+      normalizeCategory(item.category),
+      normalizeCategory(item.name),
+      ...tags,
+    ].join(" ");
+
+    if (/(headphone|headset|earbud|earphone|ear pod|airpod)/.test(searchPool))
+      return "Headphones";
+    if (
+      /(\bphone\b|\bphones\b|\bmobile\b|\bcell\b|\bsmartphone\b|\biphone\b|\bandroid\b|\bgalaxy\b|\bpixel\b)/.test(
+        searchPool
+      )
+    )
+      return "Phones";
+    if (/(laptop|notebook|macbook|pc|computer|desktop|imac|monitor)/.test(searchPool))
+      return "Computers";
+    if (/(speaker|soundbar|home theater|boom|sonos|jbl|bluetooth speaker)/.test(searchPool))
+      return "Speakers";
+    if (/(watch|wearable|smartwatch|fitness|fitbit|band)/.test(searchPool))
+      return "Watchs";
+
+    return "Others";
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -50,9 +83,13 @@ const Banner = () => {
     };
   }, []);
 
-  const filteredProducts = products.filter((product) =>
-    product.name?.toLowerCase().includes(searchInput.toLowerCase())
-  );
+  const filteredProducts = products.filter((product) => {
+    const matchesName = product.name?.toLowerCase().includes(searchInput.toLowerCase());
+    if (!matchesName) return false;
+    if (category === "all") return true;
+    const productCategory = categorizeProduct(product);
+    return productCategory === category;
+  });
 
   const handleSearch = (e) => {
     setSearchInput(e.target.value);
@@ -61,7 +98,11 @@ const Banner = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const term = searchInput.trim();
-    navigate(term ? `/shop?search=${encodeURIComponent(term)}` : "/shop");
+    const params = new URLSearchParams();
+    if (term) params.set("search", term);
+    if (category && category !== "all") params.set("category", category);
+    const search = params.toString();
+    navigate(search ? `/shop?${search}` : "/shop");
   };
 
   return (
@@ -71,7 +112,10 @@ const Banner = () => {
           {title}
           {error && <p style={{ color: "red" }}>{error}</p>}
           <form onSubmit={handleSubmit}>
-            <SelectedCategory select={"all"}/>
+            <SelectedCategory
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            />
             <input
               type="text"
               name="search"
