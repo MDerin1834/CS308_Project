@@ -118,7 +118,7 @@ async function createOrderFromCart(userId, payload) {
  * - en yeni siparişi en üstte döner
  */
 async function getOrdersByUserId(userId) {
-  return Order.find({ userId })
+  return Order.find({ userId, paidAt: { $exists: true, $ne: null } })
     .sort({ createdAt: -1 })
     .lean();
 }

@@ -16,6 +16,20 @@ const {
 const { sendInvoiceEmail, sendRefundEmail } = require("../services/emailService");
 const logger = require("../config/logger");
 
+async function deleteUnpaidOrder(order, userId) {
+  if (!order || order.paidAt) return;
+  if (String(order.userId) !== String(userId)) return;
+
+  try {
+    await order.deleteOne();
+  } catch (cleanupErr) {
+    logger.error("Failed to delete unpaid order after payment failure", {
+      error: cleanupErr,
+      orderId: order.id,
+    });
+  }
+}
+
 function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) {
   if (!/^\d{16}$/.test(cardNumber || "")) return false;
   if (!/^\d{3}$/.test(cvv || "")) return false;
@@ -37,7 +51,14 @@ function validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder }) 
 }
 
 router.post("/checkout", auth, async (req, res) => {
+  let order;
+
   try {
+    const failPayment = async (status, payload) => {
+      await deleteUnpaidOrder(order, req.user.id);
+      return res.status(status).json(payload);
+    };
+
     const {
       cardNumber,
       expiryMonth,
@@ -61,7 +82,7 @@ router.post("/checkout", auth, async (req, res) => {
       return res.status(400).json({ message: "Invalid payment amount" });
     }
 
-    const order = await Order.findById(orderId);
+    order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
@@ -74,11 +95,11 @@ router.post("/checkout", auth, async (req, res) => {
     }
 
     if (!validateCard({ cardNumber, expiryMonth, expiryYear, cvv, cardHolder })) {
-      return res.status(400).json({ message: "Invalid credit card information" });
+      return failPayment(400, { message: "Invalid credit card information" });
     }
 
     if (Math.abs(order.total - numericAmount) > 0.01) {
-      return res.status(400).json({
+      return failPayment(400, {
         message: "Payment amount does not match order total",
         expected: order.total,
         received: numericAmount,
@@ -94,18 +115,23 @@ router.post("/checkout", auth, async (req, res) => {
       const product = productMap.get(item.productId);
       const availableStock = product?.stock ?? 0;
       if (!product) {
-        return res.status(404).json({
+        return failPayment(404, {
           message: "One of the products in the order no longer exists",
           productId: item.productId,
         });
       }
       if (availableStock < item.quantity) {
-        return res.status(409).json({
+        return failPayment(409, {
           message: "Insufficient stock for some items",
           productId: item.productId,
           available: availableStock,
         });
       }
+    }
+
+    const user = await User.findById(order.userId);
+    if (!user) {
+      return failPayment(404, { message: "User not found for this order" });
     }
 
     for (const item of order.items || []) {
@@ -114,11 +140,6 @@ router.post("/checkout", auth, async (req, res) => {
       if (product.stock < 0) product.stock = 0;
     }
     await Promise.all(products.map((p) => p.save()));
-
-    const user = await User.findById(order.userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found for this order" });
-    }
 
     order.paidAt = new Date();
     order.invoiceNumber =
@@ -164,6 +185,7 @@ router.post("/checkout", auth, async (req, res) => {
     });
   } catch (err) {
     logger.error("checkout error", { error: err });
+    await deleteUnpaidOrder(order, req.user?.id);
     return res.status(500).json({ message: "Failed to process payment" });
   }
 });
