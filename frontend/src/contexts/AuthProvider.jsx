@@ -76,7 +76,7 @@ const AuthProvider = ({ children }) => {
         success: false,
         status: response.status,
         message:
-          response.data?.message || "Kayıt başarısız. Lütfen bilgileri kontrol edin.",
+          response.data?.message || "Login failed! Please check information you entered.",
       };
     } catch (error) {
       return {
@@ -84,7 +84,7 @@ const AuthProvider = ({ children }) => {
         status: 500,
         message:
           error.response?.data?.message ||
-          "Sunucuyla iletişim kurulamadı. Lütfen tekrar deneyin.",
+          "Failed to connect to the server, please try again!",
       };
     }
   };
