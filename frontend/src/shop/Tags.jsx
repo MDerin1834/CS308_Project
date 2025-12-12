@@ -1,59 +1,33 @@
 
 const title = "Our Popular Tags";
 
+const Tags = ({ tags = [] }) => {
+  const uniqueTags = Array.from(
+    new Set(
+      (tags || [])
+        .map((t) => t?.toString().trim())
+        .filter(Boolean)
+    )
+  );
 
-const tagsList = [
-    {
-        link: '#',
-        text: 'envato',
-    },
-    {
-        link: '#',
-        text: 'themeforest',
-    },
-    {
-        link: '#',
-        text: 'codecanyon',
-    },
-    {
-        link: '#',
-        text: 'videohive',
-    },
-    {
-        link: '#',
-        text: 'audiojungle',
-    },
-    {
-        link: '#',
-        text: '3docean',
-    },
-    {
-        link: '#',
-        text: 'envato',
-    },
-    {
-        link: '#',
-        text: 'themeforest',
-    },
-    {
-        link: '#',
-        text: 'codecanyon',
-    },
-]
+  return (
+    <div className="widget widget-tags">
+      <div className="widget-header">
+        <h5 className="title">{title}</h5>
+      </div>
+      <ul className="widget-wrapper">
+        {uniqueTags.length === 0 ? (
+          <li style={{ color: "#777" }}>No tags available</li>
+        ) : (
+          uniqueTags.map((text, i) => (
+            <li key={i}>
+              <a href="#">{text}</a>
+            </li>
+          ))
+        )}
+      </ul>
+    </div>
+  );
+};
 
-const Tags = () => {
-    return (
-        <div className="widget widget-tags">
-            <div className="widget-header">
-                <h5 className="title">{title}</h5>
-            </div>
-            <ul className="widget-wrapper">
-                {tagsList.map((val, i) => (
-                    <li key={i}><a href={val.link}>{val.text}</a></li>
-                ))}
-            </ul>
-        </div>
-    );
-}
- 
 export default Tags;

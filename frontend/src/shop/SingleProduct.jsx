@@ -137,6 +137,11 @@ const SingleProduct = () => {
 
 
   const result = product ? [product] : [];
+  const productTags = (product?.tag || "")
+    .toString()
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
   return (
     
     <div>
@@ -264,7 +269,7 @@ const SingleProduct = () => {
             </div>
             <div className="col-lg-4 col-md-7 col-12">
               <aside className="ps-lg-4">
-                <Tags/>
+                <Tags tags={productTags}/>
 
               </aside>
             </div>

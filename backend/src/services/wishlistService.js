@@ -14,7 +14,6 @@ async function getWishlist(userId) {
   const products = await Product.find({ id: { $in: productIds } }).lean();
   const productMap = new Map(products.map((p) => [p.id, p]));
 
-  // Her item'e product detayını iliştir
   return wishlist.items.map((i) => ({
     ...i,
     product: productMap.get(i.productId) || null,
