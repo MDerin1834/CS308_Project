@@ -6,7 +6,6 @@ const auth = require("../middleware/auth");
 const authorizeRole = require("../middleware/authorizeRole");
 
 // POST /api/orders
-// Sepetten yeni sipariş oluşturur
 router.post("/", auth, orderController.createOrder);
 
 // GET /api/orders/my-orders

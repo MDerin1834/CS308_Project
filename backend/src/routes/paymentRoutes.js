@@ -268,7 +268,7 @@ router.get("/revenue", auth, authorizeRole("sales_manager"), async (req, res) =>
 
     const revenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-    const costPercentage = 0.70; // ör: ürünlerin maliyeti satış fiyatının %70’i kabul edilir
+    const costPercentage = 0.70; 
     const cost = revenue * costPercentage;
 
     const profit = revenue - cost;

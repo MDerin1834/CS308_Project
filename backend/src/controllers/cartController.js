@@ -61,18 +61,16 @@ exports.addOrUpdateItem = async (req, res) => {
       priceSnapshot: product.price,
     });
   } else {
-    // mevcut item'ı yeni miktara çek
     if ((product.stock ?? 0) < +quantity) {
       return res
         .status(409)
         .json({ message: "Insufficient stock", available: product.stock ?? 0 });
     }
     cart.items[idx].quantity = +quantity;
-    cart.items[idx].priceSnapshot = product.price; // fiyatı güncelle
+    cart.items[idx].priceSnapshot = product.price; 
   }
 
   await cart.save();
-  // tek noktadan yanıt
   return exports.getCart(req, res);
 };
 
@@ -94,7 +92,6 @@ exports.mergeGuestCart = async (req, res) => {
   if (!cart) cart = await Cart.create({ userId: req.user.id, items: [] });
 
   for (const it of incoming) {
-    // `productId` anahtarını bekliyoruz; ancak frontend localStorage'da `id` olarak saklıyorsa onu da kabul edelim.
     const pid = it?.productId || it?.id;
     if (!pid) continue;
     const q = Math.max(1, Number(it.quantity || 1));

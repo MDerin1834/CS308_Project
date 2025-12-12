@@ -6,12 +6,12 @@ const WishlistSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // her kullanıcı için tek wishlist
+      unique: true, 
     },
     items: [
       {
         productId: {
-          type: String, // Product modelindeki "id" alanıyla eşleşiyor
+          type: String, 
           required: true,
         },
         addedAt: {

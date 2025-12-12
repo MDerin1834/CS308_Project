@@ -10,12 +10,9 @@ const ratingService = require("../services/ratingService");
 const commentService = require("../services/commentService");
 const logger = require("../config/logger");
 
-/* ============== MULTER: IMAGE UPLOAD AYARI ============== */
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // server.js -> app.use("/images", express.static(path.join(__dirname, "./public/images")));
-    // Buraya kaydedilen dosyalar /images/<filename> ile serve edilecek
     cb(null, path.join(__dirname, "../public/images"));
   },
   filename: (req, file, cb) => {
@@ -25,7 +22,7 @@ const storage = multer.diskStorage({
         .toString()
         .trim()
         .toLowerCase()
-        .replace(/[^a-z0-9-_]/gi, "_"); // güvenli dosya adı
+        .replace(/[^a-z0-9-_]/gi, "_"); 
 
     cb(null, `${base}${ext}`);
   },
@@ -41,7 +38,7 @@ function fileFilter(req, file, cb) {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, 
 });
 
 /**
@@ -160,12 +157,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/products/:id
- * Backlog 35: Product Manager ürün silebilsin.
- * - Sadece role === "product_manager" olan kullanıcılar
- * - Product.id üzerinden silme
- */
 router.delete(
   "/:id",
   auth,
@@ -189,11 +180,7 @@ router.delete(
   }
 });
 
-/**
- *  - Sadece product_manager rolü
- *  - stock >= 0, sayı olmalı
- *  - Product.id ile bulunup güncellenir
- */
+
 router.put("/:id/stock", auth, authorizeRole("product_manager"), async (req, res) => {
   try {
     const { stock } = req.body;
@@ -249,7 +236,6 @@ router.post(
         shipping = 0,
       } = req.body;
 
-      // specs için: ister JSON string, ister hiç gelmesin
       let specs;
       if (req.body.specs) {
         try {
@@ -258,7 +244,6 @@ router.post(
             specs = parsed;
           }
         } catch {
-          // specs parse edilemezse yok sayıyoruz
         }
       }
 
@@ -273,9 +258,6 @@ router.post(
           .json({ message: "Product with this ID already exists" });
       }
 
-      // Image URL kararı:
-      // - Eğer file upload geldiyse => /images/<filename>
-      // - Yoksa body.imageURL varsa onu kullan
       let finalImageURL = imageURL;
       if (req.file) {
         finalImageURL = `/images/${req.file.filename}`;

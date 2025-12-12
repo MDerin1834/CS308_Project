@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
  */
 const productSchema = new mongoose.Schema(
   {
-    id: { type: String, required: true, unique: true }, // e.g., "rtx-3070-ti"
+    id: { type: String, required: true, unique: true }, 
     name: { type: String, required: true },
     model: { type: String, default: "" },
     serialNumber: { type: String, default: "" },
@@ -20,27 +20,27 @@ const productSchema = new mongoose.Schema(
     specs: {
       type: Map,
       of: String,
-      default: undefined, // if not provided, omit from JSON
+      default: undefined, 
     },
 
     price: { type: Number, required: true },
-    stock: { type: Number, required: true, default: 0 }, // physical stock
-    quantity: { type: Number, default: 0 }, // optional business usage
+    stock: { type: Number, required: true, default: 0 }, 
+    quantity: { type: Number, default: 0 }, 
 
-    warranty: { type: String, default: "" },      // e.g., "24 months distributor"
-    distributor: { type: String, default: "" },   // e.g., "XYZ Dış Ticaret"
-    category: { type: String, required: true },   // e.g., "gpu", "cpu", "ssd"
-    seller: { type: String, required: true },     // e.g., "TeknoSU"
+    warranty: { type: String, default: "" },    
+    distributor: { type: String, default: "" },   
+    category: { type: String, required: true },   
+    seller: { type: String, required: true },    
 
-    ratings: { type: Number, default: 0 },        // average rating
-    ratingsCount: { type: Number, default: 0 },   // rating count
+    ratings: { type: Number, default: 0 },       
+    ratingsCount: { type: Number, default: 0 },  
 
     // Images
-    imageURL: { type: String, default: "" },      // canonical image field
-    img: { type: String, default: "" },           // legacy compatibility
+    imageURL: { type: String, default: "" },      
+    img: { type: String, default: "" },          
 
     // Shipping info if needed
-    shipping: { type: Number, default: 0 },       // TL
+    shipping: { type: Number, default: 0 },       
   },
   { timestamps: true }
 );

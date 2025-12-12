@@ -1,13 +1,7 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
-/**
- * Backlog 22:
- * guestCart: [{ product:"<productId>", quantity:Number }, ...]
- * - Aynı ürünler toplanır.
- * - Stok (Product.quantity) üstü kırpılır.
- * - 0 veya bulunmayan ürünler elenir.
- */
+
 async function mergeGuestCartToUser(userId, guestCart = []) {
   let userCart = await Cart.findOne({ user: userId });
   if (!userCart) userCart = await Cart.create({ user: userId, items: [] });
@@ -16,7 +10,6 @@ async function mergeGuestCartToUser(userId, guestCart = []) {
     return await userCart.populate("items.product");
   }
 
-  // Mevcut sepet -> Map
   const currentMap = new Map();
   for (const it of userCart.items) {
     currentMap.set(String(it.product), {
@@ -25,7 +18,6 @@ async function mergeGuestCartToUser(userId, guestCart = []) {
     });
   }
 
-  // Guest sepet ekle
   for (const g of guestCart) {
     if (!g || !g.product) continue;
     const pid = String(g.product);
@@ -36,7 +28,6 @@ async function mergeGuestCartToUser(userId, guestCart = []) {
     currentMap.set(pid, prev);
   }
 
-  // Stok kontrolü
   const productIds = Array.from(currentMap.keys());
   const products = await Product.find(
     { _id: { $in: productIds } },
@@ -57,12 +48,6 @@ async function mergeGuestCartToUser(userId, guestCart = []) {
   return await userCart.populate("items.product");
 }
 
-/**
- * Backlog 23: Checkout öncesi sepet özeti
- * - Ürün adı/fiyatı Product'tan çekilir (Product.price varsayılır).
- * - Satır toplamı ve genel toplam hesaplanır.
- * - Silinmiş/eksik ürünler atlanır.
- */
 async function getCartSummary(userId) {
   const cart = await Cart.findOne({ user: userId }).lean();
   if (!cart || !Array.isArray(cart.items) || cart.items.length === 0) {

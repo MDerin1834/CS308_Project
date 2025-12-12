@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema(
   {
-    productId: { type: String, required: true }, // Product.id aligns with cart items
+    productId: { type: String, required: true }, 
     name: { type: String, required: true },
     imageURL: { type: String, default: "" },
     quantity: { type: Number, required: true, min: 1 },
-    unitPrice: { type: Number, required: true }, // unit price captured at order time
-    lineTotal: { type: Number, required: true }, // quantity * unitPrice
+    unitPrice: { type: Number, required: true }, 
+    lineTotal: { type: Number, required: true }, 
   },
   { _id: false }
 );

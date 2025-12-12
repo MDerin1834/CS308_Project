@@ -6,16 +6,7 @@ const User = require("../models/User");
 const VALID_STATUSES = ["processing", "cancelled", "in-transit", "delivered"];
 const COMPLETABLE_STATUSES = ["processing", "in-transit", "delivered"];
 
-/**
- * #25: Kullanıcının sepetinden order oluşturur.
- * - Sepeti okur
- * - Stok kontrolü yapar
- * - Order oluşturur
- * - Ürün stoklarını düşürür
- * - Sepeti temizler
- */
 async function createOrderFromCart(userId, payload) {
-  // 1) Sepeti bul
   const cart = await Cart.findOne({ userId });
   if (!cart || !Array.isArray(cart.items) || cart.items.length === 0) {
     const err = new Error("Cart is empty");
@@ -23,13 +14,11 @@ async function createOrderFromCart(userId, payload) {
     throw err;
   }
 
-  // 2) Ürünleri çek
   const productIds = cart.items.map((it) => it.productId);
   const products = await Product.find({ id: { $in: productIds } });
 
   const productMap = new Map(products.map((p) => [p.id, p]));
 
-  // 3) Her item için stok ve ürün doğrulaması
   const orderItems = [];
   let subtotal = 0;
 
@@ -67,12 +56,10 @@ async function createOrderFromCart(userId, payload) {
     });
   }
 
-  // 4) Vergi / kargo (şimdilik basit)
   const tax = 0;
   const shipping = 0;
   const total = subtotal + tax + shipping;
 
-  // 5) Gönderi adresi payload'dan gelsin
   const shippingAddress = payload?.shippingAddress;
   if (
     !shippingAddress ||
@@ -87,9 +74,6 @@ async function createOrderFromCart(userId, payload) {
     throw err;
   }
 
-  // 6) Stok düşmeyi ödeme sonrasına bırakıyoruz; burada sadece yeterlilik kontrolü yaptık.
-
-  // 7) Order oluştur
   const order = await Order.create({
     userId,
     items: orderItems,
@@ -102,7 +86,6 @@ async function createOrderFromCart(userId, payload) {
     notes: payload?.notes || "",
   });
 
-  // 8) Sepeti temizle
   const clearCartOnCreate = payload?.clearCartOnCreate === true;
   if (clearCartOnCreate) {
     cart.items = [];
@@ -112,11 +95,6 @@ async function createOrderFromCart(userId, payload) {
   return order.toJSON();
 }
 
-/**
- * #28: Belirli kullanıcıya ait tüm siparişleri getirir.
- * - userId ile filtreler
- * - en yeni siparişi en üstte döner
- */
 async function getOrdersByUserId(userId) {
   return Order.find({ userId, paidAt: { $exists: true, $ne: null } })
     .sort({ createdAt: -1 })
@@ -131,14 +109,12 @@ async function cancelOrder(orderId, userId) {
     throw err;
   }
 
-  // Sipariş bu kullanıcıya mı ait?
   if (String(order.userId) !== String(userId)) {
     const err = new Error("Not your order");
     err.code = "NOT_YOUR_ORDER";
     throw err;
   }
 
-  // Sadece "processing" status'ü iptal edilebilir
   if (order.status !== "processing") {
     const err = new Error("Order cannot be cancelled");
     err.code = "NOT_CANCELLABLE";

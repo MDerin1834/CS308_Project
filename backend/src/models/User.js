@@ -20,19 +20,17 @@ const userSchema = new mongoose.Schema(
       phone: { type: String, default: "" },
     },
 
-    // 🔹 Kullanıcı rolü (authorization için)
     role: {
       type: String,
       enum: [
-        "customer",        // alışveriş yapan kullanıcı
-        "support_agent",           // genel sistem yöneticisi
-        "sales_manager",     // kampanya, satış yöneticisi
-        "product_manager",   // ürün yönetimi
+        "customer",       
+        "support_agent",          
+        "sales_manager",     
+        "product_manager",   
       ],
       default: "customer",
     },
 
-    // 🔹 Ek bilgi: hesap aktif mi?
     isActive: { type: Boolean, default: true },
 
     createdAt: { type: Date, default: Date.now },

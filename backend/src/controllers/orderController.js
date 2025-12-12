@@ -13,7 +13,7 @@ const logger = require("../config/logger");
  */
 exports.createOrder = async (req, res) => {
   try {
-    const userId = req.user.id; // cartController ile aynı mantık
+    const userId = req.user.id; 
 
     const order = await orderService.createOrderFromCart(userId, req.body);
 
@@ -54,7 +54,7 @@ exports.createOrder = async (req, res) => {
  */
 exports.getMyOrders = async (req, res) => {
   try {
-    const userId = req.user.id; // auth middleware'den geliyor
+    const userId = req.user.id; 
 
     const orders = await orderService.getOrdersByUserId(userId);
 

@@ -20,7 +20,6 @@ const refundRoutes = require("./routes/refundRoutes");
 const app = express();
 const wishlistRoutes = require("./routes/wishlistRoutes"); 
 
-/* ---------- CORS (ÖNCE) ---------- */
 const corsOptions = {
   origin: "http://localhost:5173", // Vite front-end
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -36,16 +35,16 @@ app.use(express.json());
 /* ---------- Logging ---------- */
 app.use(requestLogger);
 
-/* ---------- Güvenlik ---------- */
+/* ---------- Security ---------- */
 setupSecurity(app);
 
-/* ---------- Statik dosyalar ---------- */
+/* ---------- Static files ---------- */
 app.use("/images", express.static(path.join(__dirname, "../public/images")));
 
 /* ---------- Health ---------- */
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-/* ---------- API Rotaları ---------- */
+/* ---------- API Routes ---------- */
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
@@ -59,7 +58,7 @@ app.use("/api/refunds", refundRoutes);
 /* ---------- Error Logging ---------- */
 app.use(errorLogger);
 
-/* ---------- Sunucu ---------- */
+/* ---------- Server ---------- */
 const PORT = process.env.PORT || 5050;
 
 (async () => {
@@ -71,6 +70,3 @@ const PORT = process.env.PORT || 5050;
     process.exit(1);
   }
 })();
-
-// (Opsiyonel) Testlerde kullanmak için:
-// module.exports = app;

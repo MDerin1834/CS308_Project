@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const cartItemSchema = new mongoose.Schema(
   {
-    productId: { type: String, required: true }, // Product.id (slug vb.)
+    productId: { type: String, required: true }, 
     quantity: { type: Number, required: true, min: 1 },
-    priceSnapshot: { type: Number, required: true }, // eklendiği andaki fiyat
+    priceSnapshot: { type: Number, required: true }, 
   },
   { _id: false }
 );
