@@ -44,6 +44,7 @@ import WishlistPage from './shop/WishList.jsx';
 import Deliveries from './shop/Deliveries.jsx';
 import PendingComments from './shop/PendingComments.jsx';
 import Profile from './components/Profile.jsx';
+import SupportAgentChatPage from "./support/SupportAgentChatPage.jsx";
 
 
 
@@ -88,6 +89,14 @@ const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
   { path: "sign-up", element: <Signup /> },
   { path: "/review-order", element: <ReviewOrderPage /> },
+  {
+    path: "/support/chat",
+    element: (
+      <PrivateRoute allowedRoles={["support_agent"]}>
+        <SupportAgentChatPage />
+      </PrivateRoute>
+    ),
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
