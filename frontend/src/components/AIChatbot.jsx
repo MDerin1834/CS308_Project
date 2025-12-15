@@ -5,6 +5,12 @@ import { MessageCircle, Send } from "lucide-react";
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
+
+  // Unique conversation ID (later sent to backend)
+  const [conversationId] = useState(() => crypto.randomUUID());
+
+  const [isHumanHandoff, setIsHumanHandoff] = useState(false);
+
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Hello 👋 How can I help you today?" },
   ]);
@@ -13,17 +19,38 @@ const AIChatbot = () => {
     if (!input.trim()) return;
 
     const userMessage = { sender: "user", text: input };
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
 
-    // Temporary fake bot response
+    if (isHumanHandoff) {
+      // 🔹 This is where backend socket/API would send message to agent
+      console.log("Send to human agent:", {
+        conversationId,
+        text: input,
+      });
+      return;
+    }
+
+    // Temporary AI response
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "I’ll assist you shortly 😊" },
+        {
+          sender: "bot",
+          text:
+            "I may need to connect you with a human support agent. Please wait… 👨‍💼",
+        },
       ]);
-    }, 1000);
 
-    setInput("");
+      // 🔹 Trigger handoff
+      setIsHumanHandoff(true);
+
+      // 🔹 Backend request placeholder
+      console.log("Handoff requested:", {
+        conversationId,
+        messages: [...messages, userMessage],
+      });
+    }, 800);
   };
 
   return (
@@ -36,7 +63,6 @@ const AIChatbot = () => {
         zIndex: 9999,
       }}
     >
-      {/* Toggle Button */}
       {!isOpen && (
         <motion.button
           whileHover={{ scale: 1.1 }}
@@ -47,7 +73,6 @@ const AIChatbot = () => {
             color: "white",
             padding: "12px",
             borderRadius: "50%",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
             border: "none",
             cursor: "pointer",
           }}
@@ -56,12 +81,10 @@ const AIChatbot = () => {
         </motion.button>
       )}
 
-      {/* Chat Window */}
       {isOpen && (
         <motion.div
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 100 }}
           style={{
             width: "320px",
             height: "400px",
@@ -81,17 +104,17 @@ const AIChatbot = () => {
               padding: "10px",
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
             }}
           >
-            <span style={{ fontWeight: "bold" }}>AI Assistant 🤖</span>
+            <span style={{ fontWeight: "bold" }}>
+              {isHumanHandoff ? "Live Support 👨‍💼" : "AI Assistant 🤖"}
+            </span>
             <button
               onClick={() => setIsOpen(false)}
               style={{
                 background: "transparent",
                 color: "white",
                 border: "none",
-                fontSize: "16px",
                 cursor: "pointer",
               }}
             >
@@ -114,8 +137,10 @@ const AIChatbot = () => {
               <div
                 key={idx}
                 style={{
-                  alignSelf: msg.sender === "bot" ? "flex-start" : "flex-end",
-                  backgroundColor: msg.sender === "bot" ? "#f1f1f1" : "#2563EB",
+                  alignSelf:
+                    msg.sender === "bot" ? "flex-start" : "flex-end",
+                  backgroundColor:
+                    msg.sender === "bot" ? "#f1f1f1" : "#2563EB",
                   color: msg.sender === "bot" ? "#000" : "#fff",
                   padding: "6px 10px",
                   borderRadius: "8px",
@@ -130,11 +155,14 @@ const AIChatbot = () => {
           {/* Input */}
           <div style={{ display: "flex", borderTop: "1px solid #ddd" }}>
             <input
-              type="text"
-              placeholder="Ask me something..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              placeholder={
+                isHumanHandoff
+                  ? "Chat with support agent..."
+                  : "Ask me something..."
+              }
               style={{
                 flex: 1,
                 border: "none",
@@ -149,7 +177,6 @@ const AIChatbot = () => {
                 color: "white",
                 border: "none",
                 padding: "0 12px",
-                cursor: "pointer",
               }}
             >
               <Send size={18} />
