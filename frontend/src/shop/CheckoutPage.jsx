@@ -34,6 +34,16 @@ const CheckoutPage = (props = {}) => {
   });
   const navigate = useNavigate();
 
+  const handleShippingField =
+    (field) =>
+    (e) =>
+      setShipping((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleCardField =
+    (field) =>
+    (e) =>
+      setCard((prev) => ({ ...prev, [field]: e.target.value }));
+
   // Reset error state when modal opens
   useEffect(() => {
     if (show) {
@@ -94,14 +104,21 @@ const CheckoutPage = (props = {}) => {
       return;
     }
 
-    if (
-      !shipping.fullName ||
-      !shipping.addressLine1 ||
-      !shipping.city ||
-      !shipping.country ||
-      !shipping.postalCode
-    ) {
-      setError("Please fill all required shipping fields");
+    const normalizedShipping = {
+      fullName: shipping.fullName.trim(),
+      addressLine1: shipping.addressLine1.trim(),
+      city: shipping.city.trim(),
+      country: shipping.country.trim(),
+      postalCode: shipping.postalCode.trim(),
+    };
+    const missingShipping = [];
+    if (!normalizedShipping.fullName) missingShipping.push("Full Name");
+    if (!normalizedShipping.addressLine1) missingShipping.push("Address Line 1");
+    if (!normalizedShipping.city) missingShipping.push("City");
+    if (!normalizedShipping.country) missingShipping.push("Country");
+    if (!normalizedShipping.postalCode) missingShipping.push("Postal Code");
+    if (missingShipping.length > 0) {
+      setError(`Please fill all required shipping fields: ${missingShipping.join(", ")}`);
       return;
     }
 
@@ -126,7 +143,7 @@ const CheckoutPage = (props = {}) => {
 
       const orderRes = await api.post(
         "/api/orders",
-        { shippingAddress: shipping },
+        { shippingAddress: normalizedShipping },
         { validateStatus: () => true }
       );
 
@@ -209,19 +226,23 @@ const CheckoutPage = (props = {}) => {
           className="form-control mb-2"
           style={{ width: "100%" }}
           placeholder="Full Name"
+          name="fullName"
+          autoComplete="name"
           value={shipping.fullName}
-          onChange={(e) =>
-            setShipping({ ...shipping, fullName: e.target.value })
-          }
+          onChange={handleShippingField("fullName")}
+          onInput={handleShippingField("fullName")}
+          onBlur={handleShippingField("fullName")}
         />
         <input
           className="form-control mb-2"
           style={{ width: "100%" }}
           placeholder="Address Line 1"
+          name="addressLine1"
+          autoComplete="address-line1"
           value={shipping.addressLine1}
-          onChange={(e) =>
-            setShipping({ ...shipping, addressLine1: e.target.value })
-          }
+          onChange={handleShippingField("addressLine1")}
+          onInput={handleShippingField("addressLine1")}
+          onBlur={handleShippingField("addressLine1")}
         />
         <div
           className="mb-2"
@@ -237,26 +258,34 @@ const CheckoutPage = (props = {}) => {
             className="form-control"
             style={{ width: "100%" }}
             placeholder="City"
+            name="city"
+            autoComplete="address-level2"
             value={shipping.city}
-            onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
+            onChange={handleShippingField("city")}
+            onInput={handleShippingField("city")}
+            onBlur={handleShippingField("city")}
           />
           <input
             className="form-control"
             style={{ width: "100%" }}
             placeholder="Country"
+            name="country"
+            autoComplete="country"
             value={shipping.country}
-            onChange={(e) =>
-              setShipping({ ...shipping, country: e.target.value })
-            }
+            onChange={handleShippingField("country")}
+            onInput={handleShippingField("country")}
+            onBlur={handleShippingField("country")}
           />
           <input
             className="form-control"
             style={{ width: "100%" }}
             placeholder="Postal Code"
+            name="postalCode"
+            autoComplete="postal-code"
             value={shipping.postalCode}
-            onChange={(e) =>
-              setShipping({ ...shipping, postalCode: e.target.value })
-            }
+            onChange={handleShippingField("postalCode")}
+            onInput={handleShippingField("postalCode")}
+            onBlur={handleShippingField("postalCode")}
           />
         </div>
         <p className="mb-1">Order Total: ${total.toFixed(2)}</p>
@@ -272,10 +301,11 @@ const CheckoutPage = (props = {}) => {
             className="form-control"
             required
             placeholder="John Doe"
+            autoComplete="cc-name"
             value={card.cardHolder}
-            onChange={(e) =>
-              setCard({ ...card, cardHolder: e.target.value })
-            }
+            onChange={handleCardField("cardHolder")}
+            onInput={handleCardField("cardHolder")}
+            onBlur={handleCardField("cardHolder")}
           />
         </div>
         <div className="mb-2">
@@ -286,10 +316,11 @@ const CheckoutPage = (props = {}) => {
             className="form-control"
             required
             placeholder="1234 5678 9012 3456"
+            autoComplete="cc-number"
             value={card.cardNumber}
-            onChange={(e) =>
-              setCard({ ...card, cardNumber: e.target.value })
-            }
+            onChange={handleCardField("cardNumber")}
+            onInput={handleCardField("cardNumber")}
+            onBlur={handleCardField("cardNumber")}
           />
         </div>
         <div
@@ -308,10 +339,11 @@ const CheckoutPage = (props = {}) => {
               className="form-control"
               required
               placeholder="MM"
+              autoComplete="cc-exp-month"
               value={card.expiryMonth}
-              onChange={(e) =>
-                setCard({ ...card, expiryMonth: e.target.value })
-              }
+              onChange={handleCardField("expiryMonth")}
+              onInput={handleCardField("expiryMonth")}
+              onBlur={handleCardField("expiryMonth")}
             />
           </div>
           <div>
@@ -322,10 +354,11 @@ const CheckoutPage = (props = {}) => {
               className="form-control"
               required
               placeholder="YYYY"
+              autoComplete="cc-exp-year"
               value={card.expiryYear}
-              onChange={(e) =>
-                setCard({ ...card, expiryYear: e.target.value })
-              }
+              onChange={handleCardField("expiryYear")}
+              onInput={handleCardField("expiryYear")}
+              onBlur={handleCardField("expiryYear")}
             />
           </div>
           <div>
@@ -335,8 +368,11 @@ const CheckoutPage = (props = {}) => {
               name="cvv"
               className="form-control"
               required
+              autoComplete="cc-csc"
               value={card.cvv}
-              onChange={(e) => setCard({ ...card, cvv: e.target.value })}
+              onChange={handleCardField("cvv")}
+              onInput={handleCardField("cvv")}
+              onBlur={handleCardField("cvv")}
             />
           </div>
         </div>
