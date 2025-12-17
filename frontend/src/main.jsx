@@ -45,6 +45,8 @@ import Deliveries from './shop/Deliveries.jsx';
 import PendingComments from './shop/PendingComments.jsx';
 import Profile from './components/Profile.jsx';
 import SupportAgentChatPage from "./support/SupportAgentChatPage.jsx";
+import SalesInvoices from './shop/SalesInvoices.jsx';
+import RefundRequests from './shop/RefundRequests.jsx';
 
 
 
@@ -82,6 +84,16 @@ const router = createBrowserRouter([
       { path: "/profile", element: (
         <PrivateRoute allowedRoles={["customer"]}>
           <Profile />
+        </PrivateRoute>
+      ) },
+      { path: "/sales/invoices", element: (
+        <PrivateRoute allowedRoles={["sales_manager"]}>
+          <SalesInvoices />
+        </PrivateRoute>
+      ) },
+      { path: "/refunds/pending", element: (
+        <PrivateRoute allowedRoles={["sales_manager"]}>
+          <RefundRequests />
         </PrivateRoute>
       ) },
     ],

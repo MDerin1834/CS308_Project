@@ -66,9 +66,11 @@ const NavItems = () => {
                   <li>
                     <Link to="/">Home</Link>
                   </li>
-                  <li>
-                    <Link to="/shop">Shop</Link>
-                  </li>
+                  {(!user || user.role !== "sales_manager") && (
+                    <li>
+                      <Link to="/shop">Shop</Link>
+                    </li>
+                  )}
                   <li>
                     <Link to="/blog">Blog</Link>
                   </li>
@@ -76,13 +78,13 @@ const NavItems = () => {
               </div>
 
               <div className="d-none d-md-block">
-                {user && user.role !== "product_manager" && (
+                {user && user.role !== "product_manager" && user.role !== "sales_manager" && (
                   <Link to="/wishlist" className="me-3">
                     <i className="icofont-heart-alt"></i>
                   </Link>
                 )}
 
-                {user && user.role !== "product_manager" && (
+                {user && user.role !== "product_manager" && user.role !== "sales_manager" && (
                   <Link to="/past-orders" className="me-3">
                     <i className="icofont-box"></i>
                   </Link>
@@ -102,8 +104,18 @@ const NavItems = () => {
                     <i className="icofont-speech-comments"></i>
                   </Link>
                 )}
+                {user && user.role === "sales_manager" && (
+                  <Link to="/sales/invoices" className="me-3">
+                    <i className="icofont-print"></i>
+                  </Link>
+                )}
+                {user && user.role === "sales_manager" && (
+                  <Link to="/refunds/pending" className="me-3">
+                    <i className="icofont-refresh"></i>
+                  </Link>
+                )}
 
-                {(!user || user.role !== "product_manager") && (
+                {(!user || (user.role !== "product_manager" && user.role !== "sales_manager")) && (
                   <Link to="/cart-page" className="me-3">
                     <i className="icofont-cart-alt"></i>
                   </Link>
