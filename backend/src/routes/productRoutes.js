@@ -6,8 +6,11 @@ const multer = require("multer");
 const auth = require("../middleware/auth");
 const authorizeRole = require("../middleware/authorizeRole");
 const Product = require("../models/Product");
+const Wishlist = require("../models/Wishlist");
+const User = require("../models/User");
 const ratingService = require("../services/ratingService");
 const commentService = require("../services/commentService");
+const { sendWishlistDiscountEmail } = require("../services/emailService");
 const logger = require("../config/logger");
 
 
@@ -40,6 +43,12 @@ const upload = multer({
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, 
 });
+
+function buildDiscountPayload({ basePrice, discountPrice }) {
+  const discountAmount = basePrice - discountPrice;
+  const discountPercent = Math.round((discountAmount / basePrice) * 100);
+  return { discountAmount, discountPercent };
+}
 
 /**
  * GET /api/products
@@ -234,6 +243,7 @@ router.post(
         warranty = "",
         distributor = "",
         shipping = 0,
+        cost = null,
       } = req.body;
 
       let specs;
@@ -279,6 +289,7 @@ router.post(
         warranty,
         distributor,
         shipping,
+        cost: Number.isFinite(Number(cost)) ? Number(cost) : null,
       });
 
       await product.save();
@@ -294,6 +305,104 @@ router.post(
     }
   }
 );
+
+// PATCH /api/products/:id/discount (sales manager)
+router.patch("/:id/discount", auth, authorizeRole("sales_manager"), async (req, res) => {
+  try {
+    const product = await Product.findOne({ id: req.params.id });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const clear = req.body.clear === true;
+    const rawPercent = req.body.discountPercent;
+    const rawPrice = req.body.discountPrice;
+
+    if (clear) {
+      if (Number.isFinite(product.originalPrice)) {
+        product.price = product.originalPrice;
+      }
+      product.originalPrice = null;
+      product.discountPrice = null;
+      product.discountPercent = null;
+      await product.save();
+      return res.status(200).json({ message: "Discount cleared", product });
+    }
+
+    const basePrice = Number(product.originalPrice ?? product.price);
+    if (!Number.isFinite(basePrice) || basePrice <= 0) {
+      return res.status(400).json({ message: "Invalid base price for discount" });
+    }
+
+    let discountPrice;
+    let discountPercent;
+
+    if (rawPercent !== undefined && rawPercent !== null && rawPercent !== "") {
+      const percent = Number(rawPercent);
+      if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
+        return res.status(400).json({ message: "discountPercent must be between 0 and 100" });
+      }
+      discountPrice = Number((basePrice * (1 - percent / 100)).toFixed(2));
+      discountPercent = Math.round(percent);
+    } else if (rawPrice !== undefined && rawPrice !== null && rawPrice !== "") {
+      const priceNum = Number(rawPrice);
+      if (!Number.isFinite(priceNum) || priceNum <= 0 || priceNum >= basePrice) {
+        return res.status(400).json({ message: "discountPrice must be greater than 0 and below base price" });
+      }
+      discountPrice = Number(priceNum.toFixed(2));
+      discountPercent = buildDiscountPayload({ basePrice, discountPrice }).discountPercent;
+    } else {
+      return res.status(400).json({ message: "discountPercent or discountPrice is required" });
+    }
+
+    if (!Number.isFinite(product.originalPrice)) {
+      product.originalPrice = basePrice;
+    }
+
+    product.discountPrice = discountPrice;
+    product.discountPercent = discountPercent;
+    product.price = discountPrice;
+    await product.save();
+
+    const wishlists = await Wishlist.find({ "items.productId": product.id }).lean();
+    const userIds = wishlists.map((w) => w.userId).filter(Boolean);
+    const users = await User.find({ _id: { $in: userIds } }, { email: 1, username: 1, name: 1 }).lean();
+    const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+
+    const discountInfo = {
+      productId: product.id,
+      name: product.name,
+      currentPrice: discountPrice,
+      basePrice,
+      discountPercent,
+    };
+
+    const emailResults = await Promise.allSettled(
+      wishlists.map((w) => {
+        const user = userMap.get(String(w.userId));
+        if (!user?.email) return Promise.resolve({ skipped: true, reason: "no_email" });
+        return sendWishlistDiscountEmail({
+          to: user.email,
+          username: user.username || user.name || user.email,
+          items: [discountInfo],
+        });
+      })
+    );
+
+    const notifiedCount = emailResults.filter(
+      (r) => r.status === "fulfilled" && r.value && r.value.skipped !== true
+    ).length;
+
+    return res.status(200).json({
+      message: "Discount applied",
+      product,
+      wishlistNotifications: notifiedCount,
+    });
+  } catch (err) {
+    logger.error("Error applying discount:", { error: err });
+    return res.status(500).json({ message: "Failed to apply discount" });
+  }
+});
 
 // POST /api/products/:id/rating
 router.post("/:id/rating", auth, async (req, res) => {

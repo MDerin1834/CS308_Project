@@ -52,6 +52,7 @@ async function createOrderFromCart(userId, payload) {
       imageURL: product.imageURL || product.img || "",
       quantity,
       unitPrice,
+      unitCost: Number.isFinite(product.cost) ? product.cost : null,
       lineTotal,
     });
   }

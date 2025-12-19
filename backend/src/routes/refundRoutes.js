@@ -16,7 +16,7 @@ const { sendRefundEmail } = require("../services/emailService");
  */
 router.post("/", auth, async (req, res) => {
   try {
-    const { orderId, reason } = req.body;
+    const { orderId, reason, items } = req.body;
     if (!orderId) {
       return res.status(400).json({ message: "orderId is required" });
     }
@@ -38,15 +38,60 @@ router.post("/", auth, async (req, res) => {
       return res.status(409).json({ message: "Refund already requested for this order" });
     }
 
+    const requestedItems = Array.isArray(items) ? items : [];
+    const orderItems = Array.isArray(order.items) ? order.items : [];
+    const normalizedItems = [];
+    let refundRequestAmount = 0;
+
+    if (requestedItems.length === 0) {
+      for (const item of orderItems) {
+        const qty = Number(item.quantity ?? 0);
+        const lineTotal = Number(item.lineTotal ?? item.unitPrice * qty ?? 0);
+        normalizedItems.push({
+          productId: item.productId,
+          name: item.name || "",
+          quantity: qty,
+          unitPrice: Number(item.unitPrice ?? 0),
+          lineTotal,
+        });
+        refundRequestAmount += lineTotal;
+      }
+    } else {
+      const itemMap = new Map(orderItems.map((it) => [it.productId, it]));
+      for (const requested of requestedItems) {
+        const orderItem = itemMap.get(requested.productId);
+        if (!orderItem) {
+          return res.status(400).json({ message: "Invalid refund item selection" });
+        }
+        const qty = Number(requested.quantity ?? 0);
+        if (!Number.isFinite(qty) || qty <= 0 || qty > orderItem.quantity) {
+          return res.status(400).json({ message: "Invalid refund quantity" });
+        }
+        const unitPrice = Number(orderItem.unitPrice ?? 0);
+        const lineTotal = Number((unitPrice * qty).toFixed(2));
+        normalizedItems.push({
+          productId: orderItem.productId,
+          name: orderItem.name || "",
+          quantity: qty,
+          unitPrice,
+          lineTotal,
+        });
+        refundRequestAmount += lineTotal;
+      }
+    }
+
     order.refundRequestedAt = new Date();
     order.refundRequestReason = reason || "";
     order.refundRequestStatus = "pending";
+    order.refundRequestedItems = normalizedItems;
+    order.refundRequestAmount = Number(refundRequestAmount.toFixed(2));
     await order.save();
 
     return res.status(200).json({
       message: "Refund request submitted",
       orderId: order.id,
       refundRequestStatus: order.refundRequestStatus,
+      refundRequestAmount: order.refundRequestAmount,
     });
   } catch (err) {
     logger.error("Refund request error", { error: err });
@@ -74,14 +119,14 @@ router.get("/pending", auth, authorizeRole("sales_manager"), async (_req, res) =
   }
 });
 
-async function restockProducts(order) {
-  if (!Array.isArray(order.items)) return;
+async function restockProducts(items) {
+  if (!Array.isArray(items)) return;
 
-  const ids = order.items.map((it) => it.productId);
+  const ids = items.map((it) => it.productId);
   const products = await Product.find({ id: { $in: ids } });
   const map = new Map(products.map((p) => [p.id, p]));
 
-  for (const item of order.items) {
+  for (const item of items) {
     const product = map.get(item.productId);
     if (!product) continue;
     product.stock = (product.stock || 0) + (item.quantity || 0);
@@ -103,18 +148,38 @@ router.patch("/:id/approve", auth, authorizeRole("sales_manager"), async (req, r
       return res.status(409).json({ message: "Refund request is already resolved" });
     }
 
-    await restockProducts(order);
+    const refundItems =
+      Array.isArray(order.refundRequestedItems) && order.refundRequestedItems.length > 0
+        ? order.refundRequestedItems
+        : order.items || [];
+
+    await restockProducts(refundItems);
 
     const user = await User.findById(order.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found for this order" });
     }
 
+    const requestAmount = Number(order.refundRequestAmount ?? 0);
+    const fallbackAmount = (order.items || []).reduce(
+      (sum, item) => sum + Number(item.lineTotal ?? item.unitPrice * item.quantity ?? 0),
+      0
+    );
+    const refundAmount = requestAmount || fallbackAmount;
+
     order.refundRequestStatus = "approved";
     order.refundedAt = new Date();
-    order.refundAmount = order.total;
+    order.refundAmount = Number(refundAmount.toFixed(2));
     order.refundReason = order.refundRequestReason || "";
-    order.status = "cancelled";
+    const isFullRefund =
+      refundItems.length === (order.items || []).length &&
+      refundItems.every((item) => {
+        const original = (order.items || []).find((it) => it.productId === item.productId);
+        return original && Number(item.quantity) === Number(original.quantity);
+      });
+    if (isFullRefund) {
+      order.status = "cancelled";
+    }
     await order.save();
 
     let emailStatus = { skipped: true };

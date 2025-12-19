@@ -7,6 +7,7 @@ const orderItemSchema = new mongoose.Schema(
     imageURL: { type: String, default: "" },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true }, 
+    unitCost: { type: Number, default: null },
     lineTotal: { type: Number, required: true }, 
   },
   { _id: false }
@@ -52,6 +53,19 @@ const orderSchema = new mongoose.Schema(
     refundReason: { type: String },
     refundRequestedAt: { type: Date },
     refundRequestReason: { type: String },
+    refundRequestedItems: {
+      type: [
+        {
+          productId: { type: String, required: true },
+          name: { type: String, default: "" },
+          quantity: { type: Number, required: true },
+          unitPrice: { type: Number, required: true },
+          lineTotal: { type: Number, required: true },
+        },
+      ],
+      default: [],
+    },
+    refundRequestAmount: { type: Number },
     refundRequestStatus: {
       type: String,
       enum: ["pending", "approved", "declined"],

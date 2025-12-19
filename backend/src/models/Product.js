@@ -24,8 +24,12 @@ const productSchema = new mongoose.Schema(
     },
 
     price: { type: Number, required: true },
+    originalPrice: { type: Number, default: null },
+    discountPrice: { type: Number, default: null },
+    discountPercent: { type: Number, default: null },
     stock: { type: Number, required: true, default: 0 }, 
     quantity: { type: Number, default: 0 }, 
+    cost: { type: Number, default: null },
 
     warranty: { type: String, default: "" },    
     distributor: { type: String, default: "" },   

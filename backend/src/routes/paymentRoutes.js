@@ -268,8 +268,19 @@ router.get("/revenue", auth, authorizeRole("sales_manager"), async (req, res) =>
 
     const revenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-    const costPercentage = 0.70; 
-    const cost = revenue * costPercentage;
+    const costPercentage = 0.5;
+    const cost = orders.reduce((sum, order) => {
+      const orderCost = (order.items || []).reduce((itemSum, item) => {
+        const qty = Number(item?.quantity ?? 0);
+        const unitCost = Number(item?.unitCost);
+        if (Number.isFinite(unitCost) && unitCost >= 0) {
+          return itemSum + unitCost * qty;
+        }
+        const lineTotal = Number(item?.lineTotal ?? item?.unitPrice * qty ?? 0);
+        return itemSum + lineTotal * costPercentage;
+      }, 0);
+      return sum + orderCost;
+    }, 0);
 
     const profit = revenue - cost;
 
