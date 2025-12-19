@@ -8,6 +8,10 @@ const setupSecurity = require("./middleware/security");
 const { requestLogger, errorLogger } = require("./middleware/logger");
 const logger = require("./config/logger");
 
+// chatSocket 
+const http = require("http");
+const { setupChatSocket } = require("./sockets/chatSocket");
+
 // Routes
 const productRoutes = require("./routes/productRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -64,7 +68,11 @@ const PORT = process.env.PORT || 5050;
 (async () => {
   try {
     await connectDB(process.env.MONGO_URI);
-    app.listen(PORT, () => logger.info(`🚀 Server running on port ${PORT}`));
+    const httpServer = http.createServer(app);
+    setupChatSocket(httpServer, corsOptions);
+
+    httpServer.listen(PORT, () => logger.info(`🚀 Server running on port ${PORT}`));
+
   } catch (error) {
     logger.error("❌ Failed to connect to the database:", { error });
     process.exit(1);
