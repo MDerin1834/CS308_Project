@@ -2,6 +2,7 @@ const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
 
+// Backlog 22: merge guest cart items into the user's cart safely with stock caps
 async function mergeGuestCartToUser(userId, guestCart = []) {
   let userCart = await Cart.findOne({ user: userId });
   if (!userCart) userCart = await Cart.create({ user: userId, items: [] });
@@ -48,6 +49,7 @@ async function mergeGuestCartToUser(userId, guestCart = []) {
   return await userCart.populate("items.product");
 }
 
+// Backlog 23: build lightweight cart summary for checkout views
 async function getCartSummary(userId) {
   const cart = await Cart.findOne({ user: userId }).lean();
   if (!cart || !Array.isArray(cart.items) || cart.items.length === 0) {

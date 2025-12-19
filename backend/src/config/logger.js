@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { createLogger, format, transports } = require("winston");
 
+// Backlog 48: centralized Winston logger for structured file/console output
 const logDir = path.join(__dirname, "..", "..", "logs");
 fs.mkdirSync(logDir, { recursive: true });
 

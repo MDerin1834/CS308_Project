@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// Backlog 19: per-user cart storage with price snapshots
 const cartItemSchema = new mongoose.Schema(
   {
     productId: { type: String, required: true }, 

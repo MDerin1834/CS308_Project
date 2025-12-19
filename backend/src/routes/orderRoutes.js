@@ -12,6 +12,7 @@ router.post("/", auth, orderController.createOrder);
 router.get("/my-orders", auth, orderController.getMyOrders);
 
 // GET /api/orders/deliveries (product manager)
+// Backlog 37: delivery queue for product managers
 router.get("/deliveries", auth, authorizeRole("product_manager"), orderController.getDeliveryList);
 
 // PATCH /api/orders/:id/cancel

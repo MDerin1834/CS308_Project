@@ -9,6 +9,7 @@ const User = require("../models/User");
 const logger = require("../config/logger");
 const { sendRefundEmail } = require("../services/emailService");
 
+// Backlog 52: customers submit refund requests for delivered orders
 /**
  * POST /api/refunds
  * Body: { orderId, reason? }
@@ -99,6 +100,7 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
+// Backlog 53: sales manager reviews pending refund queue
 /**
  * GET /api/refunds/pending
  * List pending refund requests (sales_manager only)
@@ -134,6 +136,7 @@ async function restockProducts(items) {
   }
 }
 
+// Backlog 54: sales manager approval flow (restock + email)
 /**
  * PATCH /api/refunds/:id/approve
  */

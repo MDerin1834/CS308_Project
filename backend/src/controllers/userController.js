@@ -29,6 +29,7 @@ exports.registerUser = async (req, res) => {
     }
 
     if (isCustomer) {
+      // Backlog 45: collect taxId and address details for customer invoicing
       if (!taxId) {
         return res.status(400).json({ message: "taxId is required for customers" });
       }

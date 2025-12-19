@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 
+// Backlog 19: JWT auth guard to protect cart/checkout flows
 module.exports = function auth(req, res, next) {
   const hdr = req.headers.authorization;
   if (!hdr || !hdr.startsWith("Bearer ")) {

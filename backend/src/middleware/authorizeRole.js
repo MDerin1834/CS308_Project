@@ -1,5 +1,5 @@
 /**
- * Role-based authorization middleware.
+ * Backlog 44: shared role guard for role-restricted endpoints.
  * Use after `auth` middleware so req.user is populated from JWT.
  * Example: router.get("/admin", auth, authorizeRole("admin"), handler);
  */

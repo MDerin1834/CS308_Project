@@ -153,6 +153,7 @@ router.post("/checkout", auth, async (req, res) => {
 
     const invoiceFileName = `${invoiceNumber}.pdf`;
 
+    // Backlog 46: email the generated invoice to the customer after checkout
     let emailStatus = { skipped: true };
     try {
       emailStatus = await sendInvoiceEmail({
@@ -194,6 +195,7 @@ router.get("/invoices", auth, authorizeRole("sales_manager", "product_manager"),
   try {
     const { startDate, endDate } = req.query;
 
+    // Backlog 51: sales/product managers can list invoices by date range
     const invoices = await getInvoicesByDateRange(startDate, endDate);
 
     return res.status(200).json({

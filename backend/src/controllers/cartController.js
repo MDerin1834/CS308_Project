@@ -1,6 +1,7 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
+// Backlog 19: core cart CRUD for authenticated users
 // GET /api/cart  — cart with item details + totals
 exports.getCart = async (req, res) => {
   const cart =

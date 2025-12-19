@@ -8,7 +8,7 @@ router.get("/", auth, cartController.getCart);
 router.post("/", auth, cartController.addOrUpdateItem);
 router.delete("/:productId", auth, cartController.removeItem);
 
-// Guest cart merge
+// Backlog 22: merge guest cart into authenticated cart
 router.post("/merge", auth, cartController.mergeGuestCart);
 
 module.exports = router;

@@ -26,6 +26,7 @@ const Product = require("../../src/models/Product");
 const Order = require("../../src/models/Order");
 const User = require("../../src/models/User");
 
+// Backlog 47: integration coverage for order creation and payment flow
 describe("Checkout integration (order + payment)", () => {
   let app;
   let mongo;

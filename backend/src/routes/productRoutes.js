@@ -50,6 +50,7 @@ function buildDiscountPayload({ basePrice, discountPrice }) {
   return { discountAmount, discountPercent };
 }
 
+// Backlog 16: product catalog list with search/sort/pagination
 /**
  * GET /api/products
  * Query:
@@ -116,7 +117,7 @@ router.get("/", async (req, res) => {
       Product.countDocuments(filter),
     ]);
 
-    // ---------- Enrich with stockStatus ----------
+    // Backlog 17: enrich products with derived stockStatus
     const items = itemsRaw.map((p) => ({
       ...p,
       stockStatus:
@@ -139,6 +140,7 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Backlog 18: detailed product fetch with full attributes + stockStatus
 /**
  * GET /api/products/:id
  * Returns **all attributes** of a product (+ derived stockStatus)

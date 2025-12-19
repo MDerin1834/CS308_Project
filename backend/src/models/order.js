@@ -51,6 +51,7 @@ const orderSchema = new mongoose.Schema(
     refundedAt: { type: Date },
     refundAmount: { type: Number },
     refundReason: { type: String },
+    // Backlog 52: capture refund request lifecycle and item breakdowns
     refundRequestedAt: { type: Date },
     refundRequestReason: { type: String },
     refundRequestedItems: {
