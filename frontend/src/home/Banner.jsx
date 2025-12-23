@@ -27,57 +27,36 @@ const bannerList = [
 
 const Banner = () => {
   const [searchInput, setSearchInput] = useState("");
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState("All");
+  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const normalizeCategory = (value) => (value || "").toString().trim().toLowerCase();
-  const categorizeProduct = (item) => {
-    const tagText = normalizeCategory(item.tag);
-    const tags = tagText
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    const searchPool = [
-      normalizeCategory(item.category),
-      normalizeCategory(item.name),
-      ...tags,
-    ].join(" ");
-
-    if (/(headphone|headset|earbud|earphone|ear pod|airpod)/.test(searchPool))
-      return "Headphones";
-    if (
-      /(\bphone\b|\bphones\b|\bmobile\b|\bcell\b|\bsmartphone\b|\biphone\b|\bandroid\b|\bgalaxy\b|\bpixel\b)/.test(
-        searchPool
-      )
-    )
-      return "Phones";
-    if (/(laptop|notebook|macbook|pc|computer|desktop|imac|monitor)/.test(searchPool))
-      return "Computers";
-    if (/(speaker|soundbar|home theater|boom|sonos|jbl|bluetooth speaker)/.test(searchPool))
-      return "Speakers";
-    if (/(watch|wearable|smartwatch|fitness|fitbit|band)/.test(searchPool))
-      return "Watchs";
-
-    return "Others";
-  };
 
   useEffect(() => {
     let mounted = true;
-    api
-      .get("/api/products", { params: { limit: 200 } })
-      .then((res) => {
+    const load = async () => {
+      try {
+        const [productsRes, categoriesRes] = await Promise.all([
+          api.get("/api/products", { params: { limit: 200 } }),
+          api.get("/api/categories"),
+        ]);
         if (!mounted) return;
-        setProducts(res.data?.items || []);
-      })
-      .catch((err) => {
+        setProducts(productsRes.data?.items || []);
+        const apiCategories =
+          categoriesRes.data?.categories?.map((item) => item.name).filter(Boolean) || [];
+        setCategories(apiCategories);
+      } catch (err) {
         if (!mounted) return;
         setError(err?.response?.data?.message || "Failed to load products");
-      })
-      .finally(() => mounted && setLoading(false));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
     return () => {
       mounted = false;
     };
@@ -86,9 +65,9 @@ const Banner = () => {
   const filteredProducts = products.filter((product) => {
     const matchesName = product.name?.toLowerCase().includes(searchInput.toLowerCase());
     if (!matchesName) return false;
-    if (category === "all") return true;
-    const productCategory = categorizeProduct(product);
-    return productCategory === category;
+    if (normalizeCategory(category) === "all") return true;
+    const productCategory = normalizeCategory(product.category);
+    return productCategory === normalizeCategory(category);
   });
 
   const handleSearch = (e) => {
@@ -100,7 +79,7 @@ const Banner = () => {
     const term = searchInput.trim();
     const params = new URLSearchParams();
     if (term) params.set("search", term);
-    if (category && category !== "all") params.set("category", category);
+    if (category && normalizeCategory(category) !== "all") params.set("category", category);
     const search = params.toString();
     navigate(search ? `/shop?${search}` : "/shop");
   };
@@ -115,6 +94,7 @@ const Banner = () => {
             <SelectedCategory
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              categories={categories}
             />
             <input
               type="text"

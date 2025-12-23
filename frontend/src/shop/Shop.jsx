@@ -10,11 +10,12 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthProvider";
 
 const Shop = () => {
-  const categories = ["All", "Phones", "Computers", "Speakers", "Headphones", "Watchs", "Others"];
+  const fallbackCategories = ["All", "Phones", "Computers", "Speakers", "Headphones", "Watchs", "Others"];
   const { user } = useContext(AuthContext);
   const [GridList, setGridList] = useState(true);
   const [products, setProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
+  const [categories, setCategories] = useState(fallbackCategories);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sort, setSort] = useState("newest");
@@ -46,37 +47,6 @@ const Shop = () => {
 
   const normalizeCategory = (value) => (value || "").toString().trim().toLowerCase();
 
-  const categorizeProduct = (item) => {
-    const tagText = normalizeCategory(item.tag);
-    const tags = tagText
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    const searchPool = [
-      normalizeCategory(item.category),
-      normalizeCategory(item.name),
-      ...tags,
-    ].join(" ");
-
-    if (/(headphone|headset|earbud|earphone|ear pod|airpod)/.test(searchPool))
-      return "Headphones";
-    if (
-      /(\bphone\b|\bphones\b|\bmobile\b|\bcell\b|\bsmartphone\b|\biphone\b|\bandroid\b|\bgalaxy\b|\bpixel\b)/.test(
-        searchPool
-      )
-    )
-      return "Phones";
-    if (/(laptop|notebook|macbook|pc|computer|desktop|imac|monitor)/.test(searchPool))
-      return "Computers";
-    if (/(speaker|soundbar|home theater|boom|sonos|jbl|bluetooth speaker)/.test(searchPool))
-      return "Speakers";
-    if (/(watch|wearable|smartwatch|fitness|fitbit|band)/.test(searchPool))
-      return "Watchs";
-
-    return "Others";
-  };
-
   const filterItem = (category) => {
     setSelectedCategory(category);
     setCurrentPage(1);
@@ -89,10 +59,27 @@ const Shop = () => {
       return;
     }
     const filtered = allProducts.filter(
-      (item) => normalizeCategory(categorizeProduct(item)) === normalized
+      (item) => normalizeCategory(item.category) === normalized
     );
     setProducts(filtered);
   }, [allProducts, selectedCategory]);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get("/api/categories")
+      .then((res) => {
+        if (!mounted) return;
+        const list = res.data?.categories?.map((item) => item.name).filter(Boolean) || [];
+        if (list.length > 0) {
+          setCategories(["All", ...list]);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;

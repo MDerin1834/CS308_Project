@@ -35,6 +35,17 @@ router.post("/", auth, async (req, res) => {
       return res.status(400).json({ message: "Refunds are only available for delivered orders" });
     }
 
+    const purchasedAt = order.paidAt || order.createdAt;
+    if (!purchasedAt) {
+      return res.status(400).json({ message: "Order purchase date is missing" });
+    }
+
+    const now = new Date();
+    const maxWindowMs = 30 * 24 * 60 * 60 * 1000;
+    if (now.getTime() - new Date(purchasedAt).getTime() > maxWindowMs) {
+      return res.status(400).json({ message: "Refund window has expired (30 days)" });
+    }
+
     if (order.refundRequestedAt) {
       return res.status(409).json({ message: "Refund already requested for this order" });
     }

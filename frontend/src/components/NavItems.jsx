@@ -104,6 +104,11 @@ const NavItems = () => {
                     <i className="icofont-speech-comments"></i>
                   </Link>
                 )}
+                {user && user.role === "product_manager" && (
+                  <Link to="/categories/manage" className="me-3">
+                    <i className="icofont-tags"></i>
+                  </Link>
+                )}
                 {user && user.role === "sales_manager" && (
                   <Link to="/sales/invoices" className="me-3">
                     <i className="icofont-print"></i>

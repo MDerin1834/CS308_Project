@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { AuthContext } from "../contexts/AuthProvider";
@@ -21,14 +21,32 @@ const initialForm = {
   specs: "",
 };
 
+const fallbackCategories = ["Phones", "Computers", "Speakers", "Headphones", "Watchs", "Others"];
+
 const ProductCreate = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const [form, setForm] = useState(initialForm);
+  const [categories, setCategories] = useState(fallbackCategories);
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get("/api/categories")
+      .then((res) => {
+        if (!mounted) return;
+        const list = res.data?.categories?.map((item) => item.name).filter(Boolean) || [];
+        if (list.length > 0) setCategories(list);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -175,13 +193,22 @@ const ProductCreate = () => {
         </div>
         <div className="col-md-3">
           <label className="form-label">Category *</label>
-          <input
-            className="form-control"
+          <select
+            className="form-select"
             name="category"
             value={form.category}
             onChange={handleChange}
             required
-          />
+          >
+            <option value="" disabled>
+              Select category
+            </option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="col-12">

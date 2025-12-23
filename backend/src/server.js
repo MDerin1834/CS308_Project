@@ -20,6 +20,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
 const refundRoutes = require("./routes/refundRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 const app = express();
 const wishlistRoutes = require("./routes/wishlistRoutes"); 
@@ -58,6 +59,7 @@ app.use("/api/comments", require("./routes/commentRoutes"));
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/delivery", deliveryRoutes);
 app.use("/api/refunds", refundRoutes);
+app.use("/api/categories", categoryRoutes);
 
 /* ---------- Error Logging ---------- */
 app.use(errorLogger);
