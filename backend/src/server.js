@@ -21,6 +21,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
 const refundRoutes = require("./routes/refundRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const supportRoutes = require("./routes/supportRoutes");
 
 const app = express();
 const wishlistRoutes = require("./routes/wishlistRoutes"); 
@@ -45,6 +46,7 @@ setupSecurity(app);
 
 /* ---------- Static files ---------- */
 app.use("/images", express.static(path.join(__dirname, "../public/images")));
+app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 /* ---------- Health ---------- */
 app.get("/health", (_req, res) => res.json({ ok: true }));
@@ -60,6 +62,7 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/delivery", deliveryRoutes);
 app.use("/api/refunds", refundRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/support", supportRoutes);
 
 /* ---------- Error Logging ---------- */
 app.use(errorLogger);
