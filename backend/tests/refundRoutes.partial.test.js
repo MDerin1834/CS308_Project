@@ -59,6 +59,7 @@ describe("Refund routes (partial)", () => {
     const order = {
       id: "o1",
       userId: "user1",
+      paidAt: new Date().toISOString(),
       status: "delivered",
       items: [
         { productId: "p1", name: "Item 1", quantity: 2, unitPrice: 50, lineTotal: 100 },
