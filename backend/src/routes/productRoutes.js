@@ -108,7 +108,7 @@ router.get("/", async (req, res) => {
 
     // ---------- Paging ----------
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 24));
+    const limitNum = Math.min(400, Math.max(1, parseInt(limit, 10) || 24));
     const skip = (pageNum - 1) * limitNum;
 
     // lean() => plain objects; we can add derived fields easily

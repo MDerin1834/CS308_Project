@@ -79,7 +79,7 @@ const NavItems = () => {
               </div>
 
               <div className="d-none d-md-flex align-items-center gap-3">
-                <NotificationBell />
+                {user && user.role === "customer" && <NotificationBell />}
                 {user && user.role !== "product_manager" && user.role !== "sales_manager" && (
                   <Link to="/wishlist">
                     <i className="icofont-heart-alt"></i>
