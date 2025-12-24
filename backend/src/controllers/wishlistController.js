@@ -71,6 +71,21 @@ exports.removeFromWishlist = async (req, res) => {
   }
 };
 
+exports.getDiscountNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const items = await wishlistService.findDiscountedWishlistItems(userId);
+
+    return res.status(200).json({
+      message: "Discount notifications fetched",
+      count: items.length,
+      items,
+    });
+  } catch (err) {
+    logger.error("Wishlist discount fetch error", { error: err });
+    return res.status(500).json({ message: "Failed to fetch discount notifications" });
+  }
+};
 
 exports.notifyDiscounts = async (req, res) => {
   try {

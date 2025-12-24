@@ -4,17 +4,20 @@ import { Link, useNavigate } from "react-router-dom";
 import Rating from "../components/Rating";
 import { useContext } from "react";
 import { WishlistContext } from "../contexts/WishlistContext";
+import { AuthContext } from "../contexts/AuthProvider";
 
 const ProductCards = ({ products, GridList }) => {
-  
+
   const { addToWishlist } = useContext(WishlistContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const isSalesManager = user?.role === "sales_manager";
 
   // ❤️ Add to Wishlist tıklanınca çalışan fonksiyon
   const handleAddWishlist = async (product) => {
-    const user = JSON.parse(localStorage.getItem("user"));
+    const storedUser = user || JSON.parse(localStorage.getItem("user"));
 
-    if (!user) {
+    if (!storedUser) {
       // Login değilse login’e yönlendir
       localStorage.setItem("redirectAfterLogin", "/shop");
       navigate("/login");
@@ -42,6 +45,22 @@ const ProductCards = ({ products, GridList }) => {
               <div className="pro-thumb">
                 <img src={product.img || product.imageURL} alt={product.name} />
               </div>
+              {(() => {
+                const basePrice = Number(product.originalPrice ?? product.basePrice ?? product.price ?? 0);
+                const currentPrice = Number(product.discountPrice ?? product.price ?? 0);
+                const hasDiscount = basePrice > 0 && currentPrice > 0 && currentPrice < basePrice;
+                const percent = hasDiscount
+                  ? product.discountPercent ?? Math.round(((basePrice - currentPrice) / basePrice) * 100)
+                  : null;
+                return hasDiscount ? (
+                  <span
+                    className="badge bg-danger position-absolute"
+                    style={{ top: "10px", left: "10px" }}
+                  >
+                    -{percent}%
+                  </span>
+                ) : null;
+              })()}
 
               {/* ⭐ ACTION BUTTONS */}
               <div className="product-action-link">
@@ -57,9 +76,11 @@ const ProductCards = ({ products, GridList }) => {
                 </a>
 
                 {/* CART SAYFASINA GİT */}
-                <Link to="/cart-page">
-                  <i className="icofont-cart-alt"></i>
-                </Link>
+                {!isSalesManager && (
+                  <Link to="/cart-page">
+                    <i className="icofont-cart-alt"></i>
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -70,7 +91,27 @@ const ProductCards = ({ products, GridList }) => {
               <p className="productRating">
                 <Rating value={product?.ratings} count={product?.ratingsCount} />
               </p>
-              <h6>${product.price}</h6>
+              {(() => {
+                const basePrice = Number(product.originalPrice ?? product.basePrice ?? product.price ?? 0);
+                const currentPrice = Number(product.discountPrice ?? product.price ?? 0);
+                const hasDiscount = basePrice > 0 && currentPrice > 0 && currentPrice < basePrice;
+                const percent = hasDiscount
+                  ? product.discountPercent ?? Math.round(((basePrice - currentPrice) / basePrice) * 100)
+                  : null;
+                return (
+                  <div className="d-flex align-items-center gap-2">
+                    <h6 className="mb-0">${currentPrice.toFixed(2)}</h6>
+                    {hasDiscount && (
+                      <>
+                        <span className="text-muted text-decoration-line-through">
+                          ${basePrice.toFixed(2)}
+                        </span>
+                        {percent ? <span className="badge bg-danger">-{percent}%</span> : null}
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -94,9 +135,11 @@ const ProductCards = ({ products, GridList }) => {
                 </a>
 
                 {/* CART */}
-                <Link to="/cart-page">
-                  <i className="icofont-cart-alt"></i>
-                </Link>
+                {!isSalesManager && (
+                  <Link to="/cart-page">
+                    <i className="icofont-cart-alt"></i>
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -105,7 +148,27 @@ const ProductCards = ({ products, GridList }) => {
               <p className="productRating">
                 <Rating value={product?.ratings} count={product?.ratingsCount} />
               </p>
-              <h6>${product.price}</h6>
+              {(() => {
+                const basePrice = Number(product.originalPrice ?? product.basePrice ?? product.price ?? 0);
+                const currentPrice = Number(product.discountPrice ?? product.price ?? 0);
+                const hasDiscount = basePrice > 0 && currentPrice > 0 && currentPrice < basePrice;
+                const percent = hasDiscount
+                  ? product.discountPercent ?? Math.round(((basePrice - currentPrice) / basePrice) * 100)
+                  : null;
+                return (
+                  <div className="d-flex align-items-center gap-2">
+                    <h6 className="mb-0">${currentPrice.toFixed(2)}</h6>
+                    {hasDiscount && (
+                      <>
+                        <span className="text-muted text-decoration-line-through">
+                          ${basePrice.toFixed(2)}
+                        </span>
+                        {percent ? <span className="badge bg-danger">-{percent}%</span> : null}
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
               <p>{product.seller}</p>
             </div>
           </div>

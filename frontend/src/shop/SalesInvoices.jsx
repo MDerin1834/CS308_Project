@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import api from "../api/client";
 
@@ -10,6 +11,7 @@ const SalesInvoices = () => {
   const [endDate, setEndDate] = useState("");
   const [downloadingId, setDownloadingId] = useState(null);
   const [hoverPoint, setHoverPoint] = useState(null);
+  const [productPrices, setProductPrices] = useState({});
 
   const loadInvoices = async (filters = {}) => {
     setLoading(true);
@@ -37,6 +39,26 @@ const SalesInvoices = () => {
 
   useEffect(() => {
     loadInvoices();
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get("/api/products", { params: { limit: 400 }, validateStatus: () => true })
+      .then((res) => {
+        if (!mounted) return;
+        if (res.status === 200 && Array.isArray(res.data?.items)) {
+          const map = {};
+          res.data.items.forEach((p) => {
+            if (p?.id) map[p.id] = p;
+          });
+          setProductPrices(map);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleFilterSubmit = (e) => {
@@ -95,13 +117,26 @@ const SalesInvoices = () => {
     return line || unit * qty;
   };
 
+  const getBasePrice = (item) => {
+    const productId = item?.productId || item?.id;
+    const product = productPrices[productId] || {};
+    const productOriginal = Number(product.originalPrice);
+    const productPrice = Number(product.price);
+    const unitPrice = Number(item?.unitPrice ?? item?.price ?? 0);
+    if (Number.isFinite(productOriginal) && productOriginal > 0) return productOriginal;
+    if (Number.isFinite(productPrice) && productPrice > 0) return productPrice;
+    return unitPrice;
+  };
+
   const getItemCost = (item) => {
-    const lineTotal = getLineTotal(item);
+    const qty = Number(item?.quantity ?? item?.qty ?? 1) || 1;
     const rawCost = Number(item?.cost ?? item?.unitCost ?? NaN);
     if (Number.isFinite(rawCost) && rawCost >= 0) {
-      return rawCost * (item?.quantity ?? 1);
+      return rawCost * qty;
     }
-    return lineTotal * 0.5;
+    const basePrice = getBasePrice(item);
+    const assumedUnitCost = Number.isFinite(basePrice) ? basePrice * 0.5 : (getLineTotal(item) / qty) * 0.5;
+    return assumedUnitCost * qty;
   };
 
   const getOrderCost = (inv) =>
@@ -168,7 +203,17 @@ const SalesInvoices = () => {
     <div>
       <PageHeader title="Sales Manager" curPage="Invoices" />
       <div className="container py-5">
-        <h2 className="mb-4">Invoice List</h2>
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+          <h2 className="mb-0">Invoice List</h2>
+          <div className="d-flex gap-2">
+            <Link to="/sales/discounts" className="btn btn-outline-secondary">
+              Manage Discounts
+            </Link>
+            <Link to="/shop" className="btn btn-primary">
+              Shop
+            </Link>
+          </div>
+        </div>
         <form className="row g-3 align-items-end mb-4" onSubmit={handleFilterSubmit}>
           <div className="col-sm-6 col-md-4">
             <label className="form-label">Start Date</label>
@@ -216,8 +261,8 @@ const SalesInvoices = () => {
         <div className="mb-4">
           <small className="text-muted">
             Revenue/profit excludes cancelled orders and approved refunds. Discounted orders are
-            included because totals use the purchase price. Cost defaults to 50% of line total when
-            item cost is not provided.
+            included because totals use the purchase price. Cost assumes 50% of the original
+            (pre-discount) price when an explicit unit cost is not provided.
           </small>
         </div>
 

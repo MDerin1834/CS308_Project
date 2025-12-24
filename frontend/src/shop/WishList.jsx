@@ -16,29 +16,23 @@ const WishlistPage = () => {
   const safeProduct = (item) => item.product || item;
 
   // Extract price logic
-  const getPrice = (product) => {
-    return (
-      product.discountPrice ||
-      product.discountedPrice ||
-      product.basePrice ||
-      product.price ||
-      0
-    );
-  };
+  const getBasePrice = (product) =>
+    Number(product.originalPrice ?? product.basePrice ?? product.price ?? 0);
 
-  const getOriginalPrice = (product) => product.price || product.basePrice || null;
+  const getCurrentPrice = (product) =>
+    Number(product.discountPrice ?? product.discountedPrice ?? product.price ?? getBasePrice(product) ?? 0);
 
   const getDiscountPercentage = (product) => {
-    const p = product.price || product.basePrice;
-    const dp = product.discountPrice || product.discountedPrice;
-    if (!p || !dp || dp >= p) return null;
-    return Math.round(((p - dp) / p) * 100);
+    const base = getBasePrice(product);
+    const current = getCurrentPrice(product);
+    if (!base || !current || current >= base) return null;
+    return Math.round(((base - current) / base) * 100);
   };
 
   const moveToCart = async (item) => {
     const product = safeProduct(item);
     const productId = product.id || item.productId;
-    const price = getPrice(product);
+    const price = getCurrentPrice(product);
 
     // Guest
     if (!user) {
@@ -111,8 +105,8 @@ const WishlistPage = () => {
 
                   {wishlist.map((item, i) => {
                     const product = safeProduct(item);
-                    const price = getPrice(product);
-                    const original = getOriginalPrice(product);
+                    const price = getCurrentPrice(product);
+                    const original = getBasePrice(product);
                     const discountPerc = getDiscountPercentage(product);
 
                     return (
@@ -134,17 +128,29 @@ const WishlistPage = () => {
                             <h5>{product.name}</h5>
 
                             {/* Discount UI */}
-                            {discountPerc ? (
-                              <div className="wishlist-price">
-                                <span className="discount-price">${price}</span>
-                                <span className="old-price">${original}</span>
-                                <span className="discount-badge">-{discountPerc}%</span>
-                              </div>
-                            ) : (
-                              <div className="wishlist-price">
-                                <span className="normal-price">${price}</span>
-                              </div>
-                            )}
+                            <div className="wishlist-price d-flex align-items-center flex-wrap gap-2">
+                              <span
+                                className="fw-semibold"
+                                style={{ fontSize: "1.1rem", color: "#111827" }}
+                              >
+                                ${price.toFixed(2)}
+                              </span>
+                              {discountPerc ? (
+                                <>
+                                  <span
+                                    className="text-muted text-decoration-line-through"
+                                    style={{ fontSize: "0.95rem" }}
+                                  >
+                                    ${original.toFixed(2)}
+                                  </span>
+                                  <span className="badge bg-danger">-{discountPerc}%</span>
+                                </>
+                              ) : (
+                                <span className="text-muted" style={{ fontSize: "0.95rem" }}>
+                                  (No discount)
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
 

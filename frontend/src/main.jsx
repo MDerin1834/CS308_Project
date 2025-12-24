@@ -48,6 +48,8 @@ import Profile from './components/Profile.jsx';
 import SupportAgentChatPage from "./support/SupportAgentChatPage.jsx";
 import SalesInvoices from './shop/SalesInvoices.jsx';
 import RefundRequests from './shop/RefundRequests.jsx';
+import DiscountManager from './shop/DiscountManager.jsx';
+import Notifications from './shop/Notifications.jsx';
 
 
 
@@ -100,6 +102,16 @@ const router = createBrowserRouter([
       { path: "/refunds/pending", element: (
         <PrivateRoute allowedRoles={["sales_manager"]}>
           <RefundRequests />
+        </PrivateRoute>
+      ) },
+      { path: "/sales/discounts", element: (
+        <PrivateRoute allowedRoles={["sales_manager"]}>
+          <DiscountManager />
+        </PrivateRoute>
+      ) },
+      { path: "/notifications", element: (
+        <PrivateRoute>
+          <Notifications />
         </PrivateRoute>
       ) },
     ],

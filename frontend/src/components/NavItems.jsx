@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo/logo.png";
 import { AuthContext } from "../contexts/AuthProvider";
+import NotificationBell from "./NotificationBell";
 
 
 const NavItems = () => {
@@ -66,62 +67,68 @@ const NavItems = () => {
                   <li>
                     <Link to="/">Home</Link>
                   </li>
+                  <li>
+                    <Link to="/shop">Shop</Link>
+                  </li>
                   {(!user || user.role !== "sales_manager") && (
                     <li>
-                      <Link to="/shop">Shop</Link>
+                      <Link to="/blog">Blog</Link>
                     </li>
                   )}
-                  <li>
-                    <Link to="/blog">Blog</Link>
-                  </li>
                 </ul>
               </div>
 
-              <div className="d-none d-md-block">
+              <div className="d-none d-md-flex align-items-center gap-3">
+                <NotificationBell />
                 {user && user.role !== "product_manager" && user.role !== "sales_manager" && (
-                  <Link to="/wishlist" className="me-3">
+                  <Link to="/wishlist">
                     <i className="icofont-heart-alt"></i>
                   </Link>
                 )}
 
                 {user && user.role !== "product_manager" && user.role !== "sales_manager" && (
-                  <Link to="/past-orders" className="me-3">
+                  <Link to="/past-orders">
                     <i className="icofont-box"></i>
                   </Link>
                 )}
                 {user && user.role === "customer" && (
-                  <Link to="/profile" className="me-3">
+                  <Link to="/profile">
                     <i className="icofont-user"></i>
                   </Link>
                 )}
                 {user && user.role === "product_manager" && (
-                  <Link to="/deliveries" className="me-3">
+                  <Link to="/deliveries">
                     <i className="icofont-vehicle-delivery-van"></i>
                   </Link>
                 )}
                 {user && user.role === "product_manager" && (
-                  <Link to="/comments/pending" className="me-3">
+                  <Link to="/comments/pending">
                     <i className="icofont-speech-comments"></i>
                   </Link>
                 )}
                 {user && user.role === "product_manager" && (
-                  <Link to="/categories/manage" className="me-3">
+                  <Link to="/categories/manage">
                     <i className="icofont-tags"></i>
                   </Link>
                 )}
                 {user && user.role === "sales_manager" && (
-                  <Link to="/sales/invoices" className="me-3">
+                  <Link to="/sales/invoices">
                     <i className="icofont-print"></i>
                   </Link>
                 )}
                 {user && user.role === "sales_manager" && (
-                  <Link to="/refunds/pending" className="me-3">
+                  <Link to="/sales/discounts">
+                    <i className="icofont-sale-discount"></i>
+                  </Link>
+                )}
+                {user && user.role === "sales_manager" && (
+                  <Link to="/refunds/pending">
                     <i className="icofont-refresh"></i>
                   </Link>
                 )}
 
                 {(!user || (user.role !== "product_manager" && user.role !== "sales_manager")) && (
-                  <Link to="/cart-page" className="me-3">
+                  <Link to="/cart-page">
                     <i className="icofont-cart-alt"></i>
                   </Link>
                 )}
@@ -134,7 +141,7 @@ const NavItems = () => {
                   <>
                     <Link
                       to="/sign-up"
-                      className="lab-btn me-3"
+                      className="lab-btn"
                     >
                       <span>Create Account</span>
                     </Link>

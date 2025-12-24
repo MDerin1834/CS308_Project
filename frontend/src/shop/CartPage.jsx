@@ -15,6 +15,8 @@ const CartPage = () => {
   const navigate = useNavigate();
 
   const isGuest = !user;
+  const isSalesManager = user?.role === "sales_manager";
+  const checkoutBlocked = isGuest || isSalesManager;
 
   // ⭐ Kartı yükle
   const loadCart = async () => {
@@ -135,6 +137,10 @@ const CartPage = () => {
       navigate("/login");
       return;
     }
+    if (isSalesManager) {
+      alert("Sales managers can browse but cannot complete purchases.");
+      return;
+    }
 
     setShowCheckout(true);
   };
@@ -220,9 +226,11 @@ const CartPage = () => {
             {/* ⭐ BOTTOM SECTION */}
             <div className="cart-bottom">
               <div className="cart-checkout-box">
-                {isGuest && (
+                {(isGuest || isSalesManager) && (
                   <div className="alert alert-warning" role="alert">
-                    Please sign in to proceed to checkout.
+                    {isGuest
+                      ? "Please sign in to proceed to checkout."
+                      : "Sales managers cannot complete purchases from the shop."}
                   </div>
                 )}
                 <form
@@ -244,10 +252,17 @@ const CartPage = () => {
                     type="button"
                     className="lab-btn bg-primary"
                     onClick={handleCheckout}
-                    disabled={isGuest}
-                    style={{ opacity: isGuest ? 0.7 : 1, cursor: isGuest ? "not-allowed" : "pointer" }}
+                    disabled={checkoutBlocked}
+                    style={{
+                      opacity: checkoutBlocked ? 0.7 : 1,
+                      cursor: checkoutBlocked ? "not-allowed" : "pointer",
+                    }}
                   >
-                    {isGuest ? "Sign in to Checkout" : "Proceed to Checkout"}
+                    {checkoutBlocked
+                      ? isGuest
+                        ? "Sign in to Checkout"
+                        : "Purchasing Disabled"
+                      : "Proceed to Checkout"}
                   </button>
                 </div>
               </div>

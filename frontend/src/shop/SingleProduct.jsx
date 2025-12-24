@@ -192,9 +192,20 @@ const SingleProduct = () => {
                     <div className="col-md-6 col-12">
                       <div className="post-content">
                         <div>
-                          {
-                            result.map(item => <ProductDisplay item={item} key={item.id}/>)
-                          }
+                          {result.map((item) => (
+                            <ProductDisplay
+                              item={item}
+                              key={item.id}
+                              onDiscountUpdate={(next) => {
+                                if (!next) return;
+                                setProduct((prev) => {
+                                  const merged = { ...(prev || {}), ...next };
+                                  setStockValue(merged.stock ?? 0);
+                                  return merged;
+                                });
+                              }}
+                            />
+                          ))}
                           {user?.role === "product_manager" && (
                             <>
                               <div className="d-flex align-items-center gap-2 mt-3">

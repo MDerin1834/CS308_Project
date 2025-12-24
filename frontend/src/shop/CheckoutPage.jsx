@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "../components/modal.css";
 import Modal from "react-bootstrap/Modal";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
+import { AuthContext } from "../contexts/AuthProvider";
 
 // useModal: true when rendered inside CartPage (modal), false when used as a standalone page (/check-out)
 const CheckoutPage = (props = {}) => {
@@ -33,6 +34,8 @@ const CheckoutPage = (props = {}) => {
     cvv: "",
   });
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const isSalesManager = user?.role === "sales_manager";
 
   const handleShippingField =
     (field) =>
@@ -50,7 +53,10 @@ const CheckoutPage = (props = {}) => {
       setError("");
       setProcessing(false);
     }
-  }, [show]);
+    if (isSalesManager) {
+      setError("Sales managers can browse orders but cannot place purchases.");
+    }
+  }, [show, isSalesManager]);
 
   // Always refresh cart from server when possible to avoid "empty cart" errors
   useEffect(() => {
@@ -99,6 +105,10 @@ const CheckoutPage = (props = {}) => {
   };
 
   const handleOrderConfirm = async () => {
+    if (isSalesManager) {
+      setError("Sales managers can browse orders but cannot place purchases.");
+      return;
+    }
     if (!items || items.length === 0) {
       setError("Your cart is empty. Please add items first.");
       return;
@@ -382,9 +392,9 @@ const CheckoutPage = (props = {}) => {
         <button
           className="btn btn-primary"
           onClick={handleOrderConfirm}
-          disabled={processing}
+          disabled={processing || isSalesManager}
         >
-          {processing ? "Processing..." : "Confirm & Pay"}
+          {processing ? "Processing..." : isSalesManager ? "Purchasing Disabled" : "Confirm & Pay"}
         </button>
       </div>
     </div>

@@ -126,6 +126,13 @@ const Shop = () => {
   return (
     <div>
       <PageHeader title={"Our Shop Pages"} curPage={"Shop"} />
+      {user?.role === "sales_manager" && (
+        <div className="container mt-3">
+          <div className="alert alert-info mb-0">
+            Sales managers can browse all products, but checkout is disabled for this role.
+          </div>
+        </div>
+      )}
 
       {/* shop page */}
       <div className="shop-page padding-tb">

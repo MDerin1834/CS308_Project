@@ -16,4 +16,10 @@ router.post(
   wishlistController.notifyDiscounts
 );
 
+router.get(
+  "/discounts",
+  auth,
+  wishlistController.getDiscountNotifications
+);
+
 module.exports = router;

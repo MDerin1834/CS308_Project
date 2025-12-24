@@ -1,5 +1,7 @@
 const Wishlist = require("../models/Wishlist");
 const Product = require("../models/Product");
+const User = require("../models/User");
+const { sendWishlistDiscountEmail } = require("./emailService");
 
 
 async function getWishlist(userId) {
@@ -47,6 +49,30 @@ async function addToWishlist(userId, productId) {
 
   wishlist.items.push({ productId });
   await wishlist.save();
+
+  // Notify immediately if the product is already discounted
+  try {
+    const discount = getDiscountInfo(product);
+    const user = await User.findById(userId).lean();
+    if (discount && user?.email) {
+      await sendWishlistDiscountEmail({
+        to: user.email,
+        username: user.username || user.name || user.email,
+        items: [
+          {
+            productId: product.id,
+            name: product.name,
+            currentPrice: discount.currentPrice,
+            basePrice: discount.basePrice,
+            discountPercent: discount.discountPercent,
+          },
+        ],
+      });
+    }
+  } catch (err) {
+    // Non-blocking notification; errors are swallowed to avoid impacting wishlist add flow.
+  }
+
   return wishlist;
 }
 
