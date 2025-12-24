@@ -20,6 +20,10 @@ const WishlistSchema = new mongoose.Schema(
         },
       },
     ],
+    discountDismissedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

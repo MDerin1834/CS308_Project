@@ -117,3 +117,20 @@ exports.notifyDiscounts = async (req, res) => {
     return res.status(500).json({ message: "Failed to send discount email" });
   }
 };
+
+exports.clearDiscountNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const wishlist = await wishlistService.getOrCreateWishlist(userId);
+    wishlist.discountDismissedAt = new Date();
+    await wishlist.save();
+
+    return res.status(200).json({
+      message: "Discount notifications cleared",
+      clearedAt: wishlist.discountDismissedAt,
+    });
+  } catch (err) {
+    logger.error("Wishlist discount clear error", { error: err });
+    return res.status(500).json({ message: "Failed to clear discount notifications" });
+  }
+};

@@ -22,4 +22,10 @@ router.get(
   wishlistController.getDiscountNotifications
 );
 
+router.post(
+  "/discounts/clear",
+  auth,
+  wishlistController.clearDiscountNotifications
+);
+
 module.exports = router;

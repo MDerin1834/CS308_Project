@@ -22,6 +22,14 @@ async function getWishlist(userId) {
   }));
 }
 
+async function getOrCreateWishlist(userId) {
+  let wishlist = await Wishlist.findOne({ userId });
+  if (!wishlist) {
+    wishlist = await Wishlist.create({ userId, items: [] });
+  }
+  return wishlist;
+}
+
 
 async function addToWishlist(userId, productId) {
   const product = await Product.findOne({ id: productId });
@@ -126,9 +134,15 @@ async function findDiscountedWishlistItems(userId) {
 
   const productIds = wishlist.items.map((i) => i.productId);
   const products = await Product.find({ id: { $in: productIds } }).lean();
+  const dismissedAt = wishlist.discountDismissedAt
+    ? new Date(wishlist.discountDismissedAt)
+    : null;
 
   return products
     .map((p) => {
+      if (dismissedAt && p.updatedAt && new Date(p.updatedAt) <= dismissedAt) {
+        return null;
+      }
       const discount = getDiscountInfo(p);
       if (!discount) return null;
 
@@ -144,6 +158,7 @@ async function findDiscountedWishlistItems(userId) {
 
 module.exports = {
   getWishlist,
+  getOrCreateWishlist,
   addToWishlist,
   removeFromWishlist,
   findDiscountedWishlistItems,

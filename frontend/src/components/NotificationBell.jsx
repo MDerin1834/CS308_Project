@@ -65,8 +65,22 @@ const NotificationBell = () => {
 
   const unreadCount = items.length;
 
-  const clearNotifications = () => {
-    setItems([]);
+  const clearNotifications = async () => {
+    if (!user) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await api.post("/api/wishlist/discounts/clear", {}, { validateStatus: () => true });
+      if (res.status === 200) {
+        setItems([]);
+      } else {
+        setError(res.data?.message || "Failed to clear notifications");
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to clear notifications");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!user) return null;
