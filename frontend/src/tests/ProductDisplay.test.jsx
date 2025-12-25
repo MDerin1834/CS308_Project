@@ -2,11 +2,13 @@ import React from 'react';
 import { cleanup, render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthContext } from '../contexts/AuthProvider';
+import WishlistProvider from '../contexts/WishlistContext';
 import ProductDisplay from '../shop/ProductDisplay';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockNavigate = vi.fn();
 const mockApiPost = vi.fn();
+const mockApiGet = vi.fn();
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -20,6 +22,7 @@ vi.mock('../api/client', () => ({
   __esModule: true,
   default: {
     post: (...args) => mockApiPost(...args),
+    get: (...args) => mockApiGet(...args),
   },
 }));
 
@@ -45,13 +48,18 @@ const baseItem = {
 };
 
 const renderWithAuth = (ui, value) =>
-  render(<AuthContext.Provider value={value}>{ui}</AuthContext.Provider>);
+  render(
+    <AuthContext.Provider value={value}>
+      <WishlistProvider>{ui}</WishlistProvider>
+    </AuthContext.Provider>
+  );
 
 describe('ProductDisplay', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     globalThis.localStorage = createMockStorage();
     globalThis.alert = vi.fn();
+    mockApiGet.mockResolvedValue({ status: 200, data: { items: [] } });
   });
 
   afterEach(() => {

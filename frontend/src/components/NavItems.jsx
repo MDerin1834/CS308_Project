@@ -80,13 +80,13 @@ const NavItems = () => {
 
               <div className="d-none d-md-flex align-items-center gap-3">
                 {user && user.role === "customer" && <NotificationBell />}
-                {user && user.role !== "product_manager" && user.role !== "sales_manager" && (
+                {user && user.role !== "product_manager" && user.role !== "sales_manager" && user.role !== "support_agent" && (
                   <Link to="/wishlist">
                     <i className="icofont-heart-alt"></i>
                   </Link>
                 )}
 
-                {user && user.role !== "product_manager" && user.role !== "sales_manager" && (
+                {user && user.role !== "product_manager" && user.role !== "sales_manager" && user.role !== "support_agent" && (
                   <Link to="/past-orders">
                     <i className="icofont-box"></i>
                   </Link>
@@ -126,8 +126,13 @@ const NavItems = () => {
                     <i className="icofont-refresh"></i>
                   </Link>
                 )}
+                {user && user.role === "support_agent" && (
+                  <Link to="/support/chat">
+                    <i className="icofont-support-faq"></i>
+                  </Link>
+                )}
 
-                {(!user || (user.role !== "product_manager" && user.role !== "sales_manager")) && (
+                {(!user || (user.role !== "product_manager" && user.role !== "sales_manager" && user.role !== "support_agent")) && (
                   <Link to="/cart-page">
                     <i className="icofont-cart-alt"></i>
                   </Link>

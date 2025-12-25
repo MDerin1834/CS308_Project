@@ -1,56 +1,132 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, Send } from "lucide-react";
+import { AuthContext } from "../contexts/AuthProvider";
+import { io } from "socket.io-client";
+import api from "../api/client";
 
 const AIChatbot = () => {
+  const { user } = useContext(AuthContext);
+  const canShow = !user || user.role === "customer";
+  if (!canShow) return null;
+
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [roomId, setRoomId] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [attachment, setAttachment] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
-  // Unique conversation ID (later sent to backend)
-  const [conversationId] = useState(() => crypto.randomUUID());
+  const [messages, setMessages] = useState([]);
+  const roomRef = useRef(null);
+  const pendingRef = useRef(null);
+  const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:5050";
+  const token = localStorage.getItem("token");
 
-  const [isHumanHandoff, setIsHumanHandoff] = useState(false);
+  useEffect(() => {
+    if (!isOpen || socket) return;
+    const s = io(socketUrl, {
+      auth: token ? { token } : undefined,
+    });
 
-  const [messages, setMessages] = useState([
-    { sender: "bot", text: "Hello 👋 How can I help you today?" },
-  ]);
+    s.on("chat:joined", ({ roomId: joined }) => {
+      setRoomId(joined);
+      roomRef.current = joined;
+      if (pendingRef.current) {
+        const { text, attachments } = pendingRef.current;
+        pendingRef.current = null;
+        s.emit("chat:message", { roomId: joined, text, attachments });
+      }
+    });
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+    s.on("chat:history", ({ roomId: historyRoom, messages: history }) => {
+      if (historyRoom !== roomRef.current) return;
+      setMessages(Array.isArray(history) ? history : []);
+    });
 
-    const userMessage = { sender: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    s.on("chat:message", (msg) => {
+      if (msg?.roomId !== roomRef.current) return;
+      setMessages((prev) => [...prev, msg]);
+    });
 
-    if (isHumanHandoff) {
-      // 🔹 This is where backend socket/API would send message to agent
-      console.log("Send to human agent:", {
-        conversationId,
-        text: input,
-      });
+    const requestRoom = () => s.emit("chat:request", {});
+    s.on("connect", requestRoom);
+    requestRoom();
+
+    s.on("connect_error", () => {
+      setError("Unable to connect to support");
+    });
+    setSocket(s);
+
+    return () => {
+      s.disconnect();
+      setSocket(null);
+      setRoomId(null);
+    };
+  }, [isOpen, socketUrl, token]);
+
+  useEffect(() => {
+    if (socket && isOpen && !roomId) {
+      socket.emit("chat:request", {});
+    }
+  }, [socket, isOpen, roomId]);
+
+  const handleAttachment = (e) => {
+    setAttachment(e.target.files?.[0] || null);
+  };
+
+  const uploadAttachment = async () => {
+    if (!attachment) return [];
+    const formData = new FormData();
+    formData.append("file", attachment);
+    const res = await api.post("/api/support/attachments", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      validateStatus: () => true,
+    });
+    if (res.status === 201 && res.data?.attachment) {
+      return [res.data.attachment];
+    }
+    throw new Error(res.data?.message || "Failed to upload attachment");
+  };
+
+  const handleSend = async () => {
+    if (!roomId) {
+      if (input.trim() || attachment) {
+        try {
+          const attachments = attachment ? await uploadAttachment() : [];
+          pendingRef.current = {
+            text: input.trim(),
+            attachments,
+          };
+          setInput("");
+          setAttachment(null);
+        } catch (err) {
+          setError(err.message || "Failed to send message");
+          return;
+        }
+      }
+      socket?.emit("chat:request", {});
+      setError("Connecting to support...");
       return;
     }
-
-    // Temporary AI response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "bot",
-          text:
-            "I may need to connect you with a human support agent. Please wait… 👨‍💼",
-        },
-      ]);
-
-      // 🔹 Trigger handoff
-      setIsHumanHandoff(true);
-
-      // 🔹 Backend request placeholder
-      console.log("Handoff requested:", {
-        conversationId,
-        messages: [...messages, userMessage],
+    if (!input.trim() && !attachment) return;
+    setSending(true);
+    setError("");
+    try {
+      const attachments = attachment ? await uploadAttachment() : [];
+      socket?.emit("chat:message", {
+        roomId,
+        text: input.trim(),
+        attachments,
       });
-    }, 800);
+      setInput("");
+      setAttachment(null);
+    } catch (err) {
+      setError(err.message || "Failed to send message");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -107,7 +183,7 @@ const AIChatbot = () => {
             }}
           >
             <span style={{ fontWeight: "bold" }}>
-              {isHumanHandoff ? "Live Support 👨‍💼" : "AI Assistant 🤖"}
+              Live Support 👨‍💼
             </span>
             <button
               onClick={() => setIsOpen(false)}
@@ -133,21 +209,51 @@ const AIChatbot = () => {
               gap: "6px",
             }}
           >
-            {messages.map((msg, idx) => (
+            {messages.length === 0 && (
               <div
-                key={idx}
                 style={{
-                  alignSelf:
-                    msg.sender === "bot" ? "flex-start" : "flex-end",
-                  backgroundColor:
-                    msg.sender === "bot" ? "#f1f1f1" : "#2563EB",
-                  color: msg.sender === "bot" ? "#000" : "#fff",
+                  alignSelf: "flex-start",
+                  backgroundColor: "#f1f1f1",
+                  color: "#000",
                   padding: "6px 10px",
                   borderRadius: "8px",
                   maxWidth: "75%",
                 }}
               >
+                Hello 👋 How can we help you today?
+              </div>
+            )}
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                style={{
+                  alignSelf:
+                    msg.senderRole === "support_agent" ? "flex-start" : "flex-end",
+                  backgroundColor:
+                    msg.senderRole === "support_agent" ? "#f1f1f1" : "#2563EB",
+                  color: msg.senderRole === "support_agent" ? "#000" : "#fff",
+                  padding: "6px 10px",
+                  borderRadius: "8px",
+                  maxWidth: "75%",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
                 {msg.text}
+                {(msg.attachments || []).map((att, i) => (
+                  <a
+                    key={`${idx}-${i}`}
+                    href={`${socketUrl}${att.url}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      color: msg.senderRole === "support_agent" ? "#1f2937" : "#fff",
+                    }}
+                  >
+                    {att.name || "Attachment"}
+                  </a>
+                ))}
               </div>
             ))}
           </div>
@@ -158,11 +264,7 @@ const AIChatbot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder={
-                isHumanHandoff
-                  ? "Chat with support agent..."
-                  : "Ask me something..."
-              }
+              placeholder="Chat with support agent..."
               style={{
                 flex: 1,
                 border: "none",
@@ -170,6 +272,66 @@ const AIChatbot = () => {
                 outline: "none",
               }}
             />
+            <input
+              id="support-attach"
+              type="file"
+              onChange={handleAttachment}
+              style={{ display: "none" }}
+            />
+            <label
+              htmlFor="support-attach"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 12px",
+                cursor: "pointer",
+                borderLeft: "1px solid #e5e7eb",
+                color: "#2563EB",
+                background: "#fff",
+              }}
+              title={attachment ? attachment.name : "Attach file"}
+            >
+              📎
+            </label>
+            {attachment && (
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "0 8px",
+                  fontSize: "12px",
+                  color: "#64748b",
+                  maxWidth: "140px",
+                }}
+                title={attachment.name}
+              >
+                <span
+                  style={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "110px",
+                  }}
+                >
+                  {attachment.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setAttachment(null)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    color: "#94a3b8",
+                  }}
+                  title="Remove attachment"
+                >
+                  ✖
+                </button>
+              </div>
+            )}
             <button
               onClick={handleSend}
               style={{
@@ -178,10 +340,16 @@ const AIChatbot = () => {
                 border: "none",
                 padding: "0 12px",
               }}
+              disabled={sending || !roomId}
             >
-              <Send size={18} />
+              {sending ? "..." : <Send size={18} />}
             </button>
           </div>
+          {error && (
+            <div style={{ color: "red", padding: "6px 10px", fontSize: "12px" }}>
+              {error}
+            </div>
+          )}
         </motion.div>
       )}
     </div>

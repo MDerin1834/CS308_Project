@@ -104,7 +104,7 @@ function setupChatSocket(httpServer, corsOptions) {
     const user = buildUserFromHandshake(socket);
     socket.data.user = user;
 
-    socket.on("chat:request", ({ roomId }) => {
+    socket.on("chat:request", ({ roomId } = {}) => {
       const finalRoomId =
         roomId || `room_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 

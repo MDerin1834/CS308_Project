@@ -6,7 +6,7 @@ const logger = require("../config/logger");
 
 const router = express.Router();
 
-const uploadsDir = path.join(__dirname, "../public/uploads");
+const uploadsDir = path.join(__dirname, "../../public/uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -23,11 +23,7 @@ const storage = multer.diskStorage({
 });
 
 function fileFilter(_req, file, cb) {
-  const type = file.mimetype || "";
-  if (type.startsWith("image/") || type.startsWith("video/") || type === "application/pdf") {
-    return cb(null, true);
-  }
-  return cb(new Error("Only images, videos, or PDFs are allowed"), false);
+  return cb(null, true);
 }
 
 const upload = multer({
@@ -56,6 +52,41 @@ router.post("/attachments", upload.single("file"), (req, res) => {
     logger.error("Support attachment upload error", { error: err });
     return res.status(500).json({ message: "Failed to upload attachment" });
   }
+});
+
+function isSafeFilename(name) {
+  return /^[a-zA-Z0-9._-]+$/.test(name || "");
+}
+
+// DELETE /api/support/attachments/:filename
+router.delete("/attachments/:filename", async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    if (!isSafeFilename(filename)) {
+      return res.status(400).json({ message: "Invalid filename" });
+    }
+
+    const filePath = path.join(uploadsDir, filename);
+    await fs.promises.unlink(filePath);
+    return res.status(200).json({ message: "Attachment deleted" });
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      return res.status(404).json({ message: "Attachment not found" });
+    }
+    logger.error("Support attachment delete error", { error: err });
+    return res.status(500).json({ message: "Failed to delete attachment" });
+  }
+});
+
+router.use((err, _req, res, _next) => {
+  if (err?.message === "Only images, videos, or PDFs are allowed") {
+    return res.status(400).json({ message: err.message });
+  }
+  if (err?.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ message: "File is too large" });
+  }
+  logger.error("Support upload middleware error", { error: err });
+  return res.status(500).json({ message: "Upload failed" });
 });
 
 module.exports = router;
