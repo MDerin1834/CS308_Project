@@ -1,12 +1,12 @@
 const ratingService = require("../src/services/ratingService");
 
 jest.mock("../src/models/Rating", () => ({
-  findOne: jest.fn(),
+  find: jest.fn(),
   create: jest.fn(),
 }));
 
 jest.mock("../src/models/Order", () => ({
-  findOne: jest.fn(),
+  find: jest.fn(),
 }));
 
 jest.mock("../src/models/Product", () => ({
@@ -24,7 +24,10 @@ describe("ratingService.addRating", () => {
 
   it("should reject if product was not delivered", async () => {
     Product.findOne.mockResolvedValue({ id: "p1" });
-    Order.findOne.mockResolvedValue(null);
+    Order.find.mockReturnValue({
+      sort: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([]),
+    });
 
     await expect(ratingService.addRating("u1", "p1", 5)).rejects.toMatchObject({
       code: "NOT_DELIVERED",
@@ -47,15 +50,25 @@ describe("ratingService.addRating", () => {
     };
 
     Product.findOne.mockResolvedValue(mockProduct);
-    Order.findOne.mockResolvedValue({ id: "o1" });
-    Rating.findOne.mockResolvedValue(null);
+    Order.find.mockReturnValue({
+      sort: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue([{ _id: "o1" }]),
+    });
+    Rating.find.mockReturnValue({
+      lean: jest.fn().mockResolvedValue([]),
+    });
     Rating.create.mockResolvedValue({
       toJSON: () => ({ id: "r1", rating: 5 }),
     });
 
     const result = await ratingService.addRating("u1", "p1", 5);
 
-    expect(Rating.create).toHaveBeenCalledWith({ userId: "u1", productId: "p1", rating: 5 });
+    expect(Rating.create).toHaveBeenCalledWith({
+      userId: "u1",
+      productId: "p1",
+      rating: 5,
+      orderId: "o1",
+    });
     expect(mockProduct.ratingsCount).toBe(3);
     expect(mockProduct.ratings).toBeCloseTo((4 * 2 + 5) / 3);
     expect(mockProduct.save).toHaveBeenCalled();

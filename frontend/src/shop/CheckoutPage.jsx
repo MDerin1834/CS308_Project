@@ -87,7 +87,7 @@ const CheckoutPage = (props = {}) => {
       const tasks = items.map((it) =>
         api.post(
           "/api/cart",
-          { productId: it.id, quantity: it.quantity },
+          { productId: it.id, quantity: it.quantity, replace: true },
           { validateStatus: () => true }
         )
       );

@@ -67,7 +67,7 @@ const CartPage = () => {
       if (user) {
         const res = await api.post(
           "/api/cart",
-          { productId: item.id, quantity: nextQty },
+          { productId: item.id, quantity: nextQty, replace: true },
           { validateStatus: () => true }
         );
 

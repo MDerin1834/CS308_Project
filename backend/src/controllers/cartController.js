@@ -36,6 +36,7 @@ exports.getCart = async (req, res) => {
 // POST /api/cart  — sepete ekle/güncelle (stok doğrulaması)
 exports.addOrUpdateItem = async (req, res) => {
   const { productId, quantity } = req.body;
+  const replace = req.body?.replace === true || req.body?.mode === "set";
   if (!productId || !Number.isFinite(+quantity) || +quantity < 1) {
     return res
       .status(400)
@@ -45,29 +46,27 @@ exports.addOrUpdateItem = async (req, res) => {
   const product = await Product.findOne({ id: productId }).lean();
   if (!product) return res.status(404).json({ message: "Product not found" });
 
-  if ((product.stock ?? 0) < +quantity) {
+  let cart = await Cart.findOne({ userId: req.user.id });
+  if (!cart) cart = await Cart.create({ userId: req.user.id, items: [] });
+
+  const idx = cart.items.findIndex((it) => it.productId === productId);
+  const currentQty = idx === -1 ? 0 : cart.items[idx].quantity || 0;
+  const nextQty = replace ? +quantity : currentQty + +quantity;
+
+  if ((product.stock ?? 0) < nextQty) {
     return res
       .status(409)
       .json({ message: "Insufficient stock", available: product.stock ?? 0 });
   }
 
-  let cart = await Cart.findOne({ userId: req.user.id });
-  if (!cart) cart = await Cart.create({ userId: req.user.id, items: [] });
-
-  const idx = cart.items.findIndex((it) => it.productId === productId);
   if (idx === -1) {
     cart.items.push({
       productId,
-      quantity: +quantity,
+      quantity: nextQty,
       priceSnapshot: product.price,
     });
   } else {
-    if ((product.stock ?? 0) < +quantity) {
-      return res
-        .status(409)
-        .json({ message: "Insufficient stock", available: product.stock ?? 0 });
-    }
-    cart.items[idx].quantity = +quantity;
+    cart.items[idx].quantity = nextQty;
     cart.items[idx].priceSnapshot = product.price; 
   }
 
