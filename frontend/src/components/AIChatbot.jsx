@@ -20,6 +20,7 @@ const AIChatbot = () => {
 
   const [messages, setMessages] = useState([]);
   const roomRef = useRef(null);
+  const roomRequestRef = useRef(false);
   const pendingRef = useRef(null);
   const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:5050";
   const token = localStorage.getItem("token");
@@ -50,7 +51,11 @@ const AIChatbot = () => {
       setMessages((prev) => [...prev, msg]);
     });
 
-    const requestRoom = () => s.emit("chat:request", {});
+    const requestRoom = () => {
+      if (roomRequestRef.current) return;
+      roomRequestRef.current = true;
+      s.emit("chat:request", {});
+    };
     s.on("connect", requestRoom);
     requestRoom();
 
@@ -63,12 +68,16 @@ const AIChatbot = () => {
       s.disconnect();
       setSocket(null);
       setRoomId(null);
+      roomRequestRef.current = false;
     };
   }, [isOpen, socketUrl, token]);
 
   useEffect(() => {
     if (socket && isOpen && !roomId) {
-      socket.emit("chat:request", {});
+      if (!roomRequestRef.current) {
+        roomRequestRef.current = true;
+        socket.emit("chat:request", {});
+      }
     }
   }, [socket, isOpen, roomId]);
 
@@ -92,6 +101,10 @@ const AIChatbot = () => {
 
   const handleSend = async () => {
     if (!roomId) {
+      if (!roomRequestRef.current) {
+        roomRequestRef.current = true;
+        socket?.emit("chat:request", {});
+      }
       if (input.trim() || attachment) {
         try {
           const attachments = attachment ? await uploadAttachment() : [];
@@ -106,7 +119,6 @@ const AIChatbot = () => {
           return;
         }
       }
-      socket?.emit("chat:request", {});
       setError("Connecting to support...");
       return;
     }

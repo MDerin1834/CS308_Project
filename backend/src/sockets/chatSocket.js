@@ -4,6 +4,9 @@ const User = require("../models/User");
 const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 const Wishlist = require("../models/Wishlist");
+const Product = require("../models/Product");
+const ChatRoom = require("../models/ChatRoom");
+const ChatMessage = require("../models/ChatMessage");
 
 function buildUserFromHandshake(socket) {
   const token =
@@ -48,39 +51,33 @@ function setupChatSocket(httpServer, corsOptions) {
     if (!rooms.has(roomId)) {
       rooms.set(roomId, {
         roomId,
-        messages: [],
         participants: new Map(),
-        createdBy: null,
-        claimedBy: null,
-        customerId: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       });
     }
     return rooms.get(roomId);
   }
 
-  function buildRoomSummary(room) {
+  function buildRoomSummary(room, dbRoom) {
     const participants = Array.from(room.participants.values()).map((p) => ({
       userId: p.userId,
       role: p.role,
     }));
     const hasCustomer = participants.some((p) => p.role === "customer" || p.role === "guest");
-    const lastMessage = room.messages[room.messages.length - 1];
     return {
-      roomId: room.roomId,
+      roomId: dbRoom.roomId,
       participants,
-      messageCount: room.messages.length,
-      updatedAt: room.updatedAt,
-      claimedBy: room.claimedBy,
+      messageCount: dbRoom.messageCount || 0,
+      updatedAt: dbRoom.updatedAt,
+      claimedBy: dbRoom.claimedBy || null,
       hasCustomer,
-      lastMessage: lastMessage
-        ? { text: lastMessage.text, createdAt: lastMessage.createdAt }
+      lastMessage: dbRoom.lastMessage
+        ? { text: dbRoom.lastMessage, createdAt: dbRoom.lastMessageAt }
         : null,
     };
   }
 
-  async function buildCustomerContext(userId) {
+  async function buildCustomerContext(userId, options = {}) {
+    const limit = Number.isFinite(Number(options.limit)) ? Number(options.limit) : 5;
     const user = await User.findById(userId, {
       email: 1,
       username: 1,
@@ -89,14 +86,31 @@ function setupChatSocket(httpServer, corsOptions) {
     }).lean();
 
     const cart = await Cart.findOne({ userId }).lean();
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 }).limit(5).lean();
+    const ordersQuery = Order.find({ userId }).sort({ createdAt: -1 });
+    const orders = limit > 0 ? await ordersQuery.limit(limit).lean() : await ordersQuery.lean();
     const wishlist = await Wishlist.findOne({ userId }).lean();
+    const wishlistItems = Array.isArray(wishlist?.items) ? wishlist.items : [];
+    const wishlistProductIds = wishlistItems.map((item) => item.productId).filter(Boolean);
+    const wishlistProducts = wishlistProductIds.length
+      ? await Product.find({ id: { $in: wishlistProductIds } }, { id: 1, name: 1, imageURL: 1, img: 1 }).lean()
+      : [];
+    const wishlistMap = new Map(wishlistProducts.map((p) => [p.id, p]));
+    const wishlistDetails = wishlistItems.map((item) => {
+      const product = wishlistMap.get(item.productId);
+      return {
+        productId: item.productId,
+        name: product?.name || "",
+        imageURL: product?.imageURL || product?.img || "",
+        addedAt: item.addedAt,
+      };
+    });
 
     return {
       profile: user || null,
       cart: cart || { items: [] },
       orders: orders || [],
       wishlist: wishlist || { items: [] },
+      wishlistItems: wishlistDetails,
     };
   }
 
@@ -104,17 +118,19 @@ function setupChatSocket(httpServer, corsOptions) {
     const user = buildUserFromHandshake(socket);
     socket.data.user = user;
 
-    socket.on("chat:request", ({ roomId } = {}) => {
-      const finalRoomId =
-        roomId || `room_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    socket.on("chat:request", async ({ roomId } = {}) => {
+      const finalRoomId = roomId || `room_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
       const room = ensureRoom(finalRoomId);
-      if (!room.createdBy) {
-        room.createdBy = user.id;
-      }
+      const update = { $setOnInsert: { createdBy: user.id } };
       if (user.role === "customer") {
-        room.customerId = user.id;
+        update.$set = { customerId: user.id };
       }
+      await ChatRoom.findOneAndUpdate(
+        { roomId: finalRoomId },
+        update,
+        { upsert: true, new: true }
+      );
 
       socket.join(finalRoomId);
       room.participants.set(socket.id, {
@@ -123,14 +139,20 @@ function setupChatSocket(httpServer, corsOptions) {
         role: user.role,
         joinedAt: new Date().toISOString(),
       });
-      room.updatedAt = new Date().toISOString();
 
       socket.emit("chat:joined", { roomId: finalRoomId });
-      socket.emit("chat:history", { roomId: finalRoomId, messages: room.messages });
-      io.emit("chat:rooms", { rooms: Array.from(rooms.values()).map(buildRoomSummary) });
+      const history = await ChatMessage.find({ roomId: finalRoomId })
+        .sort({ createdAt: 1 })
+        .limit(200)
+        .lean();
+      socket.emit("chat:history", { roomId: finalRoomId, messages: history });
+
+      const dbRooms = await ChatRoom.find().sort({ updatedAt: -1 }).lean();
+      const list = dbRooms.map((dbRoom) => buildRoomSummary(ensureRoom(dbRoom.roomId), dbRoom));
+      io.emit("chat:rooms", { rooms: list });
     });
 
-    socket.on("chat:join", ({ roomId }) => {
+    socket.on("chat:join", async ({ roomId }) => {
       if (!roomId) return;
 
       const room = ensureRoom(roomId);
@@ -142,15 +164,19 @@ function setupChatSocket(httpServer, corsOptions) {
         role: user.role,
         joinedAt: new Date().toISOString(),
       });
-      room.updatedAt = new Date().toISOString();
       if (user.role === "customer") {
-        room.customerId = user.id;
+        await ChatRoom.findOneAndUpdate(
+          { roomId },
+          { $set: { customerId: user.id } },
+          { upsert: true }
+        );
       }
 
-      socket.emit("chat:history", {
-        roomId,
-        messages: room.messages,
-      });
+      const history = await ChatMessage.find({ roomId })
+        .sort({ createdAt: 1 })
+        .limit(200)
+        .lean();
+      socket.emit("chat:history", { roomId, messages: history });
 
       io.to(roomId).emit("chat:presence", {
         roomId,
@@ -161,7 +187,7 @@ function setupChatSocket(httpServer, corsOptions) {
       });
     });
 
-    socket.on("chat:message", ({ roomId, text, attachments }) => {
+    socket.on("chat:message", async ({ roomId, text, attachments }) => {
       if (!roomId) return;
       const room = rooms.get(roomId);
       if (!room || !room.participants.has(socket.id)) return;
@@ -181,15 +207,27 @@ function setupChatSocket(httpServer, corsOptions) {
 
       const msg = createMessage({ roomId, text: clean, user });
       msg.attachments = cleanAttachments;
+      const created = await ChatMessage.create({
+        roomId,
+        senderId: msg.senderId,
+        senderRole: msg.senderRole,
+        text: msg.text,
+        attachments: msg.attachments,
+      });
 
-      room.messages.push(msg);
-      room.updatedAt = new Date().toISOString();
+      await ChatRoom.findOneAndUpdate(
+        { roomId },
+        {
+          $set: {
+            lastMessage: msg.text,
+            lastMessageAt: new Date(),
+          },
+          $inc: { messageCount: 1 },
+        },
+        { upsert: true }
+      );
 
-      if (room.messages.length > 200) {
-        room.messages = room.messages.slice(-200);
-      }
-
-      io.to(roomId).emit("chat:message", msg);
+      io.to(roomId).emit("chat:message", created.toJSON());
     });
 
     socket.on("chat:typing", ({ roomId, isTyping }) => {
@@ -202,56 +240,55 @@ function setupChatSocket(httpServer, corsOptions) {
       });
     });
 
-    socket.on("chat:listRooms", () => {
+    socket.on("chat:listRooms", async () => {
       if (user.role !== "support_agent") {
         socket.emit("chat:rooms", { rooms: [] });
         return;
       }
 
-      const list = Array.from(rooms.values())
-        .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
-        .map(buildRoomSummary);
+      const dbRooms = await ChatRoom.find().sort({ updatedAt: -1 }).lean();
+      const list = dbRooms.map((dbRoom) => buildRoomSummary(ensureRoom(dbRoom.roomId), dbRoom));
 
       socket.emit("chat:rooms", { rooms: list });
     });
 
-    socket.on("chat:claim", ({ roomId }) => {
+    socket.on("chat:claim", async ({ roomId }) => {
       if (user.role !== "support_agent") return;
       if (!roomId) return;
-      const room = rooms.get(roomId);
-      if (!room) return;
-      if (room.claimedBy && room.claimedBy !== user.id) {
+      const dbRoom = await ChatRoom.findOne({ roomId });
+      if (!dbRoom) return;
+      if (dbRoom.claimedBy && dbRoom.claimedBy !== user.id) {
         socket.emit("chat:claim:error", { roomId, message: "Already claimed" });
         return;
       }
-      room.claimedBy = user.id;
-      room.updatedAt = new Date().toISOString();
-      io.emit("chat:claim", { roomId, claimedBy: room.claimedBy });
+      dbRoom.claimedBy = user.id;
+      await dbRoom.save();
+      io.emit("chat:claim", { roomId, claimedBy: dbRoom.claimedBy });
     });
 
-    socket.on("chat:release", ({ roomId }) => {
+    socket.on("chat:release", async ({ roomId }) => {
       if (user.role !== "support_agent") return;
       if (!roomId) return;
-      const room = rooms.get(roomId);
-      if (!room) return;
-      if (room.claimedBy && room.claimedBy !== user.id) return;
-      room.claimedBy = null;
-      room.updatedAt = new Date().toISOString();
+      const dbRoom = await ChatRoom.findOne({ roomId });
+      if (!dbRoom) return;
+      if (dbRoom.claimedBy && dbRoom.claimedBy !== user.id) return;
+      dbRoom.claimedBy = null;
+      await dbRoom.save();
       io.emit("chat:claim", { roomId, claimedBy: null });
     });
 
-    socket.on("chat:getContext", async ({ roomId }) => {
+    socket.on("chat:getContext", async ({ roomId, limit } = {}) => {
       if (user.role !== "support_agent") return;
-      const room = rooms.get(roomId);
-      if (!room) return;
+      const dbRoom = await ChatRoom.findOne({ roomId });
+      if (!dbRoom) return;
 
-      if (!room.customerId || String(room.customerId).startsWith("guest_")) {
+      if (!dbRoom.customerId || String(dbRoom.customerId).startsWith("guest_")) {
         socket.emit("chat:context", { roomId, guest: true });
         return;
       }
 
       try {
-        const context = await buildCustomerContext(room.customerId);
+        const context = await buildCustomerContext(dbRoom.customerId, { limit });
         socket.emit("chat:context", { roomId, guest: false, context });
       } catch (err) {
         socket.emit("chat:context", { roomId, guest: false, error: "Failed to load context" });

@@ -13,6 +13,8 @@ const SupportAgentChatPage = () => {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [showAllOrders, setShowAllOrders] = useState(false);
+  const [showWishlistItems, setShowWishlistItems] = useState(false);
   const activeRoomRef = useRef(null);
 
   const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:5050";
@@ -79,8 +81,10 @@ const SupportAgentChatPage = () => {
     setActiveRoom(roomId);
     setMessages([]);
     setContext(null);
+    setShowAllOrders(false);
+    setShowWishlistItems(false);
     socket?.emit("chat:join", { roomId });
-    socket?.emit("chat:getContext", { roomId });
+    socket?.emit("chat:getContext", { roomId, limit: 5 });
   };
 
   const claimRoom = () => {
@@ -91,6 +95,18 @@ const SupportAgentChatPage = () => {
   const releaseRoom = () => {
     if (!activeRoom) return;
     socket?.emit("chat:release", { roomId: activeRoom });
+  };
+
+  const loadAllOrders = () => {
+    if (!activeRoom) return;
+    socket?.emit("chat:getContext", { roomId: activeRoom, limit: 0 });
+    setShowAllOrders(true);
+  };
+
+  const loadRecentOrders = () => {
+    if (!activeRoom) return;
+    socket?.emit("chat:getContext", { roomId: activeRoom, limit: 5 });
+    setShowAllOrders(false);
   };
 
   const handleAttachment = (e) => {
@@ -149,11 +165,13 @@ const SupportAgentChatPage = () => {
           </button>
         </div>
         {loadingRooms && <p className="text-muted">Loading rooms...</p>}
-        {!loadingRooms && rooms.length === 0 && (
+        {!loadingRooms && rooms.filter((room) => (room.messageCount || 0) > 0).length === 0 && (
           <p className="text-muted">No active chats.</p>
         )}
         <div className="list-group">
-          {rooms.map((room) => (
+          {rooms
+            .filter((room) => (room.messageCount || 0) > 0)
+            .map((room) => (
             <button
               key={room.roomId}
               className={`list-group-item list-group-item-action ${
@@ -191,15 +209,48 @@ const SupportAgentChatPage = () => {
             </div>
             <div className="mb-3">
               <strong>Recent Orders</strong>
-              {(context.orders || []).slice(0, 3).map((order) => (
+              {(context.orders || []).map((order) => (
                 <div key={order._id || order.id}>
                   {order.status} • ${Number(order.total || 0).toFixed(2)}
                 </div>
               ))}
+              <div className="d-flex gap-2 mt-2">
+                {!showAllOrders && (
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={loadAllOrders}
+                  >
+                    Show all orders
+                  </button>
+                )}
+                {showAllOrders && (
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={loadRecentOrders}
+                  >
+                    Show recent
+                  </button>
+                )}
+              </div>
             </div>
             <div>
               <strong>Wishlist</strong>
               <div>{context.wishlist?.items?.length || 0} items</div>
+              <button
+                className="btn btn-sm btn-outline-secondary mt-2"
+                onClick={() => setShowWishlistItems((prev) => !prev)}
+              >
+                {showWishlistItems ? "Hide items" : "Show items"}
+              </button>
+              {showWishlistItems && (
+                <div className="mt-2">
+                  {(context.wishlistItems || []).map((item) => (
+                    <div key={item.productId}>
+                      {item.name || item.productId}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
