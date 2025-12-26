@@ -272,7 +272,14 @@ const ProductDisplay = ({ item, onDiscountUpdate }) => {
         </p>
 
         {stock > 0 ? (
-          <p style={{ color: "green", fontWeight: "500" }}>✅ In Stock: {stock} available</p>
+          <p
+            style={{
+              color: stock <= 5 ? "#f97316" : "green",
+              fontWeight: "500",
+            }}
+          >
+            ✅ In Stock: {stock} available
+          </p>
         ) : (
           <p style={{ color: "red", fontWeight: "500" }}>❌ Out of Stock</p>
         )}

@@ -16,20 +16,32 @@ async function addRating(userId, productId, rating) {
     throw err;
   }
 
-  const deliveredOrder = await Order.findOne({
-    userId,
-    status: "delivered",
-    "items.productId": productId,
-  });
+  const deliveredOrders = await Order.find(
+    {
+      userId,
+      status: "delivered",
+      "items.productId": productId,
+    },
+    { _id: 1 }
+  )
+    .sort({ createdAt: -1 })
+    .lean();
 
-  if (!deliveredOrder) {
+  if (!deliveredOrders.length) {
     const err = new Error("Not delivered");
     err.code = "NOT_DELIVERED";
     throw err;
   }
 
-  const existing = await Rating.findOne({ userId, productId });
-  if (existing) {
+  const deliveredOrderIds = deliveredOrders.map((o) => o._id);
+  const existingRatings = await Rating.find(
+    { userId, productId, orderId: { $in: deliveredOrderIds } },
+    { orderId: 1 }
+  ).lean();
+  const ratedOrderIds = new Set(existingRatings.map((r) => String(r.orderId)));
+  const nextOrder = deliveredOrders.find((o) => !ratedOrderIds.has(String(o._id)));
+
+  if (!nextOrder) {
     const err = new Error("Already rated");
     err.code = "ALREADY_RATED";
     throw err;
@@ -39,6 +51,7 @@ async function addRating(userId, productId, rating) {
     userId,
     productId,
     rating,
+    orderId: nextOrder._id,
   });
 
   const total = product.ratings * product.ratingsCount + rating;

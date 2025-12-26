@@ -68,16 +68,32 @@ const Review = ({ productId, canReview }) => {
       {error && <p style={{ color: "red" }}>{error}</p>}
       <form className="row" onSubmit={handleSubmit}>
         <div className="col-md-4 col-12">
-          <div className="rating">
-            <span className="rating-title">Your Rating (1-5): </span>
-            <input
-              type="number"
-              min="1"
-              max="5"
-              className="form-control"
-              value={rating}
-              onChange={(e) => setRating(Number(e.target.value))}
-            />
+          <div className="rating d-flex align-items-center gap-2">
+            <span className="rating-title">Your Rating:</span>
+            <div className="d-flex align-items-center">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRating(value)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    padding: "2px",
+                    cursor: "pointer",
+                  }}
+                  aria-label={`${value} star`}
+                >
+                  <i
+                    className="icofont-star"
+                    style={{ color: value <= rating ? "#f8c51c" : "#d3d3d3" }}
+                  ></i>
+                </button>
+              ))}
+              <span className="ms-2 text-muted" style={{ fontSize: "0.9rem" }}>
+                {rating || "Select"}
+              </span>
+            </div>
           </div>
         </div>
         <div className="col-md-8 col-12">
