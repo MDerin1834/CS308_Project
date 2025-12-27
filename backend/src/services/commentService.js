@@ -20,15 +20,34 @@ async function addComment(userId, productId, commentText) {
     throw err;
   }
 
-  const deliveredOrder = await Order.findOne({
-    userId,
-    status: "delivered",
-    "items.productId": productId,
-  });
+  const deliveredOrders = await Order.find(
+    {
+      userId,
+      status: "delivered",
+      "items.productId": productId,
+    },
+    { _id: 1 }
+  )
+    .sort({ createdAt: -1 })
+    .lean();
 
-  if (!deliveredOrder) {
+  if (!deliveredOrders.length) {
     const err = new Error("Not delivered");
     err.code = "NOT_DELIVERED";
+    throw err;
+  }
+
+  const deliveredOrderIds = deliveredOrders.map((o) => o._id);
+  const existingComments = await Comment.find(
+    { userId, productId, orderId: { $in: deliveredOrderIds } },
+    { orderId: 1 }
+  ).lean();
+  const commentedOrderIds = new Set(existingComments.map((c) => String(c.orderId)));
+  const nextOrder = deliveredOrders.find((o) => !commentedOrderIds.has(String(o._id)));
+
+  if (!nextOrder) {
+    const err = new Error("Comment limit reached");
+    err.code = "COMMENT_LIMIT";
     throw err;
   }
 
@@ -36,6 +55,7 @@ async function addComment(userId, productId, commentText) {
     userId,
     productId,
     comment: commentText,
+    orderId: nextOrder._id,
     status: "pending",
   });
 

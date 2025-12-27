@@ -5,6 +5,11 @@ const ratingSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     productId: { type: String, required: true },
     rating: { type: Number, min: 1, max: 5, required: true },
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+    },
   },
   { timestamps: true }
 );

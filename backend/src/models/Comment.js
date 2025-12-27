@@ -5,6 +5,11 @@ const commentSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     productId: { type: String, required: true }, 
     comment: { type: String, required: true, minlength: 1, maxlength: 2000 },
+    orderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+    },
     status: {
         type: String,
         enum: ["pending", "approved", "rejected"],

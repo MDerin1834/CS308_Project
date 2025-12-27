@@ -472,6 +472,11 @@ router.post("/:id/comment", auth, async (req, res) => {
         .status(403)
         .json({ message: "You can only comment after product is delivered" });
 
+    if (err.code === "COMMENT_LIMIT")
+      return res
+        .status(409)
+        .json({ message: "You have already commented for this delivery" });
+
     return res.status(500).json({ message: "Failed to submit comment" });
   }
 });
