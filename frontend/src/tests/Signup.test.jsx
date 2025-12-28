@@ -43,7 +43,7 @@ const fillSignupForm = async (
     addressLine1 = 'Street 1',
     addressLine2 = 'Apt 1',
     city = 'Istanbul',
-    country = 'TR',
+    country = 'Turkey',
     postalCode = '34000',
     phone = '5555555',
   },
@@ -52,16 +52,26 @@ const fillSignupForm = async (
   await user.type(screen.getByPlaceholderText(/user name/i), name);
   await user.type(screen.getByPlaceholderText(/full name/i), fullName);
   await user.type(screen.getByPlaceholderText(/email/i), email);
+  await user.click(screen.getByRole('button', { name: /next/i }));
+
+  const countrySelect = await screen.findByRole('combobox');
+  await user.selectOptions(countrySelect, country);
+
+  const selects = await screen.findAllByRole('combobox');
+  const citySelect = selects[1];
+  await user.selectOptions(citySelect, city);
+
   await user.type(screen.getByPlaceholderText(/tax id/i), taxId);
   await user.type(screen.getByPlaceholderText(/address line 1/i), addressLine1);
   if (addressLine2) {
     await user.type(screen.getByPlaceholderText(/address line 2/i), addressLine2);
   }
-  await user.type(screen.getByPlaceholderText(/city/i), city);
-  await user.type(screen.getByPlaceholderText(/country/i), country);
   await user.type(screen.getByPlaceholderText(/postal code/i), postalCode);
   await user.type(screen.getByPlaceholderText(/phone/i), phone);
-  await user.type(screen.getByPlaceholderText(/^password/i), password);
+
+  await user.click(screen.getByRole('button', { name: /next/i }));
+
+  await user.type(screen.getByPlaceholderText(/^password$/i), password);
   await user.type(screen.getByPlaceholderText(/confirm password/i), confirmPassword);
   await user.click(screen.getByRole('button', { name: /get started now/i }));
 };
@@ -99,15 +109,14 @@ describe('Signup', () => {
     renderWithAuth(<Signup />, { registerUser, signUpWithGmail: vi.fn() });
     const user = userEvent.setup();
 
-    await fillSignupForm(user, {
-      name: '   ',
-      email: 'trim@example.com',
-      password: 'Password123!',
-      confirmPassword: 'Password123!',
-    });
+    await user.clear(screen.getByPlaceholderText(/user name/i));
+    await user.type(screen.getByPlaceholderText(/user name/i), '   ');
+    await user.type(screen.getByPlaceholderText(/full name/i), 'Full Name');
+    await user.type(screen.getByPlaceholderText(/email/i), 'trim@example.com');
+    await user.click(screen.getByRole('button', { name: /next/i }));
 
     expect(registerUser).not.toHaveBeenCalled();
-    expect(await screen.findByText(/user name is required/i)).toBeInTheDocument();
+    expect(await screen.findByText(/please fill in all fields/i)).toBeInTheDocument();
   });
 
   it('shows backend error messages when registration fails', async () => {
@@ -160,7 +169,7 @@ describe('Signup', () => {
         homeAddress: expect.objectContaining({
           addressLine1: 'Street 1',
           city: 'Istanbul',
-          country: 'TR',
+          country: 'Turkey',
           postalCode: '34000',
         }),
       }),

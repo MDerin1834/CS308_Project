@@ -58,8 +58,15 @@ const Signup = () => {
 
   const handleNext = () => {
     if (step === 1) {
-      if (!formData.name || !formData.fullName || !formData.email) {
+      const name = formData.name.trim();
+      const fullName = formData.fullName.trim();
+      const email = formData.email.trim();
+      if (!name || !fullName || !email) {
         setErrorMessage("Please fill in all fields");
+        return;
+      }
+      if (!email.includes("@")) {
+        setErrorMessage("Please enter a valid email address");
         return;
       }
     } else if (step === 2) {
