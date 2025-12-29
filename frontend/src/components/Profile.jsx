@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../contexts/AuthProvider";
+import PageHeader from "../components/PageHeader";
 
 const Profile = () => {
   const { user, fetchProfile, updateProfile } = useContext(AuthContext);
@@ -78,101 +79,103 @@ const Profile = () => {
   }
 
   return (
-    <div className="container py-5">
-      <h3 className="mb-4">My Profile</h3>
-      <form className="account-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Full Name</label>
-          <input
-            type="text"
-            name="fullName"
-            value={form.fullName}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Email</label>
-          <input type="email" value={user.email} disabled />
-        </div>
-        <div className="form-group">
-          <label>Tax ID</label>
-          <input
-            type="text"
-            name="taxId"
-            value={form.taxId}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Address Line 1</label>
-          <input
-            type="text"
-            name="addressLine1"
-            value={form.addressLine1}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Address Line 2</label>
-          <input
-            type="text"
-            name="addressLine2"
-            value={form.addressLine2}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
-          <label>City</label>
-          <input
-            type="text"
-            name="city"
-            value={form.city}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Country</label>
-          <input
-            type="text"
-            name="country"
-            value={form.country}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Postal Code</label>
-          <input
-            type="text"
-            name="postalCode"
-            value={form.postalCode}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Phone (optional)</label>
-          <input
-            type="text"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-          />
-        </div>
+    <div>
+      <PageHeader title="My Profile" curPage="Profile" />
+      <div className="container padding-tb">
+        <form className="account-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              name="fullName"
+              value={form.fullName}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Email</label>
+            <input type="email" value={user.email} disabled />
+          </div>
+          <div className="form-group">
+            <label>Tax ID</label>
+            <input
+              type="text"
+              name="taxId"
+              value={form.taxId}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Address Line 1</label>
+            <input
+              type="text"
+              name="addressLine1"
+              value={form.addressLine1}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Address Line 2</label>
+            <input
+              type="text"
+              name="addressLine2"
+              value={form.addressLine2}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>City</label>
+            <input
+              type="text"
+              name="city"
+              value={form.city}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Country</label>
+            <input
+              type="text"
+              name="country"
+              value={form.country}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Postal Code</label>
+            <input
+              type="text"
+              name="postalCode"
+              value={form.postalCode}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Phone (optional)</label>
+            <input
+              type="text"
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+            />
+          </div>
 
-        {error && <div className="text-danger mb-2">{error}</div>}
-        {message && <div className="text-success mb-2">{message}</div>}
+          {error && <div className="text-danger mb-2">{error}</div>}
+          {message && <div className="text-success mb-2">{message}</div>}
 
-        <div className="form-group">
-          <button className="lab-btn" type="submit" disabled={loading}>
-            <span>{loading ? "Saving..." : "Save Profile"}</span>
-          </button>
-        </div>
-      </form>
+          <div className="form-group">
+            <button className="lab-btn" type="submit" disabled={loading}>
+              <span>{loading ? "Saving..." : "Save Profile"}</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

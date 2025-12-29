@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/client";
+import PageHeader from "../components/PageHeader";
 
 const PendingComments = () => {
   const [comments, setComments] = useState([]);
@@ -45,60 +46,62 @@ const PendingComments = () => {
   };
 
   return (
-    <div className="container py-5">
-      <h2 className="mb-4">Pending Comments</h2>
-      {loading && <p>Loading comments...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {!loading && comments.length === 0 && !error && <p>No pending comments.</p>}
+    <div>
+      <PageHeader title="Product Manager" curPage="Pending Comments" />
+      <div className="container padding-tb">
+        {loading && <p>Loading comments...</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
+        {!loading && comments.length === 0 && !error && <p>No pending comments.</p>}
 
-      {!loading && comments.length > 0 && (
-        <div className="table-responsive">
-          <table className="table table-bordered align-middle">
-            <thead>
-              <tr>
-                <th>Comment ID</th>
-                <th>Product ID</th>
-                <th>User</th>
-                <th>Rating</th>
-                <th>Comment</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comments.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.id}</td>
-                  <td>{c.productId}</td>
-                  <td>
-                    {c.userName || "-"}<br />
-                    <small>{c.userEmail || c.userId || ""}</small>
-                  </td>
-                  <td>{c.rating ? `${c.rating} ⭐` : "-"}</td>
-                  <td>{c.comment}</td>
-                  <td>{c.createdAt ? new Date(c.createdAt).toLocaleString() : "-"}</td>
-                  <td className="d-flex gap-2">
-                    <button
-                      className="btn btn-sm btn-success"
-                      onClick={() => updateStatus(c.id, "approve")}
-                      disabled={updatingId === c.id}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => updateStatus(c.id, "reject")}
-                      disabled={updatingId === c.id}
-                    >
-                      Reject
-                    </button>
-                  </td>
+        {!loading && comments.length > 0 && (
+          <div className="table-responsive">
+            <table className="table table-bordered align-middle">
+              <thead>
+                <tr>
+                  <th>Comment ID</th>
+                  <th>Product ID</th>
+                  <th>User</th>
+                  <th>Rating</th>
+                  <th>Comment</th>
+                  <th>Created</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {comments.map((c) => (
+                  <tr key={c.id}>
+                    <td>{c.id}</td>
+                    <td>{c.productId}</td>
+                    <td>
+                      {c.userName || "-"}<br />
+                      <small>{c.userEmail || c.userId || ""}</small>
+                    </td>
+                    <td>{c.rating ? `${c.rating} ⭐` : "-"}</td>
+                    <td>{c.comment}</td>
+                    <td>{c.createdAt ? new Date(c.createdAt).toLocaleString() : "-"}</td>
+                    <td className="d-flex gap-2">
+                      <button
+                        className="btn btn-sm btn-success"
+                        onClick={() => updateStatus(c.id, "approve")}
+                        disabled={updatingId === c.id}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => updateStatus(c.id, "reject")}
+                        disabled={updatingId === c.id}
+                      >
+                        Reject
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

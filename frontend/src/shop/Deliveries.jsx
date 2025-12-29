@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/client";
+import PageHeader from "../components/PageHeader";
 
 const statusOptions = ["processing", "in-transit", "delivered", "cancelled"];
 
@@ -87,77 +88,79 @@ const Deliveries = () => {
   };
 
   return (
-    <div className="container py-5">
-      <h2 className="mb-4">Deliveries</h2>
-      {loading && <p>Loading deliveries...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {!loading && deliveries.length === 0 && !error && <p>No deliveries found.</p>}
+    <div>
+      <PageHeader title="Product Manager" curPage="Deliveries" />
+      <div className="container padding-tb">
+        {loading && <p>Loading deliveries...</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
+        {!loading && deliveries.length === 0 && !error && <p>No deliveries found.</p>}
 
-      {!loading && deliveries.length > 0 && (
-        <div className="table-responsive">
-          <table className="table table-bordered align-middle">
-            <thead>
-              <tr>
-                <th>Delivery ID</th>
-                <th>Customer ID</th>
-                <th>Customer Username</th>
-                <th>Invoice</th>
-                <th>Products</th>
-                <th>Total</th>
-                <th>Address</th>
-                <th>Status</th>
-                <th>Completed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deliveries.map((d) => (
-                <tr key={d.id}>
-                  <td>{d.id}</td>
-                  <td>{d.customerId || "-"}</td>
-                  <td>{d.customerUsername || "-"}</td>
-                  <td>
-                    <div>{d.invoiceNumber || "-"}</div>
-                    {d.invoiceNumber && (
-                      <button
-                        className="btn btn-sm btn-outline-primary mt-1"
-                        onClick={() => handleDownload(d.id, d.invoiceNumber)}
-                        disabled={downloadingId === d.id}
-                      >
-                        {downloadingId === d.id ? "Downloading..." : "Download PDF"}
-                      </button>
-                    )}
-                  </td>
-                  <td>
-                    {d.items?.map((item, idx) => (
-                      <div key={idx}>
-                        {item.productId ? `[${item.productId}] ` : ""}
-                        {item.name || ""} x {item.quantity} ({item.lineTotal ? `$${item.lineTotal}` : ""})
-                      </div>
-                    ))}
-                  </td>
-                  <td>${Number(d.total || 0).toFixed(2)}</td>
-                  <td>{formatAddress(d.shippingAddress)}</td>
-                  <td>
-                    <select
-                      className="form-select form-select-sm"
-                      value={d.status}
-                      onChange={(e) => handleStatusChange(d.id, e.target.value)}
-                      disabled={updatingId === d.id}
-                    >
-                      {statusOptions.map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>{d.completion ? "Yes" : "No"}</td>
+        {!loading && deliveries.length > 0 && (
+          <div className="table-responsive">
+            <table className="table table-bordered align-middle">
+              <thead>
+                <tr>
+                  <th>Delivery ID</th>
+                  <th>Customer ID</th>
+                  <th>Customer Username</th>
+                  <th>Invoice</th>
+                  <th>Products</th>
+                  <th>Total</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                  <th>Completed</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {deliveries.map((d) => (
+                  <tr key={d.id}>
+                    <td>{d.id}</td>
+                    <td>{d.customerId || "-"}</td>
+                    <td>{d.customerUsername || "-"}</td>
+                    <td>
+                      <div>{d.invoiceNumber || "-"}</div>
+                      {d.invoiceNumber && (
+                        <button
+                          className="btn btn-sm btn-outline-primary mt-1"
+                          onClick={() => handleDownload(d.id, d.invoiceNumber)}
+                          disabled={downloadingId === d.id}
+                        >
+                          {downloadingId === d.id ? "Downloading..." : "Download PDF"}
+                        </button>
+                      )}
+                    </td>
+                    <td>
+                      {d.items?.map((item, idx) => (
+                        <div key={idx}>
+                          {item.productId ? `[${item.productId}] ` : ""}
+                          {item.name || ""} x {item.quantity} ({item.lineTotal ? `$${item.lineTotal}` : ""})
+                        </div>
+                      ))}
+                    </td>
+                    <td>${Number(d.total || 0).toFixed(2)}</td>
+                    <td>{formatAddress(d.shippingAddress)}</td>
+                    <td>
+                      <select
+                        className="form-select form-select-sm"
+                        value={d.status}
+                        onChange={(e) => handleStatusChange(d.id, e.target.value)}
+                        disabled={updatingId === d.id}
+                      >
+                        {statusOptions.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>{d.completion ? "Yes" : "No"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

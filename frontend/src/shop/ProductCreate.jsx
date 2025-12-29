@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { AuthContext } from "../contexts/AuthProvider";
+import PageHeader from "../components/PageHeader";
 
 const initialForm = {
   id: "",
@@ -119,11 +120,12 @@ const ProductCreate = () => {
   }
 
   return (
-    <div className="container padding-tb">
-      <h2>Create Product</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
-      <form onSubmit={handleSubmit} className="row g-3">
+    <div>
+      <PageHeader title="Product Manager" curPage="Create Product" />
+      <div className="container padding-tb">
+        {error && <p style={{ color: "red" }}>{error}</p>}
+        {success && <p style={{ color: "green" }}>{success}</p>}
+        <form onSubmit={handleSubmit} className="row g-3">
         <div className="col-md-4">
           <label className="form-label">Product ID *</label>
           <input
@@ -298,7 +300,8 @@ const ProductCreate = () => {
             <span>{submitting ? "Submitting..." : "Create Product"}</span>
           </button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
