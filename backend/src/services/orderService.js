@@ -4,7 +4,22 @@ const Order = require("../models/Order");
 const User = require("../models/User");
 
 const VALID_STATUSES = ["processing", "cancelled", "in-transit", "delivered"];
-const COMPLETABLE_STATUSES = ["processing", "in-transit", "delivered"];
+const COMPLETABLE_STATUSES = ["processing", "in-transit", "delivered", "cancelled"];
+
+async function restockOrderItems(items = []) {
+  if (!Array.isArray(items) || items.length === 0) return;
+  const productIds = items.map((item) => item.productId);
+  const products = await Product.find({ id: { $in: productIds } });
+  const productMap = new Map(products.map((p) => [p.id, p]));
+
+  for (const item of items) {
+    const product = productMap.get(item.productId);
+    if (!product) continue;
+    product.stock = (product.stock ?? 0) + (item.quantity || 0);
+  }
+
+  await Promise.all(products.map((p) => p.save()));
+}
 
 async function createOrderFromCart(userId, payload) {
   const cart = await Cart.findOne({ userId });
@@ -122,6 +137,8 @@ async function cancelOrder(orderId, userId) {
     throw err;
   }
 
+  await restockOrderItems(order.items);
+
   order.status = "cancelled";
   await order.save();
 
@@ -140,6 +157,10 @@ async function updateOrderStatus(orderId, newStatus) {
     const err = new Error("Order not found");
     err.code = "ORDER_NOT_FOUND";
     throw err;
+  }
+
+  if (newStatus === "cancelled" && order.status !== "cancelled") {
+    await restockOrderItems(order.items);
   }
 
   order.status = newStatus;
