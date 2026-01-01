@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const path = require("path");
+const fs = require("fs");
 const multer = require("multer");
 
 const auth = require("../middleware/auth");
@@ -14,9 +15,14 @@ const { sendWishlistDiscountEmail } = require("../services/emailService");
 const logger = require("../config/logger");
 
 
+const imagesDir = path.join(__dirname, "../../public/images");
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/images"));
+    cb(null, imagesDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -181,6 +187,27 @@ router.delete(
       return res.status(404).json({ message: "Product not found" });
     }
 
+    const imagePath = deleted.imageURL || deleted.img || "";
+    let pathname = imagePath;
+    if (/^https?:\/\//i.test(imagePath)) {
+      try {
+        pathname = new URL(imagePath).pathname;
+      } catch {
+        pathname = imagePath;
+      }
+    }
+    if (pathname.startsWith("/images/")) {
+      const filename = path.basename(pathname);
+      const fullPath = path.join(imagesDir, filename);
+      try {
+        await fs.promises.unlink(fullPath);
+      } catch (err) {
+        if (err.code !== "ENOENT") {
+          logger.error("Failed to delete product image", { error: err, filename });
+        }
+      }
+    }
+
     return res.status(200).json({
       message: "Product deleted successfully",
       product: deleted,
@@ -271,8 +298,12 @@ router.post(
       }
 
       let finalImageURL = imageURL;
+      let finalImg = req.body.img || "";
       if (req.file) {
-        finalImageURL = `/images/${req.file.filename}`;
+        const publicPath = `/images/${req.file.filename}`;
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        finalImageURL = `${baseUrl}${publicPath}`;
+        finalImg = finalImageURL;
       }
 
       const product = new Product({
@@ -284,6 +315,7 @@ router.post(
         stock,
         description,
         imageURL: finalImageURL,
+        img: finalImg,
         model,
         serialNumber,
         tag,
