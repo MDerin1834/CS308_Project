@@ -16,7 +16,8 @@ const CartPage = () => {
 
   const isGuest = !user;
   const isSalesManager = user?.role === "sales_manager";
-  const checkoutBlocked = isGuest || isSalesManager;
+  const isCartEmpty = cartItems.length === 0;
+  const checkoutBlocked = isGuest || isSalesManager || isCartEmpty;
 
   // ⭐ Kartı yükle
   const loadCart = async () => {
@@ -132,6 +133,9 @@ const CartPage = () => {
 
   // ⭐ Checkout butonu
   const handleCheckout = () => {
+    if (isCartEmpty) {
+      return;
+    }
     if (!user) {
       localStorage.setItem("redirectAfterLogin", "/cart-page");
       navigate("/login");
@@ -231,6 +235,11 @@ const CartPage = () => {
                     {isGuest
                       ? "Please sign in to proceed to checkout."
                       : "Sales managers cannot complete purchases from the shop."}
+                  </div>
+                )}
+                {isCartEmpty && (
+                  <div className="alert alert-info" role="alert">
+                    Your cart is empty. Add items before proceeding to checkout.
                   </div>
                 )}
                 <form

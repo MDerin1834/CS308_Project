@@ -180,7 +180,18 @@ const SupportAgentChatPage = () => {
               onClick={() => joinRoom(room.roomId)}
               type="button"
             >
-              <div className="fw-semibold">{room.roomId}</div>
+              <div
+                className="fw-semibold"
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  maxWidth: "100%",
+                }}
+                title={room.roomId}
+              >
+                {room.roomId}
+              </div>
               <small>
                 {room.claimedBy ? "Claimed" : "Unclaimed"} • {room.messageCount} msgs
               </small>
