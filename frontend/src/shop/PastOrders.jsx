@@ -9,6 +9,7 @@ const PastOrders = () => {
   const [error, setError] = useState("");
   const [cancellingId, setCancellingId] = useState(null);
   const [refundSubmittingId, setRefundSubmittingId] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
   const [refundSelection, setRefundSelection] = useState({});
   const [refundReason, setRefundReason] = useState({});
   const [refundFeedback, setRefundFeedback] = useState({});
@@ -133,6 +134,34 @@ const PastOrders = () => {
     }
   };
 
+  const handleDownloadInvoice = async (orderId, invoiceNumber) => {
+    setDownloadingId(orderId);
+    setError("");
+    try {
+      const res = await api.get(`/api/payment/invoices/${orderId}/pdf`, {
+        responseType: "blob",
+        validateStatus: () => true,
+      });
+      if (res.status === 200) {
+        const blob = new Blob([res.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${invoiceNumber || orderId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } else {
+        setError(res.data?.message || "Failed to download invoice");
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to download invoice");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <div>
       <PageHeader title="My Orders" curPage="Orders" />
@@ -181,6 +210,15 @@ const PastOrders = () => {
                     const isProcessing = order.status === "processing";
                     const refundable = isRefundEligible(order);
                     const refundRequested = hasRefundRequest(order);
+                    const purchaseDate = getPurchaseDate(order);
+                    const daysSincePurchase = purchaseDate
+                      ? (Date.now() - new Date(purchaseDate).getTime()) / (1000 * 60 * 60 * 24)
+                      : null;
+                    const refundExpired =
+                      order.status === "delivered" &&
+                      !refundRequested &&
+                      daysSincePurchase !== null &&
+                      daysSincePurchase > 30;
                     const firstItem = order.items?.[0] || {};
                     const thumb = firstItem.imageURL || firstItem.img || "";
                     const itemCount =
@@ -326,29 +364,43 @@ const PastOrders = () => {
                           </div>
                         </td>
 
-                        <td>
-                          <button className="lab-btn" onClick={() => toggleOrder(orderId)}>
-                            {openOrder === orderId ? "Hide Details" : "View Details"}
-                          </button>
+                      <td>
+                        <button className="lab-btn" onClick={() => toggleOrder(orderId)}>
+                          {openOrder === orderId ? "Hide Details" : "View Details"}
+                        </button>
 
-                          {isProcessing && (
-                            <button
-                              className="btn btn-danger ms-2"
-                              onClick={() => handleCancel(orderId)}
-                              disabled={cancellingId === orderId}
-                            >
-                              {cancellingId === orderId ? "Cancelling..." : "Cancel Order"}
-                            </button>
-                          )}
-                          {refundable && !refundRequested && (
-                            <button
-                              className="btn btn-outline-danger ms-2"
-                              onClick={() => openOrderDetails(orderId)}
-                            >
-                              Request Refund
-                            </button>
-                          )}
-                        </td>
+                        {isProcessing && (
+                          <button
+                            className="btn btn-danger ms-2"
+                            onClick={() => handleCancel(orderId)}
+                            disabled={cancellingId === orderId}
+                          >
+                            {cancellingId === orderId ? "Cancelling..." : "Cancel Order"}
+                          </button>
+                        )}
+                        {order.paidAt && (
+                          <button
+                            className="btn btn-outline-secondary ms-2"
+                            onClick={() => handleDownloadInvoice(orderId, order.invoiceNumber)}
+                            disabled={downloadingId === orderId}
+                          >
+                            {downloadingId === orderId ? "Downloading..." : "Invoice PDF"}
+                          </button>
+                        )}
+                        {refundable && !refundRequested && (
+                          <button
+                            className="btn btn-outline-danger ms-2"
+                            onClick={() => openOrderDetails(orderId)}
+                          >
+                            Request Refund
+                          </button>
+                        )}
+                        {refundExpired && (
+                          <span className="ms-2 text-muted" style={{ fontSize: "0.9rem" }}>
+                            Refund window expired (30 days).
+                          </span>
+                        )}
+                      </td>
                       </tr>
                     );
                   })}

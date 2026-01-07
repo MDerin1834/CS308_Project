@@ -61,10 +61,6 @@ const ItemList = [
         link: '/shop',
     },
     {
-        text: 'Blog',
-        link: '/blog',
-    },
-    {
         text: 'About',
         link: '/about',
     },

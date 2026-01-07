@@ -209,7 +209,7 @@ router.get("/invoices", auth, authorizeRole("sales_manager", "product_manager"),
   }
 });
 
-router.get("/invoices/:id/pdf", auth, authorizeRole("sales_manager", "product_manager"), async (req, res) => {
+router.get("/invoices/:id/pdf", auth, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) {
@@ -217,6 +217,11 @@ router.get("/invoices/:id/pdf", auth, authorizeRole("sales_manager", "product_ma
     }
     if (!order.paidAt) {
       return res.status(400).json({ message: "Invoice available only for paid orders" });
+    }
+
+    const isPrivileged = ["sales_manager", "product_manager"].includes(req.user.role);
+    if (!isPrivileged && String(order.userId) !== req.user.id) {
+      return res.status(403).json({ message: "You cannot access this invoice" });
     }
 
     const user = await User.findById(order.userId);

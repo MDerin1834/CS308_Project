@@ -70,11 +70,6 @@ const NavItems = () => {
                   <li>
                     <Link to="/shop">Shop</Link>
                   </li>
-                  {(!user || user.role !== "sales_manager") && (
-                    <li>
-                      <Link to="/blog">Blog</Link>
-                    </li>
-                  )}
                 </ul>
               </div>
 
