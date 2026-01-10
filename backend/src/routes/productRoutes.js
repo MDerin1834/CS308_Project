@@ -513,4 +513,30 @@ router.post("/:id/comment", auth, async (req, res) => {
   }
 });
 
+// PATCH /api/products/:id/price (sales manager)
+router.patch("/:id/price", auth, authorizeRole("sales_manager"), async (req, res) => {
+  try {
+    const product = await Product.findOne({ id: req.params.id });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const nextPrice = Number(req.body?.price);
+    if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
+      return res.status(400).json({ message: "Price must be a positive number" });
+    }
+
+    product.price = nextPrice;
+    product.originalPrice = nextPrice;
+    product.discountPrice = null;
+    product.discountPercent = null;
+    await product.save();
+
+    return res.status(200).json({ message: "Price updated", product });
+  } catch (err) {
+    logger.error("Error updating price:", { error: err });
+    return res.status(500).json({ message: "Failed to update price" });
+  }
+});
+
 module.exports = router;

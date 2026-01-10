@@ -113,6 +113,36 @@ const DiscountManager = () => {
     }
   };
 
+  const handleSetPrice = async (product) => {
+    const raw = inputs[product.id] || {};
+    const nextPrice = Number(raw.basePrice);
+    if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
+      setFeedback("Enter a valid base price.");
+      return;
+    }
+
+    setSavingId(product.id);
+    setFeedback("");
+    try {
+      const res = await api.patch(
+        `/api/products/${product.id}/price`,
+        { price: nextPrice },
+        { validateStatus: () => true }
+      );
+      if (res.status === 200 && res.data?.product) {
+        updateProductInState(res.data.product);
+        setInputs((prev) => ({ ...prev, [product.id]: { ...(prev[product.id] || {}), basePrice: "" } }));
+        setFeedback(`Price updated for ${product.name}.`);
+      } else {
+        setFeedback(res.data?.message || "Could not update price.");
+      }
+    } catch (err) {
+      setFeedback(err?.response?.data?.message || "Could not update price.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   const filteredProducts = useMemo(() => {
     if (!search) return products;
     const term = search.toLowerCase();
@@ -271,6 +301,22 @@ const DiscountManager = () => {
                             disabled={savingId === product.id}
                           >
                             {savingId === product.id ? "Saving..." : "Apply"}
+                          </button>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            placeholder="New base price"
+                            min="0"
+                            step="0.01"
+                            value={rowInput.basePrice ?? ""}
+                            onChange={(e) => handleInputChange(product.id, "basePrice", e.target.value)}
+                          />
+                          <button
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => handleSetPrice(product)}
+                            disabled={savingId === product.id}
+                          >
+                            {savingId === product.id ? "Saving..." : "Set Price"}
                           </button>
                           <button
                             className="btn btn-sm btn-outline-danger"
