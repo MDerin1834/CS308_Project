@@ -120,8 +120,12 @@ const Shop = () => {
     if (selectedCategory && selectedCategory !== "All") {
       params.category = selectedCategory;
     }
-    setSearchParams(params, { replace: true });
-  }, [searchTerm, selectedCategory, setSearchParams]);
+    const next = new URLSearchParams(params).toString();
+    const current = searchParams.toString();
+    if (next !== current) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchTerm, selectedCategory, setSearchParams, searchParams]);
 
   return (
     <div>
